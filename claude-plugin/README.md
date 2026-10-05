@@ -14,6 +14,17 @@ APIs and the branches between them. It ends with the interactive viewer (`.logic
 
 You don't have to type the command: Claude also uses it when you ask "how does … work?" or "what happens when …?".
 
+## Keep flows up to date
+
+```text
+/logictrail:update                 # every saved flow
+/logictrail:update checkout        # the flow whose name matches, e.g. how-does-checkout-work
+```
+
+Claude runs `logictrail update` (same question or starting point, same limits, current code), then explains what
+changed in the path: new and removed steps with their file and line, and steps that only moved. It needs a LogicTrail
+CLI with the `update` command.
+
 ## Install
 
 1. Install the LogicTrail CLI (Node.js 22+), either in your project or globally:
@@ -41,6 +52,7 @@ Add `.logictrail/` to your `.gitignore`.
 | Path                         | What it is                                                                           |
 | ---------------------------- | ------------------------------------------------------------------------------------ |
 | `skills/explain/SKILL.md`    | The `/logictrail:explain` command                                                    |
-| `bin/logictrail-outline`     | Prints a compact, step-by-step outline of a LogicTrail JSON graph                    |
+| `skills/update/SKILL.md`     | The `/logictrail:update` command                                                     |
+| `bin/logictrail-outline`     | Prints a compact, step-by-step outline of a saved flow (.json or .html)              |
 | `scripts/summarize.mjs`      | The outline script (plain Node.js, no dependencies)                                  |
 | `.claude-plugin/plugin.json` | Plugin manifest. The marketplace entry is in the repository root's `.claude-plugin/` |

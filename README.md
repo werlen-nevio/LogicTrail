@@ -133,12 +133,14 @@ folder ignores itself.
 ### In Claude Code
 
 The [LogicTrail plugin](claude-plugin) adds `/logictrail:explain`: Claude runs LogicTrail, reads the flow and walks
-you through it with the file and line behind every step.
+you through it with the file and line behind every step. `/logictrail:update` re-runs saved flows against the
+current code and explains what changed.
 
 ```text
 /plugin marketplace add werlen-nevio/LogicTrail
 /plugin install logictrail@logictrail
 /logictrail:explain how does checkout work?
+/logictrail:update checkout
 ```
 
 ## How it works
@@ -281,6 +283,33 @@ Try them on the bundled sample: `npx logictrail "how does checkout work?" --root
 | `--no-cache`          | Re-parse every file                                                           |
 | `--config <path>`     | Use a specific config file                                                    |
 | `-v, --verbose`       | Show seeds, skipped files and validation details                              |
+
+### Updating flows
+
+A flow shows the code as it was when you asked. After the code changes, run it again with the
+same question or starting point and limits:
+
+```bash
+npx logictrail update                          # every flow in .logictrail
+npx logictrail update how-does-checkout-work   # one flow, by its file name
+```
+
+LogicTrail rewrites each flow in the formats it was saved in (an SVG keeps its theme) and lists
+what changed:
+
+```text
+✓ what-happens-when-a-payment-fails: steps 1 added, 3 moved; edges 1 added
+  + paymentAttempt.create (database) server/src/services/orderService.ts:35
+  ~ markOrderFailed()  server/src/services/orderService.ts:30 → :32
+```
+
+`+` and `−` mark steps that are new or gone, `~` a step that moved. Lines with an arrow
+(`− sendPaymentFailedEmail() → Resend: emails.send (calls)`) are connections gained or lost
+between steps that are in both versions.
+
+`update` reads a flow's `.json` file, or its `.html` viewer when there is no JSON, and takes
+`--root`, `--out-dir`, `--model`, `--max-depth`, `--max-nodes`, `--theme`, `--open`, `--no-cache`
+and `--config`. To ask a question that starts with the word "update", put it in quotes.
 
 ## Configuration
 

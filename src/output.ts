@@ -9,7 +9,7 @@ import { renderMermaid } from "./render/mermaid.js";
 import { renderSvg, type Theme } from "./render/svg.js";
 import { VERSION } from "./version.js";
 
-const EXTENSIONS: Readonly<Record<OutputFormat, string>> = {
+export const EXTENSIONS: Readonly<Record<OutputFormat, string>> = {
   html: "html",
   svg: "svg",
   mermaid: "mmd",

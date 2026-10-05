@@ -1,6 +1,7 @@
 import type { CodeEdge, CodeGraph, CodeNode, ResolvedStep } from "../analysis/code-graph.js";
 import {
   GRAPH_SCHEMA_VERSION,
+  type FlowRequest,
   type LogicEdge,
   type LogicEdgeType,
   type LogicNode,
@@ -32,6 +33,7 @@ export interface FlowSelectionInput {
 
 export interface BuildFlowOptions {
   query: string;
+  request?: FlowRequest;
   graph: CodeGraph;
   candidates: CandidateGraph;
   selection: FlowSelectionInput;
@@ -94,6 +96,7 @@ class FlowBuilder {
     const result: LogicTrailGraph = {
       schemaVersion: GRAPH_SCHEMA_VERSION,
       query: this.options.query,
+      ...(this.options.request ? { request: this.options.request } : {}),
       title: selection.title,
       entryPoints,
       nodes: ordered,

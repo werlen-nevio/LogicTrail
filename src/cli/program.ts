@@ -11,6 +11,8 @@ import type { Theme } from "../render/svg.js";
 import { VERSION } from "../version.js";
 import { openFile } from "./open.js";
 import { TerminalReporter } from "./reporter.js";
+import { displayPath, parsePositiveInt } from "./shared.js";
+import { updateCommand } from "./update.js";
 
 interface CliOptions {
   output?: OutputFormat[];
@@ -48,13 +50,6 @@ function parseFormats(value: string, previous: OutputFormat[] | undefined): Outp
   return [...new Set([...(previous ?? []), ...(all as OutputFormat[])])];
 }
 
-function parsePositiveInt(value: string): number {
-  const number = Number(value);
-  if (!Number.isInteger(number) || number < 1)
-    throw new InvalidArgumentError("Expected a positive integer.");
-  return number;
-}
-
 export function createProgram(): Command {
   const program = new Command();
   program
@@ -63,6 +58,8 @@ export function createProgram(): Command {
       "Ask your codebase how it works. LogicTrail turns a question into an evidence-backed execution flow.",
     )
     .version(VERSION, "--version", "Show the version number")
+    // Options after "update" belong to the update command, not to the question command.
+    .enablePositionalOptions()
     .argument("[question...]", 'What to explain, e.g. "how does checkout work?"')
     .option(
       "-o, --output <formats>",
@@ -101,6 +98,7 @@ Examples:
   $ logictrail --route "POST /api/orders" --output svg,mermaid
   $ logictrail --function createSession --model static
   $ logictrail "how does authentication work?" --output mermaid --stdout
+  $ logictrail update                # re-run every saved flow against the current code
 
 Environment:
   ANTHROPIC_API_KEY   Enables Claude for selection and explanations (static analysis otherwise)
@@ -110,6 +108,7 @@ Environment:
     .action(async (words: string[], options: CliOptions) => {
       process.exitCode = await runCli(words.join(" "), options);
     });
+  program.addCommand(updateCommand());
   return program;
 }
 
@@ -190,12 +189,7 @@ async function runCli(question: string, options: CliOptions): Promise<number> {
       theme: options.theme,
     });
     process.stderr.write(`\n${pc.bold("Generated:")}\n`);
-    for (const file of written) {
-      const display = path.relative(process.cwd(), file.path) || file.path;
-      process.stdout.write(
-        `  ${display.startsWith("..") ? file.path : `./${display.split(path.sep).join("/")}`}\n`,
-      );
-    }
+    for (const file of written) process.stdout.write(`  ${displayPath(file.path)}\n`);
 
     if (options.open) {
       const preferred =

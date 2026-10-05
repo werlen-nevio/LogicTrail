@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "query": "how does login work?",
+  "request": {
+    "question": "how does login work?",
+    "maxDepth": 12,
+    "maxNodes": 60
+  },
   "title": "How does login work?",
   "entryPoints": [
     "client/src/pages/LoginPage.tsx#LoginPage"

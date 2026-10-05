@@ -3,7 +3,7 @@ import { buildCodeGraph, type CodeGraph, type CodeNode } from "./analysis/code-g
 import { Workspace } from "./analysis/workspace.js";
 import { DEFAULT_CONFIG, type ResolvedConfig } from "./config/config.js";
 import { buildFlowGraph } from "./flow/build.js";
-import type { LogicTrailGraph } from "./graph/model.js";
+import type { FlowRequest, LogicTrailGraph } from "./graph/model.js";
 import { indexRepository, type IndexResult } from "./indexer/indexer.js";
 import { selectProvider } from "./llm/index.js";
 import { buildFlowAnalysisInput } from "./llm/input.js";
@@ -34,6 +34,8 @@ export interface AnalyzeOptions {
   /** Overrides the provider chosen from config / environment. */
   provider?: LLMProvider;
   reporter?: Reporter;
+  /** The repository from an earlier {@link indexAndAnalyze} call; skips indexing it again. */
+  indexed?: IndexedRepository;
 }
 
 export interface AnalysisResult {
@@ -110,7 +112,7 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
     if (selection.notice) reporter.info(selection.notice);
   }
 
-  const { index, codeGraph } = await indexAndAnalyze(root, config, reporter);
+  const { index, codeGraph } = options.indexed ?? (await indexAndAnalyze(root, config, reporter));
   const question = options.question?.trim() || questionForTarget(options.target);
   reporter.phase(`Finding flow for:\n"${question}"`);
 
@@ -205,6 +207,7 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
 
   const graph = buildFlowGraph({
     query: question,
+    request: flowRequest(root, options, config),
     graph: codeGraph,
     candidates,
     selection: {
@@ -246,6 +249,22 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
 
 function hasTarget(target: FlowTarget): boolean {
   return Boolean(target.file || target.function || target.route);
+}
+
+/** What `logictrail update` needs to ask for the same flow again. */
+function flowRequest(root: string, options: AnalyzeOptions, config: ResolvedConfig): FlowRequest {
+  const { file, function: fn, route } = options.target ?? {};
+  const question = options.question?.trim();
+  const relativeFile =
+    file && path.isAbsolute(file) ? path.relative(root, file).split(path.sep).join("/") : file;
+  return {
+    ...(question ? { question } : {}),
+    ...(relativeFile ? { file: relativeFile } : {}),
+    ...(fn ? { function: fn } : {}),
+    ...(route ? { route } : {}),
+    maxDepth: config.maxDepth,
+    maxNodes: config.maxNodes,
+  };
 }
 
 export function questionForTarget(target: FlowTarget | undefined): string {

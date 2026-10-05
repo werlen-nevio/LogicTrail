@@ -70,3 +70,4 @@ and external calls), so you can say what each step does, not just its name. Keep
    the code, say that it comes from your reading, not from the trace.
 5. Mention any warnings from the outline that affect the answer.
 6. End with the path to the interactive viewer (`.logictrail/<question-slug>.html`) and offer to open it in the browser.
+   Mention that `/logictrail:update <question-slug>` refreshes the flow after the code changes.

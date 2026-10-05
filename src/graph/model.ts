@@ -89,9 +89,22 @@ export interface LogicEdge {
   evidence?: SourceEvidence[];
 }
 
+/** How a flow was requested, so it can be re-run against newer code (`logictrail update`). */
+export interface FlowRequest {
+  /** The question as asked; absent when the flow was requested by a starting point only. */
+  question?: string;
+  file?: string;
+  function?: string;
+  route?: string;
+  maxDepth: number;
+  maxNodes: number;
+}
+
 export interface LogicTrailGraph {
   schemaVersion: typeof GRAPH_SCHEMA_VERSION;
   query: string;
+  /** Absent in flows written before `logictrail update` existed. */
+  request?: FlowRequest;
   title: string;
   entryPoints: string[];
   nodes: LogicNode[];

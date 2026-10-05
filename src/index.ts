@@ -18,6 +18,10 @@ export {
 export type { AnalysisResult, AnalyzeOptions, FlowTarget, IndexedRepository } from "./pipeline.js";
 export { writeOutputs, renderFormat, slugify } from "./output.js";
 export type { WriteOutputsOptions, WrittenFile } from "./output.js";
+export { findSavedFlows, loadSavedFlow, SavedFlowError, updateFlow } from "./update.js";
+export type { SavedFlow, UpdatedFlow, UpdateFlowOptions } from "./update.js";
+export { diffFlows, hasChanges } from "./flow/diff.js";
+export type { ChangedEdge, FlowChanges, MovedNode } from "./flow/diff.js";
 
 export { defineConfig, DEFAULT_CONFIG, OUTPUT_FORMATS, resolveConfig } from "./config/config.js";
 export type { LogicTrailConfig, OutputFormat, ResolvedConfig } from "./config/config.js";

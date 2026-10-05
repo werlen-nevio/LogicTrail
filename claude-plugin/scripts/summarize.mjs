@@ -1,19 +1,33 @@
 #!/usr/bin/env node
-// Prints a compact outline of a LogicTrail JSON graph: the steps in flow order with their file:line
-// and the edges between them. The full JSON embeds source snippets and is too large to read whole.
-// Usage: logictrail-outline <graph.json>   (the plugin's bin/ wrapper), or node summarize.mjs <graph.json>
+// Prints a compact outline of a LogicTrail flow: the steps in flow order with their file:line and
+// the edges between them. The full graph embeds source snippets and is too large to read whole.
+// Reads a flow's .json file or the data embedded in its .html viewer.
+// Usage: logictrail-outline <flow.json|flow.html>   (the plugin's bin/ wrapper), or node summarize.mjs
 import fs from "node:fs";
 
 const MAX_DESCRIPTION = 220;
 
 const file = process.argv[2];
 if (!file) {
-  console.error("Usage: logictrail-outline <graph.json>");
+  console.error("Usage: logictrail-outline <flow.json|flow.html>");
   process.exit(2);
 }
 
-/** @type {import("../../src/graph/model.js").LogicTrailGraph} */
-const graph = JSON.parse(fs.readFileSync(file, "utf8"));
+const text = fs.readFileSync(file, "utf8");
+const embedded = /<script id="logictrail-data" type="application\/json">([\s\S]*?)<\/script>/.exec(
+  text,
+)?.[1];
+/** @type {import("../../src/graph/model.js").LogicTrailGraph | undefined} */
+let graph;
+try {
+  graph = file.endsWith(".html") ? embedded && JSON.parse(embedded).graph : JSON.parse(text);
+} catch {
+  graph = undefined;
+}
+if (!graph?.nodes) {
+  console.error(`${file} is not a LogicTrail flow.`);
+  process.exit(1);
+}
 const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
 const outgoing = new Map();
 for (const edge of graph.edges) {
@@ -40,11 +54,15 @@ const where = (node) =>
 const shorten = (text) =>
   text.length > MAX_DESCRIPTION ? `${text.slice(0, MAX_DESCRIPTION - 1).trimEnd()}…` : text;
 
-const { analysis } = graph;
+const { analysis, request } = graph;
+const start = ["file", "function", "route"]
+  .filter((key) => request?.[key])
+  .map((key) => `--${key} ${request[key]}`);
 const lines = [
   `# ${graph.title}`,
   `Question: ${graph.query}`,
-  `Analysis: ${analysis.provider}${analysis.model ? ` (${analysis.model})` : ""} · ${graph.nodes.length} steps · ${graph.edges.length} edges · ${analysis.stats.files} files scanned`,
+  ...(start.length > 0 ? [`Starting point: ${start.join(" ")}`] : []),
+  `Analysis: ${analysis.provider}${analysis.model ? ` (${analysis.model})` : ""} · ${graph.nodes.length} steps · ${graph.edges.length} edges · ${analysis.stats.files} files scanned · generated ${analysis.generatedAt}`,
   `Entry points: ${graph.entryPoints.map((id) => `[${step.get(id)}]`).join(", ") || "none"}`,
   "",
   "## Explanation",

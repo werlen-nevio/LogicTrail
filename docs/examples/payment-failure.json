@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "query": "what happens when a payment fails?",
+  "request": {
+    "question": "what happens when a payment fails?",
+    "maxDepth": 12,
+    "maxNodes": 60
+  },
   "title": "What happens when a payment fails?",
   "entryPoints": [
     "ext:Stripe:paymentIntents.create"

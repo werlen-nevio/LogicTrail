@@ -91,6 +91,28 @@ describe("cli", () => {
     expect(unknown.stderr).toContain('No function named "doesNotExist" was found.');
   });
 
+  it("updates saved flows", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-update-"));
+    try {
+      const common = ["--root", ACME_SHOP, "--out-dir", outDir, "--model", "static", "--no-cache"];
+      expect(cli(["--route", "POST /api/orders", "--output", "json,html", ...common]).status).toBe(
+        0,
+      );
+
+      const updated = cli(["update", ...common]);
+      expect(updated.status).toBe(0);
+      expect(updated.stderr).toContain("what-happens-when-post-api-orders-is-called: no changes");
+      expect(updated.stdout.trim().split("\n")).toHaveLength(2);
+
+      const missing = cli(["update", "the", "cart", ...common]);
+      expect(missing.status).toBe(1);
+      expect(missing.stderr).toContain('No saved flow named "the"');
+      expect(missing.stderr).toContain('quote it: logictrail "update …"');
+    } finally {
+      await fs.rm(outDir, { recursive: true, force: true });
+    }
+  });
+
   it("slugifies output names", () => {
     expect(slugify("How does checkout work?")).toBe("how-does-checkout-work");
     expect(slugify("Ünïcödé — flows!")).toBe("unicode-flows");

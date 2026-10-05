@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "query": "how does checkout work?",
+  "request": {
+    "question": "how does checkout work?",
+    "maxDepth": 12,
+    "maxNodes": 60
+  },
   "title": "How does checkout work?",
   "entryPoints": [
     "client/src/pages/CheckoutPage.tsx#CheckoutPage"
