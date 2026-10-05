@@ -11,3 +11,4 @@ _site/
 .impeccable/questions/
 .impeccable/review/
 brag-output*/
+.claude/worktrees/

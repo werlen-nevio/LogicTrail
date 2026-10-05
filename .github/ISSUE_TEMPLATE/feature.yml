@@ -1,0 +1,50 @@
+name: Feature request
+description: An idea for the CLI, the viewer, the output formats or the Claude Code plugin.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Support for a new framework, library or language has its own
+        [adapter request](https://github.com/werlen-nevio/LogicTrail/issues/new?template=adapter.yml)
+        template.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: |
+        What should LogicTrail do? A command, flag, config option or a sketch of the viewer helps.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds you use today, or other ways to solve it.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        - CLI
+        - HTML viewer
+        - SVG, Mermaid or JSON output
+        - Claude Code plugin
+        - Library API
+        - Configuration
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you like to work on it?
+      options:
+        - "Yes"
+        - Maybe, with some guidance
+        - "No"
