@@ -1,0 +1,3 @@
+# Check text files out with LF everywhere, Windows included: Prettier, the line-number fixtures
+# and the plugin's shell script all depend on it.
+* text=auto eol=lf

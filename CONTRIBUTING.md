@@ -20,6 +20,7 @@ Useful scripts:
 | `npm run demo`                       | Analyze the sample app and write every output format   |
 | `npm test` / `npm run test:watch`    | Vitest                                                 |
 | `npm run build`                      | Compile to `dist/` and bundle the browser viewer       |
+| `npm run test:package`               | Install the packed CLI and run it (after a build)      |
 | `node scripts/generate-examples.mjs` | Regenerate `docs/examples` (run after `npm run build`) |
 
 Node.js 22 or newer is required.
@@ -86,3 +87,26 @@ and member paths, so most of them carry over once a language's import model maps
   excluded from formatting on purpose, because tests refer to their exact line numbers.
 - Keep the evidence promise: anything that cannot be proven from source must be marked as
   inferred, with a confidence and a reason.
+
+CI runs `npm run check` and `npm run test:package` on Ubuntu and Windows, validates the Claude
+plugin and its marketplace with `claude plugin validate --strict`, and runs
+`node scripts/release.mjs`, which checks that `package.json`, the plugin and `CHANGELOG.md` agree.
+
+## Releasing
+
+The npm package and the Claude plugin share one version number.
+
+1. In `CHANGELOG.md`, move the notes under `[Unreleased]` to a new `## [x.y.z] - YYYY-MM-DD`
+   section and add its compare link at the bottom.
+2. Set `x.y.z` in `package.json` (`npm version x.y.z --no-git-tag-version`) and in
+   `claude-plugin/.claude-plugin/plugin.json`, then run `node scripts/release.mjs`.
+3. Commit and push a tag: `git tag vx.y.z && git push origin main vx.y.z`.
+
+The [release workflow](.github/workflows/release.yml) then publishes `logictrail` to npm with
+provenance, creates the GitHub Release from the changelog entry and tags the plugin release
+(`logictrail--vx.y.z`, with `claude plugin tag`). A prerelease tag such as `v1.0.0-beta.1` goes to
+npm's `next` dist-tag and becomes a GitHub prerelease. If a step fails, fix the cause and re-run
+the workflow: steps that already succeeded are skipped.
+
+npm trusts the workflow by its file name (trusted publishing), so no npm token is stored. If you
+rename `release.yml`, update the trusted publisher in the package settings on npmjs.com.

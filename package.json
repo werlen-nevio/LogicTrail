@@ -1,6 +1,6 @@
 {
   "name": "logictrail",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ask your codebase how it works. LogicTrail turns a question into an evidence-backed, interactive execution flow.",
   "keywords": [
     "cli",
@@ -50,6 +50,7 @@
     "demo": "tsx src/cli/main.ts \"how does login work?\" --root examples/acme-shop --output html,mermaid,svg,json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:package": "node scripts/test-package.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p src/viewer/tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
