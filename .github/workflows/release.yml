@@ -32,9 +32,10 @@ jobs:
       - name: Install the packed CLI and run it
         run: npm run test:package
 
+      # npm trusted publishing: npm exchanges the workflow's OIDC token for a short-lived publish
+      # token, so there is no NPM_TOKEN secret. Set up once with:
+      #   npm trust github logictrail --file release.yml --repo werlen-nevio/LogicTrail
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
           if [ "$(npm view "logictrail@$version" version 2>/dev/null)" = "$version" ]; then
