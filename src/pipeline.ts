@@ -7,8 +7,14 @@ import type { FlowRequest, LogicTrailGraph } from "./graph/model.js";
 import { indexRepository, type IndexResult } from "./indexer/indexer.js";
 import { selectProvider } from "./llm/index.js";
 import { buildFlowAnalysisInput } from "./llm/input.js";
+import { buildUserPrompt, SYSTEM_PROMPT } from "./llm/prompt.js";
 import { StaticProvider } from "./llm/static.js";
-import { ProviderError, type FlowAnalysisResult, type LLMProvider } from "./llm/types.js";
+import {
+  ProviderError,
+  type FlowAnalysisInput,
+  type FlowAnalysisResult,
+  type LLMProvider,
+} from "./llm/types.js";
 import { validateSelection } from "./llm/validate.js";
 import { chooseSeeds, extractCandidates, type CandidateGraph } from "./query/candidates.js";
 import { RetrievalIndex } from "./query/retrieve.js";
@@ -112,58 +118,11 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
     if (selection.notice) reporter.info(selection.notice);
   }
 
-  const { index, codeGraph } = options.indexed ?? (await indexAndAnalyze(root, config, reporter));
-  const question = options.question?.trim() || questionForTarget(options.target);
-  reporter.phase(`Finding flow for:\n"${question}"`);
-
-  const retrieval = new RetrievalIndex(codeGraph);
-  const scored = retrieval.score(queryTerms(question));
-  const scores = new Map(scored.map((node) => [node.id, node.score]));
   const usesLlm = !(provider instanceof StaticProvider);
-
-  let seeds: string[];
-  if (options.target && hasTarget(options.target)) {
-    seeds = seedsForTarget(codeGraph, options.target, root);
-    for (const seed of seeds)
-      scores.set(seed, Math.max(scores.get(seed) ?? 0, scored[0]?.score ?? 1));
-  } else {
-    seeds = chooseSeeds(scored, usesLlm ? { limit: 30, ratio: 0.2 } : { limit: 12, ratio: 0.45 });
-  }
-  if (seeds.length === 0) {
-    throw new NoFlowFoundError(`Could not find code related to "${question}".`, [
-      'Try different words, e.g. names used in the code ("checkout", "createOrder").',
-      "Target code directly with --function <name>, --file <path> or --route <path>.",
-    ]);
-  }
-  reporter.debug(`Seeds: ${seeds.map((id) => codeGraph.nodes.get(id)?.label ?? id).join(", ")}`);
-
-  const directMatches = new Set(
-    scored.filter((node) => node.directScore > 0).map((node) => node.id),
+  const { question, index, codeGraph, candidates, source, built } = await prepareFlow(
+    options,
+    usesLlm,
   );
-  for (const seed of seeds) directMatches.add(seed);
-  const candidates = extractCandidates(
-    codeGraph,
-    scores,
-    seeds,
-    {
-      maxDepth: config.maxDepth,
-      maxCandidates: usesLlm ? Math.max(150, config.maxNodes * 2) : config.maxNodes,
-      upDepth: 3,
-    },
-    directMatches,
-  );
-  reporter.success(`${formatCount(candidates.nodes.size)} relevant symbols`);
-
-  const source = new SourceReader(root);
-  const built = buildFlowAnalysisInput({
-    question,
-    repositoryName: path.basename(root),
-    fileCount: index.stats.files,
-    graph: codeGraph,
-    candidates,
-    source,
-    maxNodes: config.maxNodes,
-  });
 
   const warnings: string[] = [];
   let result: FlowAnalysisResult;
@@ -245,6 +204,81 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
     provider: activeProvider,
     ...(result.usage ? { usage: result.usage } : {}),
   };
+}
+
+/** What would be sent to Claude for a question, without sending it. */
+export interface FlowPrompt {
+  system: string;
+  user: string;
+  input: FlowAnalysisInput;
+}
+
+/**
+ * Builds the prompt {@link analyze} sends to Claude, using the same retrieval and candidate
+ * limits, but calls no provider. Works without an API key.
+ */
+export async function buildFlowPrompt(options: AnalyzeOptions): Promise<FlowPrompt> {
+  const { built } = await prepareFlow(options, true);
+  return { system: SYSTEM_PROMPT, user: buildUserPrompt(built.input), input: built.input };
+}
+
+/** Index -> code graph -> retrieval -> candidate sub-graph -> the provider's input. */
+async function prepareFlow(options: AnalyzeOptions, usesLlm: boolean) {
+  const root = path.resolve(options.root);
+  const config = options.config ?? DEFAULT_CONFIG;
+  const reporter = options.reporter ?? silentReporter;
+  const { index, codeGraph } = options.indexed ?? (await indexAndAnalyze(root, config, reporter));
+  const question = options.question?.trim() || questionForTarget(options.target);
+  reporter.phase(`Finding flow for:\n"${question}"`);
+
+  const retrieval = new RetrievalIndex(codeGraph);
+  const scored = retrieval.score(queryTerms(question));
+  const scores = new Map(scored.map((node) => [node.id, node.score]));
+
+  let seeds: string[];
+  if (options.target && hasTarget(options.target)) {
+    seeds = seedsForTarget(codeGraph, options.target, root);
+    for (const seed of seeds)
+      scores.set(seed, Math.max(scores.get(seed) ?? 0, scored[0]?.score ?? 1));
+  } else {
+    seeds = chooseSeeds(scored, usesLlm ? { limit: 30, ratio: 0.2 } : { limit: 12, ratio: 0.45 });
+  }
+  if (seeds.length === 0) {
+    throw new NoFlowFoundError(`Could not find code related to "${question}".`, [
+      'Try different words, e.g. names used in the code ("checkout", "createOrder").',
+      "Target code directly with --function <name>, --file <path> or --route <path>.",
+    ]);
+  }
+  reporter.debug(`Seeds: ${seeds.map((id) => codeGraph.nodes.get(id)?.label ?? id).join(", ")}`);
+
+  const directMatches = new Set(
+    scored.filter((node) => node.directScore > 0).map((node) => node.id),
+  );
+  for (const seed of seeds) directMatches.add(seed);
+  const candidates = extractCandidates(
+    codeGraph,
+    scores,
+    seeds,
+    {
+      maxDepth: config.maxDepth,
+      maxCandidates: usesLlm ? Math.max(150, config.maxNodes * 2) : config.maxNodes,
+      upDepth: 3,
+    },
+    directMatches,
+  );
+  reporter.success(`${formatCount(candidates.nodes.size)} relevant symbols`);
+
+  const source = new SourceReader(root);
+  const built = buildFlowAnalysisInput({
+    question,
+    repositoryName: path.basename(root),
+    fileCount: index.stats.files,
+    graph: codeGraph,
+    candidates,
+    source,
+    maxNodes: config.maxNodes,
+  });
+  return { question, index, codeGraph, candidates, source, built };
 }
 
 function hasTarget(target: FlowTarget): boolean {

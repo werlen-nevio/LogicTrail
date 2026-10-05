@@ -6,7 +6,13 @@ import { ConfigError, loadConfig } from "../config/load.js";
 import { selectProvider } from "../llm/index.js";
 import { ProviderError } from "../llm/types.js";
 import { renderFormat, slugify, writeOutputs } from "../output.js";
-import { analyze, NoFlowFoundError, type FlowTarget } from "../pipeline.js";
+import {
+  analyze,
+  buildFlowPrompt,
+  formatCount,
+  NoFlowFoundError,
+  type FlowTarget,
+} from "../pipeline.js";
 import type { Theme } from "../render/svg.js";
 import { VERSION } from "../version.js";
 import { openFile } from "./open.js";
@@ -30,6 +36,7 @@ interface CliOptions {
   config?: string;
   cache: boolean;
   stdout?: boolean;
+  showPrompt?: boolean;
   verbose?: boolean;
 }
 
@@ -87,6 +94,10 @@ export function createProgram(): Command {
     .option("--config <path>", "Path to a logictrail.config file")
     .option("--no-cache", "Re-analyze every file instead of reusing the cache")
     .option("--stdout", "Print the result to stdout instead of writing files (single format)")
+    .option(
+      "--show-prompt",
+      "Print what would be sent to Claude, without sending it or writing files",
+    )
     .option("-v, --verbose", "Show details about each step")
     .showHelpAfterError("(run logictrail --help for usage)")
     .addHelpText(
@@ -98,6 +109,7 @@ Examples:
   $ logictrail --route "POST /api/orders" --output svg,mermaid
   $ logictrail --function createSession --model static
   $ logictrail "how does authentication work?" --output mermaid --stdout
+  $ logictrail "how does checkout work?" --show-prompt   # review what Claude would see
   $ logictrail update                # re-run every saved flow against the current code
 
 Environment:
@@ -158,6 +170,28 @@ async function runCli(question: string, options: CliOptions): Promise<number> {
   }
 
   try {
+    if (options.showPrompt) {
+      const prompt = await buildFlowPrompt({
+        root,
+        ...(question.trim() ? { question } : {}),
+        target,
+        config: effective,
+        reporter,
+      });
+      process.stdout.write(`# System prompt
+
+${prompt.system}
+
+# User prompt
+
+${prompt.user}
+`);
+      reporter.success(
+        `${formatCount(prompt.system.length + prompt.user.length)} characters, ${prompt.input.candidates.length} candidates. Nothing was sent.`,
+      );
+      return 0;
+    }
+
     const selection = selectProvider({
       model: effective.llm.model,
       ...(effective.llm.effort ? { effort: effective.llm.effort } : {}),

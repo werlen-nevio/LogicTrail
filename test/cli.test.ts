@@ -45,6 +45,29 @@ describe("cli", () => {
     expect(result.stderr).toMatch(/✓ \d+ files/);
   });
 
+  it("prints the prompt without an API key, sending and writing nothing", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-prompt-"));
+    try {
+      const result = cli([
+        "how does login work?",
+        "--root",
+        ACME_SHOP,
+        "--out-dir",
+        outDir,
+        "--show-prompt",
+        "--no-cache",
+      ]);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toMatch(/^# System prompt\n\nYou are the flow analyst/);
+      expect(result.stdout).toContain("# User prompt\n\n<question>how does login work?</question>");
+      expect(result.stderr).toContain("Nothing was sent.");
+      expect(result.stderr).not.toContain("No ANTHROPIC_API_KEY found");
+      expect(await fs.readdir(outDir)).toEqual([]);
+    } finally {
+      await fs.rm(outDir, { recursive: true, force: true });
+    }
+  });
+
   it("writes every requested format", async () => {
     const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-out-"));
     try {
