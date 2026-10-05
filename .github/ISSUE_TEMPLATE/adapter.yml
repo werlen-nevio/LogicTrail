@@ -1,0 +1,49 @@
+name: Adapter request
+description: Support for a framework, library or language that LogicTrail doesn't recognize yet.
+labels: ["adapter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Framework adapters turn calls into steps such as database queries, HTTP requests or events.
+        Language adapters add a new language. See
+        [CONTRIBUTING.md](https://github.com/werlen-nevio/LogicTrail/blob/main/CONTRIBUTING.md)
+        if you'd like to write one yourself.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Framework or library
+        - Language
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Name and package
+      placeholder: "@aws-sdk/client-sqs"
+    validations:
+      required: true
+  - type: textarea
+    id: usage
+    attributes:
+      label: Typical usage
+      description: |
+        A short, realistic snippet: how the client is imported and created, and the calls that
+        should show up in a flow.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected step
+      description: |
+        What each call should become, for example "emit to queue `orders`" or "database query on
+        `users`", and which argument holds the name.
+  - type: textarea
+    id: today
+    attributes:
+      label: What LogicTrail shows today
+      description: Missing entirely, shown as a plain function call, or classified wrongly?

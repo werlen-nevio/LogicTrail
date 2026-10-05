@@ -1,0 +1,70 @@
+name: Bug report
+description: A wrong or missing step in a flow, a crash, or output that looks broken.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please don't report security issues here; see
+        [SECURITY.md](https://github.com/werlen-nevio/LogicTrail/blob/main/SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you expect, and what did LogicTrail do instead?
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command or library call, including the question and flags.
+      placeholder: npx logictrail "how does checkout work?" --output html
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code to reproduce
+      description: |
+        The smallest code that shows the problem, or a link to a public repository. For a missing
+        or wrong step, show the call and where its callee comes from (import, constructor, etc.).
+  - type: textarea
+    id: output
+    attributes:
+      label: Output or error
+      description: Error messages, stack traces or the relevant part of the JSON output.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: LogicTrail version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      options:
+        - CLI
+        - Claude Code plugin
+        - Library API
+        - HTML viewer
+    validations:
+      required: true
+  - type: dropdown
+    id: model
+    attributes:
+      label: Model
+      description: Which provider selected the flow (`--model`).
+      options:
+        - Claude
+        - static (no LLM)
+        - Not sure
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Node 22.12, Windows 11
