@@ -10,7 +10,7 @@
  * stale caches are discarded.
  */
 
-export const FACTS_VERSION = 3;
+export const FACTS_VERSION = 4;
 
 export interface FileFacts {
   /** Repository-relative path with forward slashes. */
@@ -194,9 +194,12 @@ export type HandlerRef =
 export interface RouteFact {
   method: string;
   path: string;
-  framework: "express" | "next-app" | "next-pages" | "generic";
+  framework:
+    "express" | "fastify" | "hono" | "koa" | "nestjs" | "next-app" | "next-pages" | "generic";
   /** Path of the router object the route is registered on (Express-style). */
   router?: string[];
+  /** Symbol id of the function whose parameter `router` is (a Fastify plugin). */
+  routerOwner?: string;
   /** Middleware first, the final handler last. */
   handlers: HandlerRef[];
   line: number;
@@ -205,9 +208,18 @@ export interface RouteFact {
 
 export interface MountFact {
   router: string[];
+  /** Symbol id of the function whose parameter `router` is (a Fastify plugin). */
+  routerOwner?: string;
   prefix: string;
   targets: HandlerRef[];
   line: number;
+  /**
+   * How the prefix applies. Omitted for Express-style `use()`, where targets that are not
+   * routers become middleware. "register" (Fastify plugins) only mounts routers, "base-path"
+   * prefixes the router's own routes (Hono `basePath`, Koa `prefix`) and "global-prefix"
+   * prefixes every NestJS route (`app.setGlobalPrefix`).
+   */
+  kind?: "register" | "base-path" | "global-prefix";
 }
 
 export interface ListenerFact {

@@ -4,7 +4,15 @@ import { parseSql } from "../src/analysis/adapters/data.js";
 import { joinPaths, RouteMatcher, type RouteDefinition } from "../src/analysis/routes.js";
 import { Workspace } from "../src/analysis/workspace.js";
 import { JavaScriptModuleResolver } from "../src/lang/javascript/module-resolver.js";
-import { ACME_SHOP, edgeLabels, facts, fixtureGraph, NEXT_APP, nodeByLabel } from "./helpers.js";
+import {
+  ACME_SHOP,
+  edgeLabels,
+  facts,
+  fixtureGraph,
+  NEXT_APP,
+  nodeByLabel,
+  SERVER_FRAMEWORKS,
+} from "./helpers.js";
 
 describe("module resolution", () => {
   const files = new Set([
@@ -237,6 +245,66 @@ describe("code graph on the Next.js + Drizzle sample", () => {
       "navigates:navigate /orders/:param",
     ]);
     expect(edgeLabels(graph, "CheckoutPage")).toEqual(["calls:saveDraft()", "calls:placeOrder()"]);
+  });
+});
+
+describe("code graph on Fastify, Hono, Koa and NestJS servers", () => {
+  it("composes plugin, sub-app, router and controller prefixes", async () => {
+    const { graph } = await fixtureGraph(SERVER_FRAMEWORKS);
+    expect(graph.routes.map((route) => `${route.framework} ${route.method} ${route.path}`)).toEqual(
+      expect.arrayContaining([
+        "fastify GET /health",
+        "fastify GET /api/users/:id",
+        "fastify PUT /api/users/:id",
+        "fastify PATCH /api/users/:id",
+        "fastify POST /api/auth/login",
+        "hono GET /v1/status",
+        "hono GET /v1/books",
+        "hono POST /v1/books/:id/reviews",
+        "koa GET /shop/orders/:id",
+        "koa POST /shop/orders",
+        "nestjs GET /api/accounts/:id",
+        "nestjs POST /api/accounts",
+      ]),
+    );
+    expect(graph.routes).toHaveLength(12);
+    expect([...graph.frameworks]).toEqual(
+      expect.arrayContaining(["fastify", "hono", "koa", "nestjs"]),
+    );
+  });
+
+  it("resolves handlers, hooks and middleware", async () => {
+    const { graph } = await fixtureGraph(SERVER_FRAMEWORKS);
+    expect(edgeLabels(graph, "GET /api/users/:id")).toEqual([
+      "calls:requireAuth()",
+      "calls:getUser()",
+    ]);
+    expect(edgeLabels(graph, "POST /api/auth/login")).toEqual(["calls:login()"]);
+    // app.use("*", timing) runs before every route of the app, including mounted sub-apps.
+    expect(edgeLabels(graph, "POST /v1/books/:id/reviews")).toEqual([
+      "calls:timing()",
+      "calls:validateReview()",
+      "calls:POST /v1/books/:id/reviews handler",
+    ]);
+    expect(edgeLabels(graph, "GET /shop/orders/:id")).toEqual([
+      "calls:requireUser()",
+      "calls:GET /shop/orders/:id handler",
+    ]);
+    expect(edgeLabels(graph, "GET /api/accounts/:id")).toEqual([
+      "calls:AccountsController.findOne()",
+    ]);
+    // The service is injected through the controller's constructor.
+    expect(edgeLabels(graph, "AccountsController.findOne()")).toEqual([
+      "calls:AccountsService.findOne()",
+    ]);
+  });
+
+  it("links client requests to the composed routes", async () => {
+    const { graph } = await fixtureGraph(SERVER_FRAMEWORKS);
+    expect(edgeLabels(graph, "fetchUser()")).toEqual(["requests:GET /api/users/:id"]);
+    expect(edgeLabels(graph, "postReview()")).toEqual(["requests:POST /v1/books/:id/reviews"]);
+    expect(edgeLabels(graph, "fetchOrder()")).toEqual(["requests:GET /shop/orders/:id"]);
+    expect(edgeLabels(graph, "fetchAccount()")).toEqual(["requests:GET /api/accounts/:id"]);
   });
 });
 

@@ -9,6 +9,7 @@ import type {
   InitSummary,
   MemberRef,
   PropertyFact,
+  RouteFact,
   SymbolFact,
   SymbolKind,
 } from "../../indexer/facts.js";
@@ -41,6 +42,7 @@ const ROUTER_PACKAGES = new Set([
   "express",
   "fastify",
   "hono",
+  "koa",
   "@koa/router",
   "koa-router",
   "elysia",
@@ -48,7 +50,18 @@ const ROUTER_PACKAGES = new Set([
   "restify",
 ]);
 const NON_ROUTER_PACKAGES = new Set(["axios", "ky", "got", "superagent", "ofetch", "supertest"]);
-const ROUTER_NAME = /^(app|server|router|routes|.+Router|.+Routes)$/;
+const ROUTER_FRAMEWORKS = new Map<string, RouteFact["framework"]>([
+  ["express", "express"],
+  ["fastify", "fastify"],
+  ["hono", "hono"],
+  ["koa", "koa"],
+  ["@koa/router", "koa"],
+  ["koa-router", "koa"],
+]);
+const ROUTER_NAME = /^(app|server|fastify|router|routes|.+Router|.+Routes)$/;
+/** Fastify route options that run before the handler. */
+const ROUTE_HOOKS = new Set(["onRequest", "preParsing", "preValidation", "preHandler"]);
+const NEST_METHODS = new Set(["Get", "Post", "Put", "Patch", "Delete", "All", "Options", "Head"]);
 const REQUEST_PARAM = /^(req|request|ctx|c|context)$/;
 const LISTENER_METHODS = new Set(["on", "once", "addListener", "subscribe"]);
 const UI_EMITTERS = new Set(["window", "document"]);
@@ -97,6 +110,7 @@ class FileExtractor {
   private readonly usedIds = new Set<string>();
   private readonly requireDeclarations = new Set<ts.VariableDeclaration>();
   private readonly fileStem: string;
+  private importedFrameworks: Set<RouteFact["framework"]> | undefined;
 
   constructor(
     private readonly filePath: string,
@@ -605,6 +619,7 @@ class FileExtractor {
     const basePath = base ? getPath(base.expression) : undefined;
     if (basePath) info.extends = basePath;
     classSymbol.classInfo = info;
+    const controllerPaths = this.nestControllerPaths(node);
 
     for (const member of node.members) {
       const memberName = member.name ? propertyNameText(member.name) : undefined;
@@ -620,6 +635,7 @@ class FileExtractor {
           declarationNode: member,
         });
         this.walkFunction(member, method);
+        if (controllerPaths) this.nestRoutes(member, method, controllerPaths);
       } else if (ts.isConstructorDeclaration(member)) {
         for (const parameter of member.parameters) {
           const isProperty =
@@ -691,6 +707,52 @@ class FileExtractor {
     return { typeName, ...(typeArgs && typeArgs.length > 0 ? { typeArgs } : {}) };
   }
 
+  /** `@Controller("users")` prefixes, or undefined when the class is no NestJS controller. */
+  private nestControllerPaths(node: ts.ClassLikeDeclaration): string[] | undefined {
+    const controller = this.nestDecorators(node).find((entry) => entry.name === "Controller");
+    return controller ? nestPaths(controller.call.arguments[0]) : undefined;
+  }
+
+  /** NestJS `@Get(":id")`-style routes on a controller method. */
+  private nestRoutes(
+    member: ts.MethodDeclaration,
+    method: SymbolFact,
+    prefixes: readonly string[],
+  ): void {
+    for (const { name, call, decorator } of this.nestDecorators(member)) {
+      if (!NEST_METHODS.has(name)) continue;
+      for (const prefix of prefixes) {
+        for (const routePath of nestPaths(call.arguments[0]) ?? []) {
+          this.facts.routes.push({
+            method: name.toUpperCase(),
+            path: joinUrl(prefix, routePath),
+            framework: "nestjs",
+            handlers: [{ kind: "symbol", symbol: method.id }],
+            line: lineOf(this.sf, decorator),
+            text: textOf(this.sf, decorator, 100),
+          });
+        }
+      }
+    }
+  }
+
+  /** `@Name(...)` decorators imported from @nestjs/common, by imported name. */
+  private nestDecorators(
+    node: ts.Node,
+  ): { name: string; call: ts.CallExpression; decorator: ts.Decorator }[] {
+    const decorators = ts.canHaveDecorators(node) ? (ts.getDecorators(node) ?? []) : [];
+    const result: { name: string; call: ts.CallExpression; decorator: ts.Decorator }[] = [];
+    for (const decorator of decorators) {
+      const call = decorator.expression;
+      if (!ts.isCallExpression(call) || !ts.isIdentifier(call.expression)) continue;
+      const imported = this.imports.get(call.expression.text);
+      if (imported?.source === "@nestjs/common") {
+        result.push({ name: imported.imported, call, decorator });
+      }
+    }
+    return result;
+  }
+
   private variableDeclaration(
     declaration: ts.VariableDeclaration,
     scope: SymbolFact | undefined,
@@ -719,6 +781,7 @@ class FileExtractor {
       ? unwrapExpression(declaration.initializer)
       : undefined;
     const init = summarizeInit(this.sf, initializer);
+    if (initializer) this.basePathMount(name, initializer, scope);
     if (!scope) {
       const binding: BindingFact = { name, line: lineOf(this.sf, declaration), init };
       if (init.kind === "string") binding.stringValue = init.value;
@@ -753,6 +816,61 @@ class FileExtractor {
       /^with[A-Z]/.test(last) ||
       (topLevel && callee.length === 1 && value.arguments.length === 1);
     return isWrapper ? functions[0] : undefined;
+  }
+
+  /**
+   * Hono `new Hono().basePath("/api")` and Koa `new Router({ prefix: "/api" })` prefix the
+   * router's own routes; Hono `app.basePath("/api")` mounts the new router under `app`.
+   */
+  private basePathMount(
+    name: string,
+    initializer: ts.Expression,
+    scope: SymbolFact | undefined,
+  ): void {
+    const line = lineOf(this.sf, initializer);
+    if (ts.isCallExpression(initializer)) {
+      const callee = unwrapExpression(initializer.expression);
+      const prefixArg = initializer.arguments[0];
+      if (!ts.isPropertyAccessExpression(callee) || callee.name.text !== "basePath") return;
+      if (!prefixArg || !ts.isStringLiteralLike(prefixArg)) return;
+      const parent = getPath(callee.expression);
+      if (parent) {
+        if (this.routerFramework(parent, scope) !== "hono") return;
+        const target: HandlerRef = { kind: "path", path: [name] };
+        this.facts.mounts.push({ router: parent, prefix: prefixArg.text, targets: [target], line });
+        return;
+      }
+      const created = unwrapExpression(callee.expression);
+      const constructor = ts.isNewExpression(created) ? getPath(created.expression) : undefined;
+      if (this.importSource(constructor?.[0] ?? "") !== "hono") return;
+      this.facts.mounts.push({
+        router: [name],
+        prefix: prefixArg.text,
+        targets: [],
+        line,
+        kind: "base-path",
+      });
+      return;
+    }
+    if (!ts.isNewExpression(initializer)) return;
+    const constructor = getPath(initializer.expression);
+    if (ROUTER_FRAMEWORKS.get(this.importSource(constructor?.[0] ?? "") ?? "") !== "koa") return;
+    const optionsArg = initializer.arguments?.[0];
+    const options = optionsArg ? unwrapExpression(optionsArg) : undefined;
+    if (!options || !ts.isObjectLiteralExpression(options)) return;
+    for (const property of options.properties) {
+      if (!ts.isPropertyAssignment(property) || propertyNameText(property.name) !== "prefix")
+        continue;
+      const prefix = unwrapExpression(property.initializer);
+      if (!ts.isStringLiteralLike(prefix)) continue;
+      this.facts.mounts.push({
+        router: [name],
+        prefix: prefix.text,
+        targets: [],
+        line,
+        kind: "base-path",
+      });
+    }
   }
 
   private objectMembers(
@@ -847,6 +965,16 @@ class FileExtractor {
 
     if (HTTP_METHODS.has(method)) return this.routeRegistration(call, callee, scope);
     if (method === "use") return this.mountRegistration(call, callee, scope);
+    if (method === "route") {
+      // Fastify `fastify.route({ ... })` or Hono `app.route("/prefix", subApp)`.
+      const first = call.arguments[0];
+      if (call.arguments.length === 1) return this.routeOptionsRegistration(call, callee, scope);
+      if (call.arguments.length === 2 && first && ts.isStringLiteralLike(first))
+        return this.mountRegistration(call, callee, scope);
+      return false;
+    }
+    if (method === "register") return this.pluginRegistration(call, callee, scope);
+    if (method === "setGlobalPrefix") return this.globalPrefix(call, callee, scope);
     if (LISTENER_METHODS.has(method)) return this.listenerRegistration(call, callee, scope);
     if (method === "process") return this.queueProcessor(call, callee, scope);
     return false;
@@ -894,23 +1022,108 @@ class FileExtractor {
     const lastHandler = handlerArgs[handlerArgs.length - 1]?.at(-1);
     if (!this.isRouter(routerPath, scope, lastHandler)) return false;
 
+    const framework = this.routerFramework(routerPath, scope);
+    const routerOwner = this.routerOwner(routerPath, scope);
     for (const [index, entry] of methods.entries()) {
       const verb = entry.method.toUpperCase();
       const handlers: HandlerRef[] = [];
       for (const arg of handlerArgs[index] ?? []) {
-        handlers.push(...this.handlerRefs(arg, `${verb} ${routePath}`, scope));
+        handlers.push(...this.routeArgRefs(arg, `${verb} ${routePath}`, scope));
       }
       this.facts.routes.push({
         method: verb,
         path: routePath,
-        framework: "express",
+        framework,
         router: routerPath,
+        ...(routerOwner ? { routerOwner } : {}),
         handlers,
         line: lineOf(this.sf, entry.call),
         text: textOf(this.sf, entry.call, 100),
       });
     }
     return true;
+  }
+
+  /** Fastify `fastify.route({ method: "GET", url: "/x", preHandler, handler })`. */
+  private routeOptionsRegistration(
+    call: ts.CallExpression,
+    callee: ts.PropertyAccessExpression,
+    scope: SymbolFact | undefined,
+  ): boolean {
+    const options = call.arguments[0] ? unwrapExpression(call.arguments[0]) : undefined;
+    const routerPath = getPath(callee.expression);
+    if (!options || !routerPath || !ts.isObjectLiteralExpression(options)) return false;
+    const methods: string[] = [];
+    let routePath: string | undefined;
+    let handler: ts.Expression | undefined;
+    for (const property of options.properties) {
+      if (!ts.isPropertyAssignment(property)) continue;
+      const key = propertyNameText(property.name);
+      const value = unwrapExpression(property.initializer);
+      if (key === "method") {
+        const values = ts.isArrayLiteralExpression(value) ? value.elements : [value];
+        for (const element of values) {
+          if (ts.isStringLiteralLike(element)) methods.push(element.text.toUpperCase());
+        }
+      } else if ((key === "url" || key === "path") && ts.isStringLiteralLike(value)) {
+        routePath = value.text;
+      } else if (key === "handler") {
+        handler = value;
+      }
+    }
+    if (methods.length === 0 || !routePath?.startsWith("/")) return false;
+    if (!this.isRouter(routerPath, scope, handler)) return false;
+    const framework = this.routerFramework(routerPath, scope);
+    const routerOwner = this.routerOwner(routerPath, scope);
+    const handlers = this.routeArgRefs(options, `${methods.join(",")} ${routePath}`, scope);
+    for (const method of methods) {
+      this.facts.routes.push({
+        method,
+        path: routePath,
+        framework,
+        router: routerPath,
+        ...(routerOwner ? { routerOwner } : {}),
+        handlers,
+        line: lineOf(this.sf, call),
+        text: textOf(this.sf, call, 100),
+      });
+    }
+    return true;
+  }
+
+  /** Handler refs of one route argument; a Fastify options object gives its hooks and handler. */
+  private routeArgRefs(
+    arg: ts.Expression,
+    name: string,
+    scope: SymbolFact | undefined,
+  ): HandlerRef[] {
+    const value = unwrapExpression(arg);
+    if (!ts.isObjectLiteralExpression(value)) return this.handlerRefs(arg, name, scope);
+    const hooks: HandlerRef[] = [];
+    const handler: HandlerRef[] = [];
+    for (const property of value.properties) {
+      const key = property.name ? propertyNameText(property.name) : undefined;
+      if (key !== "handler" && !ROUTE_HOOKS.has(key ?? "")) continue;
+      const refs = key === "handler" ? handler : hooks;
+      if (ts.isPropertyAssignment(property)) {
+        refs.push(...this.handlerRefs(property.initializer, name, scope));
+      } else if (ts.isShorthandPropertyAssignment(property)) {
+        refs.push({ kind: "path", path: [property.name.text] });
+      } else if (ts.isMethodDeclaration(property)) {
+        const symbol = this.createSymbol({
+          name,
+          kind: "handler",
+          node: property,
+          scope,
+          scopeKind: scope ? "nested" : "top",
+          docNode: property,
+          declarationNode: property,
+        });
+        this.walkFunction(property, symbol);
+        refs.push({ kind: "symbol", symbol: symbol.id });
+      }
+    }
+    return [...hooks, ...handler];
   }
 
   private mountRegistration(
@@ -924,12 +1137,80 @@ class FileExtractor {
     let prefix = "";
     const first = args[0];
     if (first && ts.isStringLiteralLike(first)) {
-      prefix = first.text;
+      // Hono middleware for every path: `app.use("*", logger())`.
+      prefix = first.text === "*" || first.text === "/*" ? "" : first.text;
       args.shift();
     }
     const targets: HandlerRef[] = [];
-    for (const arg of args) targets.push(...this.handlerRefs(arg, `use ${prefix || "/"}`, scope));
-    this.facts.mounts.push({ router: routerPath, prefix, targets, line: lineOf(this.sf, call) });
+    for (const arg of args) {
+      const mounted = koaRoutes(arg);
+      if (mounted) targets.push({ kind: "path", path: mounted });
+      else targets.push(...this.handlerRefs(arg, `use ${prefix || "/"}`, scope));
+    }
+    const routerOwner = this.routerOwner(routerPath, scope);
+    this.facts.mounts.push({
+      router: routerPath,
+      ...(routerOwner ? { routerOwner } : {}),
+      prefix,
+      targets,
+      line: lineOf(this.sf, call),
+    });
+    return true;
+  }
+
+  /** Fastify `fastify.register(plugin, { prefix: "/api" })`. */
+  private pluginRegistration(
+    call: ts.CallExpression,
+    callee: ts.PropertyAccessExpression,
+    scope: SymbolFact | undefined,
+  ): boolean {
+    const routerPath = getPath(callee.expression);
+    const [pluginArg, optionsArg] = call.arguments;
+    if (!routerPath || !pluginArg || ts.isStringLiteralLike(pluginArg)) return false;
+    if (this.routerFramework(routerPath, scope) !== "fastify") return false;
+    if (!this.isRouter(routerPath, scope, undefined)) return false;
+    let prefix = "";
+    const options = optionsArg ? unwrapExpression(optionsArg) : undefined;
+    if (options && ts.isObjectLiteralExpression(options)) {
+      for (const property of options.properties) {
+        if (!ts.isPropertyAssignment(property) || propertyNameText(property.name) !== "prefix")
+          continue;
+        const value = unwrapExpression(property.initializer);
+        if (ts.isStringLiteralLike(value)) prefix = value.text;
+      }
+    }
+    const targets = this.handlerRefs(pluginArg, `register ${prefix || "/"}`, scope);
+    const routerOwner = this.routerOwner(routerPath, scope);
+    this.facts.mounts.push({
+      router: routerPath,
+      ...(routerOwner ? { routerOwner } : {}),
+      prefix,
+      targets,
+      line: lineOf(this.sf, call),
+      kind: "register",
+    });
+    return true;
+  }
+
+  /** NestJS `app.setGlobalPrefix("api")` on an app created by `NestFactory.create()`. */
+  private globalPrefix(
+    call: ts.CallExpression,
+    callee: ts.PropertyAccessExpression,
+    scope: SymbolFact | undefined,
+  ): boolean {
+    const routerPath = getPath(callee.expression);
+    const prefixArg = call.arguments[0];
+    if (routerPath?.length !== 1 || !prefixArg || !ts.isStringLiteralLike(prefixArg)) return false;
+    const init = this.lookupInit(routerPath[0] ?? "", scope);
+    if (init?.kind !== "call" || this.importSource(init.callee[0] ?? "") !== "@nestjs/core")
+      return false;
+    this.facts.mounts.push({
+      router: routerPath,
+      prefix: prefixArg.text,
+      targets: [],
+      line: lineOf(this.sf, call),
+      kind: "global-prefix",
+    });
     return true;
   }
 
@@ -1027,6 +1308,7 @@ class FileExtractor {
     if (ts.isArrayLiteralExpression(value)) {
       return value.elements.flatMap((element) => this.handlerRefs(element, name, scope));
     }
+    if (ts.isSpreadElement(value)) return this.handlerRefs(value.expression, name, scope);
     const valuePath = getPath(value);
     if (valuePath) return [{ kind: "path", path: valuePath }];
     if (ts.isCallExpression(value)) {
@@ -1049,17 +1331,17 @@ class FileExtractor {
   ): boolean {
     const head = routerPath[0] ?? "";
     if (routerPath.length === 1) {
-      const init = this.lookupInit(head, scope);
-      if (init && (init.kind === "call" || init.kind === "new")) {
-        const source = this.importSource(init.callee[0] ?? "");
-        if (source && ROUTER_PACKAGES.has(source)) return true;
-        if (source && NON_ROUTER_PACKAGES.has(source)) return false;
-      }
+      const source = this.originPackage(head, scope);
+      if (source && ROUTER_PACKAGES.has(source)) return true;
+      if (source && NON_ROUTER_PACKAGES.has(source)) return false;
       const imported = this.imports.get(head);
       if (imported && NON_ROUTER_PACKAGES.has(imported.source)) return false;
     }
     const last = routerPath[routerPath.length - 1] ?? "";
     if (ROUTER_NAME.test(last)) return true;
+    // The instance parameter of a Fastify plugin: `async function routes(instance) { ... }`.
+    if (this.routerOwner(routerPath, scope) && this.importedRouterFrameworks().has("fastify"))
+      return true;
     if (lastHandler) {
       const handler = unwrapExpression(lastHandler);
       if (isInlineFunction(handler)) {
@@ -1069,6 +1351,59 @@ class FileExtractor {
       }
     }
     return false;
+  }
+
+  /** Package that created `name`, following chains like `const api = app.basePath("/api")`. */
+  private originPackage(name: string, scope: SymbolFact | undefined): string | undefined {
+    let current = name;
+    for (let depth = 0; depth < 4; depth++) {
+      const init = this.lookupInit(current, scope);
+      const head =
+        init?.kind === "call" || init?.kind === "new"
+          ? init.callee[0]
+          : init?.kind === "alias"
+            ? init.path[0]
+            : undefined;
+      if (!head || head === current) return undefined;
+      const source = this.importSource(head);
+      if (source) return source;
+      current = head;
+    }
+    return undefined;
+  }
+
+  /** Which server framework a router object belongs to (Express unless proven otherwise). */
+  private routerFramework(
+    routerPath: readonly string[],
+    scope: SymbolFact | undefined,
+  ): RouteFact["framework"] {
+    const head = routerPath[0] ?? "";
+    const origin = ROUTER_FRAMEWORKS.get(this.originPackage(head, scope) ?? "");
+    if (origin) return origin;
+    const imported = this.importedRouterFrameworks();
+    if (imported.size === 1) return [...imported][0] ?? "express";
+    return head === "fastify" ? "fastify" : "express";
+  }
+
+  /** Server frameworks this file imports from, including type-only imports. */
+  private importedRouterFrameworks(): Set<RouteFact["framework"]> {
+    if (!this.importedFrameworks) {
+      this.importedFrameworks = new Set();
+      for (const fact of this.facts.imports) {
+        const framework = ROUTER_FRAMEWORKS.get(fact.source);
+        if (framework) this.importedFrameworks.add(framework);
+      }
+    }
+    return this.importedFrameworks;
+  }
+
+  /** Symbol id of the enclosing function when the router is its first parameter. */
+  private routerOwner(
+    routerPath: readonly string[],
+    scope: SymbolFact | undefined,
+  ): string | undefined {
+    const head = routerPath[0];
+    return scope && head && scope.params[0] === head && !scope.locals[head] ? scope.id : undefined;
   }
 
   private lookupInit(name: string, scope: SymbolFact | undefined): InitSummary | undefined {
@@ -1231,4 +1566,39 @@ class FileExtractor {
       symbol.envVars = result.envVars;
     }
   }
+}
+
+/** Joins URL path parts like the frameworks do: "users" + ":id" -> "/users/:id". */
+function joinUrl(...parts: string[]): string {
+  const segments = parts.flatMap((part) => part.split("/")).filter((segment) => segment.length > 0);
+  return `/${segments.join("/")}`;
+}
+
+/** Literal paths of a NestJS decorator argument: none, a string, a string array or `{ path }`. */
+function nestPaths(arg: ts.Expression | undefined): string[] | undefined {
+  if (!arg) return [""];
+  const value = unwrapExpression(arg);
+  if (ts.isStringLiteralLike(value)) return [value.text];
+  if (ts.isArrayLiteralExpression(value)) {
+    const paths = value.elements.filter(ts.isStringLiteralLike).map((element) => element.text);
+    return paths.length === value.elements.length ? paths : undefined;
+  }
+  if (ts.isObjectLiteralExpression(value)) {
+    const property = value.properties.find(
+      (candidate) => candidate.name && propertyNameText(candidate.name) === "path",
+    );
+    if (!property) return [""];
+    return ts.isPropertyAssignment(property) ? nestPaths(property.initializer) : undefined;
+  }
+  return undefined;
+}
+
+/** Koa `router.routes()` / `router.middleware()` passed to `use()` mounts `router`. */
+function koaRoutes(arg: ts.Expression): string[] | undefined {
+  const value = unwrapExpression(arg);
+  if (!ts.isCallExpression(value) || value.arguments.length > 0) return undefined;
+  const callee = unwrapExpression(value.expression);
+  if (!ts.isPropertyAccessExpression(callee)) return undefined;
+  if (callee.name.text !== "routes" && callee.name.text !== "middleware") return undefined;
+  return getPath(callee.expression);
 }

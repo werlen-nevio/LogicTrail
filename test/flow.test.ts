@@ -3,7 +3,7 @@ import { resolveConfig } from "../src/config/config.js";
 import type { LogicTrailGraph } from "../src/graph/model.js";
 import { StaticProvider } from "../src/llm/static.js";
 import { analyze, NoFlowFoundError } from "../src/pipeline.js";
-import { ACME_SHOP, NEXT_APP } from "./helpers.js";
+import { ACME_SHOP, NEXT_APP, SERVER_FRAMEWORKS } from "./helpers.js";
 
 const config = resolveConfig({ cache: false });
 
@@ -212,6 +212,23 @@ describe("targets", () => {
     });
     expect(labels(result.graph)).toEqual(
       expect.arrayContaining(["POST /api/orders", "OrdersController.create()", "createOrder()"]),
+    );
+  });
+
+  it("starts from a NestJS route with the global prefix", async () => {
+    const result = await analyze({
+      root: SERVER_FRAMEWORKS,
+      target: { route: "GET /api/accounts/:id" },
+      config,
+      provider: new StaticProvider(),
+    });
+    expect(labels(result.graph)).toEqual(
+      expect.arrayContaining([
+        "GET /api/accounts/:id",
+        "AccountsController.findOne()",
+        "AccountsService.findOne()",
+        "fetchAccount()",
+      ]),
     );
   });
 

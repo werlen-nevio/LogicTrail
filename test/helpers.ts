@@ -11,6 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, "..");
 export const ACME_SHOP = path.resolve(here, "../examples/acme-shop");
 export const NEXT_APP = path.resolve(here, "fixtures/next-app");
+export const SERVER_FRAMEWORKS = path.resolve(here, "fixtures/server-frameworks");
 
 export function facts(code: string, file = "src/example.ts"): FileFacts {
   return extractJavaScriptFacts({ path: file, content: code, hash: "test" });
