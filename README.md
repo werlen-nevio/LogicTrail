@@ -435,6 +435,21 @@ leaves the call out rather than guessing.
 - Files larger than 1 MB, usually generated or bundled code, are skipped.
 - Very large repositories are indexed incrementally thanks to the cache, but the first run parses
   every file.
+- In Git Bash on Windows, a route like `--route "/search"` is rewritten to a Windows path before
+  LogicTrail sees it. Include the method (`--route "GET /search"`) or set `MSYS_NO_PATHCONV=1`.
+
+### Performance
+
+Measured with `--model static` on Windows 11, a Ryzen 7 3700X and Node 24:
+
+| Repository                                                                                   | Files | First run | Cached run | Peak memory |
+| -------------------------------------------------------------------------------------------- | ----: | --------: | ---------: | ----------: |
+| Express API ([realworld](https://github.com/gothinkster/node-express-realworld-example-app)) |    38 |     1.0 s |      0.8 s |     ~125 MB |
+| Next.js store ([vercel/commerce](https://github.com/vercel/commerce))                        |    66 |     1.0 s |     0.85 s |     ~130 MB |
+| Turborepo monorepo ([cal.com](https://github.com/calcom/cal.com), 11.5k symbols)             | 5,015 |       9 s |      3.5 s |     ~400 MB |
+
+The cache lives in `.logictrail/cache` (about 32 MB for cal.com) and is reused automatically.
+`--no-cache` parses every file again.
 
 ## Roadmap
 
