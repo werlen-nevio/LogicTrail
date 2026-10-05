@@ -1,5 +1,5 @@
 // Builds the project site into _site/ for GitHub Pages: the pages in site/, the example viewers
-// from docs/examples, the brand icons, LogicTrail's query-term code bundled for the browser, the
+// from docs/examples, the brand icons, the graph's JSON Schema, LogicTrail's query-term code bundled for the browser, the
 // sample flows the landing page's demo draws from, and CHANGELOG.md rendered into the page.
 // Run after `npm run build` (it reads dist/): npm run site
 import fs from "node:fs";
@@ -28,6 +28,9 @@ for (const name of ["logictrail-horizontal.svg", "logictrail-horizontal-dark.svg
   copy(`docs/brand/logo/${name}`, `assets/brand/${name}`);
 }
 copy("docs/brand/social/logictrail-social.png", "og.png");
+
+// The graph's JSON Schema, at the URL in every JSON output's $schema (GRAPH_SCHEMA_URL).
+copy("schema/graph-v1.schema.json", "schema/graph-v1.schema.json");
 
 // The plugin page plays this clip; never deploy a player without it.
 for (const clip of ["assets/logictrail-claude.mp4", "assets/logictrail-claude.jpg"]) {

@@ -1,6 +1,9 @@
+import fs from "node:fs";
+import path from "node:path";
+import { Ajv2020 } from "ajv/dist/2020.js";
 import { beforeAll, describe, expect, it } from "vitest";
 import { resolveConfig } from "../src/config/config.js";
-import type { LogicTrailGraph } from "../src/graph/model.js";
+import { GRAPH_SCHEMA_URL, type LogicTrailGraph } from "../src/graph/model.js";
 import { StaticProvider } from "../src/llm/static.js";
 import { analyze } from "../src/pipeline.js";
 import { renderHtml, safeJson } from "../src/render/html.js";
@@ -8,7 +11,7 @@ import { renderJson } from "../src/render/json.js";
 import { curvePath, layoutGraph, truncatePath } from "../src/render/layout.js";
 import { escapeLabel, renderMermaid } from "../src/render/mermaid.js";
 import { renderSvg } from "../src/render/svg.js";
-import { ACME_SHOP } from "./helpers.js";
+import { ACME_SHOP, ROOT } from "./helpers.js";
 
 let graph: LogicTrailGraph;
 
@@ -135,9 +138,24 @@ describe("html", () => {
 
 describe("json", () => {
   it("round-trips the graph and can omit snippets", () => {
-    expect(JSON.parse(renderJson(graph))).toEqual(graph);
+    expect(JSON.parse(renderJson(graph))).toEqual({ $schema: GRAPH_SCHEMA_URL, ...graph });
     const lean = JSON.parse(renderJson(graph, { snippets: false })) as LogicTrailGraph;
     expect(lean.nodes.some((node) => node.snippet)).toBe(false);
     expect(lean.schemaVersion).toBe(1);
+  });
+
+  it("matches the published JSON Schema", () => {
+    const schema = JSON.parse(
+      fs.readFileSync(path.join(ROOT, "schema/graph-v1.schema.json"), "utf8"),
+    ) as { $id: string };
+    expect(schema.$id).toBe(GRAPH_SCHEMA_URL);
+    const validate = new Ajv2020({ allErrors: true, validateFormats: false }).compile(schema);
+    const examples = fs
+      .readdirSync(path.join(ROOT, "docs/examples"))
+      .filter((name) => name.endsWith(".json"))
+      .map((name) => fs.readFileSync(path.join(ROOT, "docs/examples", name), "utf8"));
+    for (const json of [renderJson(graph), renderJson(graph, { snippets: false }), ...examples]) {
+      expect(validate(JSON.parse(json)), JSON.stringify(validate.errors)).toBe(true);
+    }
   });
 });

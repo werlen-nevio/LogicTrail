@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://werlen-nevio.github.io/LogicTrail/schema/graph-v1.schema.json",
+  "title": "LogicTrail graph",
+  "description": "A LogicTrail flow as written by `--output json` (schemaVersion 1). Mirrors src/graph/model.ts.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "query",
+    "title",
+    "entryPoints",
+    "nodes",
+    "edges",
+    "explanation",
+    "analysis"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "query": { "type": "string" },
+    "request": { "$ref": "#/$defs/FlowRequest" },
+    "title": { "type": "string" },
+    "entryPoints": {
+      "description": "Ids of the nodes the flow starts at.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/LogicNode" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/LogicEdge" } },
+    "explanation": { "description": "Markdown.", "type": "string" },
+    "analysis": {
+      "description": "Who produced the semantic layer (selection, descriptions, explanation).",
+      "type": "object",
+      "required": ["provider", "generatedAt", "repository", "stats", "warnings"],
+      "properties": {
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "repository": { "type": "string" },
+        "rootPath": {
+          "description": "Absolute path of the analyzed root, used for \"open in editor\" links.",
+          "type": "string"
+        },
+        "stats": {
+          "type": "object",
+          "required": ["files", "symbols", "relationships", "candidates"],
+          "properties": {
+            "files": { "type": "integer", "minimum": 0 },
+            "symbols": { "type": "integer", "minimum": 0 },
+            "relationships": { "type": "integer", "minimum": 0 },
+            "candidates": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "LogicNodeType": {
+      "enum": [
+        "component",
+        "function",
+        "route",
+        "service",
+        "database",
+        "external",
+        "library",
+        "condition",
+        "event",
+        "error",
+        "response"
+      ]
+    },
+    "LogicEdgeType": {
+      "enum": [
+        "calls",
+        "requests",
+        "returns",
+        "reads",
+        "writes",
+        "emits",
+        "condition",
+        "renders",
+        "triggers",
+        "navigates"
+      ]
+    },
+    "SourceEvidence": {
+      "type": "object",
+      "required": ["file", "line", "kind"],
+      "properties": {
+        "file": {
+          "description": "Repository-relative path using forward slashes.",
+          "type": "string"
+        },
+        "line": { "type": "integer", "minimum": 1 },
+        "text": { "description": "The relevant source line (trimmed).", "type": "string" },
+        "kind": {
+          "enum": ["definition", "call", "route", "reference", "emit", "listener", "branch", "exit"]
+        }
+      }
+    },
+    "SourceSnippet": {
+      "type": "object",
+      "required": ["startLine", "lines", "truncated"],
+      "properties": {
+        "startLine": { "type": "integer", "minimum": 1 },
+        "lines": { "type": "array", "items": { "type": "string" } },
+        "truncated": { "type": "boolean" }
+      }
+    },
+    "LogicNode": {
+      "type": "object",
+      "required": ["id", "type", "label"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "$ref": "#/$defs/LogicNodeType" },
+        "label": { "type": "string" },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 },
+        "description": { "type": "string" },
+        "descriptionSource": { "enum": ["llm", "doc", "static"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/SourceEvidence" } },
+        "snippet": { "$ref": "#/$defs/SourceSnippet" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "LogicEdge": {
+      "type": "object",
+      "required": ["id", "from", "to", "type", "confidence", "source"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "description": "Id of the source node.", "type": "string" },
+        "to": { "description": "Id of the target node.", "type": "string" },
+        "type": { "$ref": "#/$defs/LogicEdgeType" },
+        "label": { "type": "string" },
+        "branch": {
+          "description": "For edges that leave a condition node: the branch arm, e.g. \"yes\", \"no\", \"error\".",
+          "type": "string"
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "enum": ["static", "inferred"] },
+        "reason": {
+          "description": "For inferred edges: why the relationship is believed to exist.",
+          "type": "string"
+        },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/SourceEvidence" } }
+      }
+    },
+    "FlowRequest": {
+      "description": "How a flow was requested, so `logictrail update` can re-run it.",
+      "type": "object",
+      "required": ["maxDepth", "maxNodes"],
+      "properties": {
+        "question": { "type": "string" },
+        "file": { "type": "string" },
+        "function": { "type": "string" },
+        "route": { "type": "string" },
+        "maxDepth": { "type": "integer", "minimum": 0 },
+        "maxNodes": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

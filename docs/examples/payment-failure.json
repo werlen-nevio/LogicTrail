@@ -1,4 +1,5 @@
 {
+  "$schema": "https://werlen-nevio.github.io/LogicTrail/schema/graph-v1.schema.json",
   "schemaVersion": 1,
   "query": "what happens when a payment fails?",
   "request": {

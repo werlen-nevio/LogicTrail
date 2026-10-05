@@ -8,6 +8,7 @@ on:
     paths:
       - site/**
       - docs/**
+      - schema/**
       - CHANGELOG.md
       - package.json
       - src/query/terms.ts

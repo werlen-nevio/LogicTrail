@@ -8,6 +8,7 @@ import { extractJavaScriptFacts } from "../src/lang/javascript/extract.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
+export const ROOT = path.resolve(here, "..");
 export const ACME_SHOP = path.resolve(here, "../examples/acme-shop");
 export const NEXT_APP = path.resolve(here, "fixtures/next-app");
 

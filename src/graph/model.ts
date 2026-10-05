@@ -8,6 +8,10 @@
 
 export const GRAPH_SCHEMA_VERSION = 1;
 
+/** JSON Schema of the graph (schema/graph-v1.schema.json), referenced by `--output json`. */
+export const GRAPH_SCHEMA_URL =
+  "https://werlen-nevio.github.io/LogicTrail/schema/graph-v1.schema.json";
+
 export type LogicNodeType =
   | "component"
   | "function"
@@ -101,6 +105,8 @@ export interface FlowRequest {
 }
 
 export interface LogicTrailGraph {
+  /** Set in JSON files: the URL of the graph's JSON Schema. */
+  $schema?: string;
   schemaVersion: typeof GRAPH_SCHEMA_VERSION;
   query: string;
   /** Absent in flows written before `logictrail update` existed. */
