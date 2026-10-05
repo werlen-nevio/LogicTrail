@@ -48,49 +48,71 @@ export function joinPaths(...parts: string[]): string {
  * Computes the full URL of every route: Express-style mount prefixes are
  * composed across files (`app.use("/api", api)` + `api.use("/auth", auth)` +
  * `auth.post("/login")` = `POST /api/auth/login`) and middleware attached at
- * mount points is prepended to each route's handler chain.
+ * mount points is prepended to each route's handler chain. Fastify plugins,
+ * Hono sub-apps and Koa routers compose the same way, and NestJS controller
+ * routes get the app's global prefix.
  */
 export function composeRoutes(workspace: Workspace): RouteDefinition[] {
-  const routerKey = (file: string, path: readonly string[] | undefined): string | undefined => {
+  const routerKey = (
+    file: string,
+    path: readonly string[] | undefined,
+    owner?: string,
+  ): string | undefined => {
+    // A router received as a function parameter is keyed by that function (Fastify plugins).
+    if (owner) return `${file}#${owner}`;
     if (!path || path.length === 0) return undefined;
     if (path.length === 1 && path[0]) {
       const definition = workspace.locateDefinition(file, path[0]);
-      if (definition?.kind === "binding") return `${definition.file}#${definition.name}`;
+      if (definition) return `${definition.file}#${definition.name}`;
     }
     return `${file}#local:${path.join(".")}`;
+  };
+  const targetKey = (file: string, target: HandlerRef): string | undefined => {
+    if (target.kind === "symbol") return `${file}#${target.symbol}`;
+    return target.kind === "path" ? routerKey(file, target.path) : undefined;
   };
 
   const knownRouters = new Set<string>();
   for (const [file, facts] of workspace.files) {
     for (const route of facts.routes) {
-      const routeKey = routerKey(file, route.router);
+      const routeKey = routerKey(file, route.router, route.routerOwner);
       if (routeKey) knownRouters.add(routeKey);
     }
     for (const mount of facts.mounts) {
-      const mountKey = routerKey(file, mount.router);
+      const mountKey = routerKey(file, mount.router, mount.routerOwner);
       if (mountKey) knownRouters.add(mountKey);
     }
   }
 
   const mountsByTarget = new Map<string, MountEdge[]>();
   const routerMiddleware = new Map<string, RouterMiddleware[]>();
+  const basePaths = new Map<string, string>();
+  const globalPrefixes = new Set<string>();
   for (const [file, facts] of workspace.files) {
     for (const mount of facts.mounts) {
-      const parentKey = routerKey(file, mount.router);
+      const parentKey = routerKey(file, mount.router, mount.routerOwner);
+      if (mount.kind === "global-prefix") {
+        globalPrefixes.add(mount.prefix);
+        continue;
+      }
+      if (mount.kind === "base-path") {
+        if (parentKey) basePaths.set(parentKey, mount.prefix);
+        continue;
+      }
       const pendingMiddleware: RouteHandlerRef[] = [];
       let mountedRouter = false;
       for (const target of mount.targets) {
-        const childKey = target.kind === "path" ? routerKey(file, target.path) : undefined;
+        const childKey = targetKey(file, target);
         if (childKey && knownRouters.has(childKey) && childKey !== parentKey) {
           const edges = mountsByTarget.get(childKey) ?? [];
           edges.push({ mount, file, parentKey, middleware: [...pendingMiddleware] });
           mountsByTarget.set(childKey, edges);
           mountedRouter = true;
-        } else {
+        } else if (mount.kind !== "register") {
           pendingMiddleware.push({ ref: target, file, middleware: true });
         }
       }
-      if (!mountedRouter && mount.prefix === "" && parentKey) {
+      if (!mountedRouter && mount.prefix === "" && parentKey && mount.kind !== "register") {
         const list = routerMiddleware.get(parentKey) ?? [];
         list.push({ file, line: mount.line, refs: pendingMiddleware });
         routerMiddleware.set(parentKey, list);
@@ -114,10 +136,9 @@ export function composeRoutes(workspace: Workspace): RouteDefinition[] {
     const cached = memo.get(key);
     if (cached) return cached;
     if (seen.has(key)) return [ROOT];
-    const edges = mountsByTarget.get(key);
-    if (!edges || edges.length === 0) return [ROOT];
+    const edges = mountsByTarget.get(key) ?? [];
     const nextSeen = new Set(seen).add(key);
-    const result: Mounting[] = [];
+    let result: Mounting[] = edges.length === 0 ? [ROOT] : [];
     for (const edge of edges) {
       const parents = edge.parentKey ? mountings(edge.parentKey, nextSeen) : [ROOT];
       const inherited = middlewareBefore(edge.parentKey, edge.file, edge.mount.line);
@@ -128,6 +149,13 @@ export function composeRoutes(workspace: Workspace): RouteDefinition[] {
         });
       }
     }
+    // The router's own base path (Hono `basePath`, Koa `prefix`) comes after its mount prefix.
+    const base = basePaths.get(key);
+    if (base)
+      result = result.map((mounting) => ({
+        ...mounting,
+        prefix: joinPaths(mounting.prefix, base),
+      }));
     memo.set(key, result);
     return result;
   };
@@ -148,19 +176,23 @@ export function composeRoutes(workspace: Workspace): RouteDefinition[] {
         file,
         middleware: index < route.handlers.length - 1,
       }));
-      if (route.framework !== "express" && route.framework !== "generic") {
-        add({
-          method: route.method,
-          path: route.path,
-          framework: route.framework,
-          file,
-          line: route.line,
-          text: route.text,
-          handlers: own,
-        });
+      if (!route.router) {
+        const prefixes =
+          route.framework === "nestjs" && globalPrefixes.size > 0 ? [...globalPrefixes] : [""];
+        for (const prefix of prefixes) {
+          add({
+            method: route.method,
+            path: prefix ? joinPaths(prefix, route.path) : route.path,
+            framework: route.framework,
+            file,
+            line: route.line,
+            text: route.text,
+            handlers: own,
+          });
+        }
         continue;
       }
-      const key = routerKey(file, route.router);
+      const key = routerKey(file, route.router, route.routerOwner);
       const routerLevel = middlewareBefore(key, file, route.line);
       for (const mounting of key ? mountings(key, new Set()) : [ROOT]) {
         add({

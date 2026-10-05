@@ -255,6 +255,123 @@ describe("framework registrations", () => {
     expect(symbol(result, "GET /health").kind).toBe("handler");
   });
 
+  it("extracts Fastify routes, route options and plugin prefixes", () => {
+    const result = facts(`
+      import Fastify from "fastify";
+      const app = Fastify();
+      app.get("/users/:id", { preHandler: [auth] }, getUser);
+      app.route({ method: ["PUT", "PATCH"], url: "/users/:id", handler: updateUser });
+      app.register(users, { prefix: "/api" });
+      app.register(cors);
+    `);
+    expect(
+      result.routes.map(
+        (route) =>
+          `${route.framework} ${route.method} ${route.path} [${route.handlers.map((h) => (h.kind === "path" ? h.path.join(".") : h.kind)).join(",")}]`,
+      ),
+    ).toEqual([
+      "fastify GET /users/:id [auth,getUser]",
+      "fastify PUT /users/:id [updateUser]",
+      "fastify PATCH /users/:id [updateUser]",
+    ]);
+    expect(result.mounts.map((mount) => `${mount.kind} ${mount.prefix || "/"}`)).toEqual([
+      "register /api",
+      "register /",
+    ]);
+  });
+
+  it("keys routes on a Fastify plugin's instance parameter by the plugin", () => {
+    const result = facts(`
+      import type { FastifyInstance } from "fastify";
+      export default async function users(instance: FastifyInstance) {
+        instance.get("/:id", getUser);
+      }
+    `);
+    expect(result.routes).toEqual([
+      expect.objectContaining({ framework: "fastify", router: ["instance"], routerOwner: "users" }),
+    ]);
+  });
+
+  it("extracts Hono base paths and sub-app mounts", () => {
+    const result = facts(`
+      import { Hono } from "hono";
+      const app = new Hono().basePath("/v1");
+      const admin = app.basePath("/admin");
+      admin.get("/stats", stats);
+      app.route("/books", books);
+    `);
+    expect(result.routes.map((route) => `${route.framework} ${route.path}`)).toEqual([
+      "hono /stats",
+    ]);
+    expect(result.mounts).toEqual([
+      expect.objectContaining({ router: ["app"], prefix: "/v1", kind: "base-path" }),
+      expect.objectContaining({
+        router: ["app"],
+        prefix: "/admin",
+        targets: [{ kind: "path", path: ["admin"] }],
+      }),
+      expect.objectContaining({
+        router: ["app"],
+        prefix: "/books",
+        targets: [{ kind: "path", path: ["books"] }],
+      }),
+    ]);
+  });
+
+  it("extracts Koa router prefixes and nested routers", () => {
+    const result = facts(`
+      import Router from "@koa/router";
+      const router = new Router({ prefix: "/api" });
+      router.get("/orders", ...guards, listOrders);
+      router.use("/admin", admin.routes(), admin.allowedMethods());
+    `);
+    expect(result.routes).toEqual([
+      expect.objectContaining({
+        framework: "koa",
+        path: "/orders",
+        handlers: [
+          { kind: "path", path: ["guards"] },
+          { kind: "path", path: ["listOrders"] },
+        ],
+      }),
+    ]);
+    expect(result.mounts).toEqual([
+      expect.objectContaining({ router: ["router"], prefix: "/api", kind: "base-path" }),
+      expect.objectContaining({
+        router: ["router"],
+        prefix: "/admin",
+        targets: [
+          { kind: "path", path: ["admin"] },
+          { kind: "call", path: ["admin", "allowedMethods"], text: "admin.allowedMethods()" },
+        ],
+      }),
+    ]);
+  });
+
+  it("extracts NestJS controller routes", () => {
+    const result = facts(`
+      import { Controller, Get, Post as Create } from "@nestjs/common";
+      @Controller("users")
+      export class UsersController {
+        @Get(":id") findOne() {}
+        @Create() create() {}
+        @Get(["", "all"]) list() {}
+        helper() {}
+      }
+    `);
+    expect(
+      result.routes.map((route) => `${route.framework} ${route.method} ${route.path}`),
+    ).toEqual([
+      "nestjs GET /users/:id",
+      "nestjs POST /users",
+      "nestjs GET /users",
+      "nestjs GET /users/all",
+    ]);
+    expect(result.routes[0]?.handlers).toEqual([
+      { kind: "symbol", symbol: "UsersController.findOne" },
+    ]);
+  });
+
   it("does not treat HTTP client calls as routes", () => {
     const result = facts(`
       import axios from "axios";

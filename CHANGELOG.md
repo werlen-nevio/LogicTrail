@@ -8,6 +8,14 @@ Claude Code plugin share one version number.
 
 ## [Unreleased]
 
+### Added
+
+- Routes for Fastify (`fastify.get`, `fastify.route`, route hooks and `register` prefixes), Hono
+  (`app.route` sub-apps and `basePath`), Koa (`@koa/router` and `koa-router` prefixes and nested
+  `router.routes()`) and NestJS (`@Controller` methods decorated with `@Get`, `@Post` and so on,
+  plus `app.setGlobalPrefix`). Each route records its framework and is matched by `--route` and by
+  client requests like an Express route.
+
 ## [0.2.0] - 2026-10-05
 
 ### Added
