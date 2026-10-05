@@ -5,7 +5,15 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: ["dist/", "coverage/", "examples/", "test/fixtures/", "**/.logictrail/"],
+    ignores: [
+      "dist/",
+      "coverage/",
+      "examples/",
+      "test/fixtures/",
+      "**/.logictrail/",
+      "_site/",
+      "brag-output*/",
+    ],
   },
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
@@ -42,5 +50,12 @@ export default defineConfig(
   {
     files: ["**/*.js", "**/*.mjs"],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    files: ["site/**/*.js"],
+    languageOptions: {
+      sourceType: "script",
+      globals: { ...globals.browser },
+    },
   },
 );

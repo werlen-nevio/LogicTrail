@@ -56,7 +56,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
-    "prepublishOnly": "npm run check && npm run build"
+    "prepublishOnly": "npm run check && npm run build",
+    "site": "npm run build && node scripts/build-site.mjs",
+    "site:preview": "node scripts/serve-site.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
@@ -74,6 +76,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "globals": "^17.13.0",
+    "marked": "^18.0.14",
     "prettier": "^3.9.9",
     "tsx": "^4.23.15",
     "typescript-eslint": "^8.71.0",

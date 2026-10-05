@@ -1,0 +1,128 @@
+<!doctype html>
+<!--
+  Source of logictrail-social.png (1280 x 640), the GitHub social preview and the site's og:image.
+  Re-render from the repository root with Chrome:
+  chrome --headless=new --hide-scrollbars --window-size=1280,640 --virtual-time-budget=3000
+    --screenshot=docs/brand/social/logictrail-social.png docs/brand/social/social-card.html
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LogicTrail social card</title>
+    <link rel="stylesheet" href="../../../site/assets/site.css" />
+    <style>
+      html,
+      body {
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+      }
+      .card {
+        position: relative;
+        display: grid;
+        grid-template-columns: 760px 1fr;
+        height: 640px;
+      }
+      .card .field {
+        position: relative;
+        padding: 52px 0 44px 56px;
+        justify-content: space-between;
+      }
+      .card .question {
+        font-size: 158px;
+      }
+      .card .side {
+        padding: 56px 48px 44px 40px;
+        justify-content: flex-start;
+      }
+      .card .trail {
+        margin-top: 1.25rem;
+      }
+      .card .step {
+        padding-block: 0.36rem;
+      }
+      .card .step-label {
+        font-size: 1rem;
+      }
+      .card .step-where {
+        font-size: 0.84rem;
+      }
+      .foot-row {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+      }
+      .foot-row img {
+        height: 40px;
+        width: auto;
+      }
+      .foot-row p {
+        font: 800 28px/1.1 var(--display);
+        letter-spacing: -0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="field" id="field">
+        <div class="question">
+          <span class="storm"
+            ><span class="w drop settled">how</span> <span class="w drop settled">does</span>
+            <span class="w term settled">checkout</span>
+            <span class="w drop settled">work?</span></span
+          >
+        </div>
+        <div class="foot-row">
+          <img src="../logo/logictrail-horizontal.svg" alt="LogicTrail" />
+          <p>Ask your codebase how it works.</p>
+        </div>
+      </div>
+      <div class="side">
+        <p class="terms">
+          <span class="label">Searched for</span><span class="t">checkout</span
+          ><span class="s">order</span><span class="s">cart</span><span class="s">payment</span>
+        </p>
+        <ol class="trail">
+          <li class="step hit">
+            <span class="step-label"
+              ><span><mark>Checkout</mark>Page</span><span class="step-type">component</span></span
+            ><span class="step-where">…/pages/CheckoutPage.tsx:9</span>
+          </li>
+          <li class="step hit">
+            <span class="step-label"
+              ><span>use<mark>Cart</mark>()</span><span class="step-type">function</span></span
+            ><span class="step-where">client/src/hooks/useCart.ts:4</span>
+          </li>
+          <li class="step hit">
+            <span class="step-label"
+              ><span>handle<mark>Checkout</mark>()</span
+              ><span class="step-type">function</span></span
+            ><span class="step-where">…/pages/CheckoutPage.tsx:14</span>
+          </li>
+          <li class="step hit">
+            <span class="step-label"
+              ><span>create<mark>Order</mark>()</span><span class="step-type">function</span></span
+            ><span class="step-where">client/src/api/orders.ts:8</span>
+          </li>
+          <li class="step hit">
+            <span class="step-label"
+              ><span>POST /api/<mark>orders</mark></span
+              ><span class="step-type">route</span></span
+            ><span class="step-where">server/src/routes/orders.ts:8</span>
+          </li>
+          <li class="step">
+            <span class="step-label"
+              ><span>requireAuth()</span><span class="step-type">function</span></span
+            ><span class="step-where">…/middleware/requireAuth.ts:5</span>
+          </li>
+          <li class="step hit">
+            <span class="step-label"
+              ><span><mark>Order</mark>Service.createOrder()</span
+              ><span class="step-type">service</span></span
+            ><span class="step-where">…/services/orderService.ts:9</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </body>
+</html>

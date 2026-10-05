@@ -6,3 +6,6 @@ package-lock.json
 # Fixtures stand in for third-party code; keep them exactly as written.
 examples
 test/fixtures
+_site
+.impeccable
+brag-output*

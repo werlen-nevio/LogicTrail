@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T16:00:00Z",
+  "title": "Design System: LogicTrail",
+  "extensions": {
+    "colorMeta": {
+      "waymark-yellow": { "role": "primary", "displayName": "Waymark Yellow", "canonical": "#ffc400", "tonalRamp": ["#3d2c00", "#5c4300", "#7d5c00", "#a27800", "#cc9800", "#ffc400", "#ffd95c", "#fff0c2"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#16171b", "tonalRamp": ["#16171b", "#2e3036", "#46484f", "#5d6169", "#7a7e86", "#a9adb5", "#d3d5d9", "#f4f5f6"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#ffffff", "tonalRamp": ["#16171b", "#2e3036", "#5d6169", "#8e949b", "#c4c7cc", "#e6e8eb", "#f4f5f6", "#ffffff"] },
+      "rain": { "role": "neutral", "displayName": "Rain", "canonical": "#8e949b", "tonalRamp": ["#22252a", "#383c42", "#50555c", "#6b7077", "#8e949b", "#acb1b7", "#cbcfd3", "#eaecee"] },
+      "graphite": { "role": "neutral", "displayName": "Graphite", "canonical": "#5d6169", "tonalRamp": ["#1d1f23", "#2e3036", "#454850", "#5d6169", "#7a7e86", "#9a9ea5", "#c0c3c8", "#e6e8eb"] },
+      "mist": { "role": "neutral", "displayName": "Mist", "canonical": "#e6e8eb", "tonalRamp": ["#2a2c30", "#45484d", "#63666b", "#85888d", "#a8abb0", "#c9cbcf", "#e6e8eb", "#f7f8f9"] },
+      "fog": { "role": "neutral", "displayName": "Fog", "canonical": "#f4f5f6", "tonalRamp": ["#2b2c2e", "#47494c", "#66686b", "#888a8d", "#abadb0", "#cfd0d2", "#e9eaeb", "#f4f5f6"] },
+      "ink-rule": { "role": "neutral", "displayName": "Ink Rule", "canonical": "#2e3036", "tonalRamp": ["#16171b", "#2e3036", "#46484f", "#5d6169", "#7a7e86", "#a9adb5", "#d3d5d9", "#f4f5f6"] },
+      "on-ink-2": { "role": "neutral", "displayName": "On-Ink Secondary", "canonical": "#a9adb5", "tonalRamp": ["#26282d", "#3d4046", "#565a61", "#71757d", "#8d919a", "#a9adb5", "#c9ccd1", "#e8e9ec"] }
+    },
+    "typographyMeta": {
+      "question": { "displayName": "Question", "purpose": "The editable, storming question in the hero; the settled question on the 404. Mona Sans 900 at width 75%, uppercase." },
+      "display": { "displayName": "Display", "purpose": "Section titles, uppercase; same narrow black cut for release versions, confidence figure and process numerals." },
+      "display-code": { "displayName": "Display (command)", "purpose": "Section titles that are commands, e.g. /logictrail:explain." },
+      "headline": { "displayName": "Headline", "purpose": "The page H1 under the question." },
+      "title": { "displayName": "Title", "purpose": "Definition terms, format names, process stage titles." },
+      "body": { "displayName": "Body", "purpose": "Prose in the system UI stack, capped at 62ch." },
+      "label": { "displayName": "Label", "purpose": "Tracked capitals for panel headings, nav, buttons, step types, table heads, captions." },
+      "code": { "displayName": "Code", "purpose": "Every command, identifier, path and file:line." }
+    },
+    "shadows": [
+      { "name": "state-underscore-nav", "value": "inset 0 -2px 0 #ffc400", "purpose": "Current nav link, under Ink text. The only shadow use: a state underscore, never elevation." },
+      { "name": "state-underscore-tab", "value": "inset 0 -3px 0 #ffc400", "purpose": "Selected demo tab, under Ink text." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The one easing curve: storm, tile reveal, trail carve, button tracking." },
+      { "name": "term-tile", "value": "transform scaleX 0 to 1, 0.7s ease-out, origin left", "purpose": "Yellow tile condensing behind a search term." },
+      { "name": "word-settle", "value": "color 0.6s ease-out", "purpose": "Set-aside word settling in Rain after its letters scatter." },
+      { "name": "letter-scatter", "value": "1500-1900ms seeded, ease-out", "purpose": "Letters of set-aside words lifting, scattering and settling back." },
+      { "name": "trail-carve", "value": "scaleY 0 to 1, 900ms; steps 560ms, 70ms stagger", "purpose": "Trail rule grows top-down, then steps rise in." },
+      { "name": "button-hover", "value": "letter-spacing 0.16em to 0.22em, font-stretch 100% to 112%, 0.35s ease-out", "purpose": "Buttons widen their type on hover." },
+      { "name": "reduced-motion", "value": "settled state, no transitions", "purpose": "prefers-reduced-motion shows the settled storm and trail directly." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "960px" },
+      { "name": "narrow", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid Ink, square, tracked capitals; type widens on hover.",
+      "html": "<a class=\"ds-button\" href=\"#\">Install</a>",
+      "css": ".ds-button { display: inline-flex; align-items: center; justify-content: center; min-height: 3rem; padding: 0 1.5rem; border: 1.5px solid #16171b; background: #16171b; color: #ffffff; font: 650 0.78rem/1 'Mona Sans', ui-sans-serif, system-ui, sans-serif; font-stretch: 100%; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; border-radius: 0; cursor: pointer; transition: letter-spacing 0.35s cubic-bezier(0.16, 1, 0.3, 1), font-stretch 0.35s cubic-bezier(0.16, 1, 0.3, 1); } .ds-button:hover { letter-spacing: 0.22em; font-stretch: 112%; } .ds-button:focus-visible { outline: 2px solid #16171b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Transparent with an Ink frame; Paper frame on the Ink band.",
+      "html": "<a class=\"ds-button-ghost\" href=\"#\">Install</a>",
+      "css": ".ds-button-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 3rem; padding: 0 1.5rem; border: 1.5px solid #16171b; background: transparent; color: #16171b; font: 650 0.78rem/1 'Mona Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; border-radius: 0; transition: letter-spacing 0.35s cubic-bezier(0.16, 1, 0.3, 1), font-stretch 0.35s cubic-bezier(0.16, 1, 0.3, 1); } .ds-button-ghost:hover { letter-spacing: 0.22em; font-stretch: 112%; } .ds-button-ghost:focus-visible { outline: 2px solid #16171b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Lit Button on the Ink Band",
+      "kind": "button",
+      "refersTo": "button-lit",
+      "description": "Yellow fill with Ink label, used on the single Ink band.",
+      "html": "<div class=\"ds-band-demo\"><a class=\"ds-button-lit\" href=\"#\">The plugin page</a></div>",
+      "css": ".ds-band-demo { background: #16171b; padding: 1.5rem; } .ds-button-lit { display: inline-flex; align-items: center; min-height: 3rem; padding: 0 1.5rem; border: 1.5px solid #ffc400; background: #ffc400; color: #16171b; font: 650 0.78rem/1 'Mona Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; transition: letter-spacing 0.35s cubic-bezier(0.16, 1, 0.3, 1), font-stretch 0.35s cubic-bezier(0.16, 1, 0.3, 1); } .ds-button-lit:hover { letter-spacing: 0.22em; font-stretch: 112%; } .ds-button-lit:focus-visible { outline: 2px solid #ffc400; outline-offset: 3px; }"
+    },
+    {
+      "name": "Install Panel with Command Rows",
+      "kind": "card",
+      "refersTo": "install-panel",
+      "description": "Ink-framed panel: label head, hairline-divided monospace commands with copy buttons.",
+      "html": "<div class=\"ds-install\"><div class=\"ds-install-head\"><span class=\"ds-label\">Install in Claude Code</span></div><ul class=\"ds-cmds\"><li class=\"ds-cmd\"><code>/plugin marketplace add werlen-nevio/LogicTrail</code><button class=\"ds-copy\" type=\"button\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"9\" y=\"9\" width=\"11\" height=\"11\"/><path d=\"M5 15V5h10\"/></svg>Copy</button></li><li class=\"ds-cmd\"><code>/plugin install logictrail@logictrail</code><button class=\"ds-copy\" type=\"button\" data-copied><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12l5 5 9-10\"/></svg>Copied</button></li></ul></div>",
+      "css": ".ds-install { border: 1.5px solid #16171b; background: #ffffff; color: #16171b; } .ds-install-head { padding: 0.85rem 1rem; border-bottom: 1px solid #e6e8eb; } .ds-label { font: 650 0.75rem/1.2 'Mona Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.14em; text-transform: uppercase; } .ds-cmds { margin: 0; padding: 0 1rem; list-style: none; } .ds-cmd { display: flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; border-top: 1px solid #e6e8eb; } .ds-cmd:first-child { border-top: 0; } .ds-cmd code { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9rem; white-space: nowrap; overflow-x: auto; padding: 0.6rem 0; } .ds-copy { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.25rem; padding: 0 0.7rem; border: 1px solid #e6e8eb; background: #ffffff; color: #16171b; font: 650 0.72rem/1 'Mona Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; } .ds-copy:hover { border-color: #16171b; } .ds-copy:focus-visible { outline: 2px solid #16171b; outline-offset: 3px; } .ds-copy[data-copied] { background: #ffc400; border-color: #ffc400; }"
+    },
+    {
+      "name": "Question Presets",
+      "kind": "chip",
+      "refersTo": "chip-try",
+      "description": "Square preset chips; the pressed one inverts to Ink.",
+      "html": "<div class=\"ds-tries\"><button class=\"ds-try\" type=\"button\" aria-pressed=\"false\">how does login work?</button><button class=\"ds-try\" type=\"button\" aria-pressed=\"true\">how does checkout work?</button></div>",
+      "css": ".ds-tries { display: flex; flex-wrap: wrap; gap: 0.5rem; } .ds-try { min-height: 2.25rem; padding: 0 0.85rem; border: 1px solid #e6e8eb; background: #ffffff; color: #16171b; font: 500 0.9rem/1 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; border-radius: 0; cursor: pointer; transition: border-color 0.2s; } .ds-try:hover { border-color: #16171b; } .ds-try:focus-visible { outline: 2px solid #16171b; outline-offset: 3px; } .ds-try[aria-pressed=\"true\"] { border-color: #16171b; background: #16171b; color: #ffffff; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Tracked-capital links in Graphite; current page in Ink with a yellow underscore.",
+      "html": "<nav class=\"ds-top\"><ul class=\"ds-nav\"><li><a href=\"#\" aria-current=\"page\">Claude Code</a></li><li><a href=\"#\">Demo</a></li><li><a href=\"#\">Evidence</a></li><li><a href=\"#\">Changelog</a></li></ul></nav>",
+      "css": ".ds-top { display: flex; justify-content: flex-end; min-height: 4rem; align-items: center; padding: 0 1.5rem; border-bottom: 1px solid #e6e8eb; background: #ffffff; } .ds-nav { display: flex; gap: 2rem; margin: 0; padding: 0; list-style: none; } .ds-nav a { display: inline-flex; padding-block: 0.5rem; font: 650 0.75rem/1 'Mona Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; color: #5d6169; transition: color 0.2s; } .ds-nav a:hover, .ds-nav a[aria-current=\"page\"] { color: #16171b; } .ds-nav a[aria-current=\"page\"] { box-shadow: inset 0 -2px 0 #ffc400; } .ds-nav a:focus-visible { outline: 2px solid #16171b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Storm Question (settled)",
+      "kind": "custom",
+      "refersTo": "term-tile",
+      "description": "The monumental question after the storm: set-aside words in Rain, search terms on the yellow tile.",
+      "html": "<p class=\"ds-question\"><span class=\"ds-w\">how does</span> <span class=\"ds-w ds-term\">checkout</span> <span class=\"ds-w\">work?</span></p>",
+      "css": ".ds-question { margin: 0; font-family: 'Mona Sans', ui-sans-serif, system-ui, sans-serif; font-weight: 900; font-stretch: 75%; font-size: 4.5rem; line-height: 0.88; letter-spacing: 0.006em; text-transform: uppercase; color: #16171b; } .ds-w { position: relative; color: #8e949b; transition: color 0.6s cubic-bezier(0.16, 1, 0.3, 1); } .ds-term { color: #16171b; isolation: isolate; } .ds-term::before { content: ''; position: absolute; z-index: -1; left: -0.05em; right: -0.05em; top: 0.33em; bottom: 0.27em; background: #ffc400; transform-origin: left center; transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); } .ds-question:hover .ds-term::before { transform: scaleX(1.02); }"
+    },
+    {
+      "name": "Trail",
+      "kind": "custom",
+      "refersTo": "trail",
+      "description": "Real steps joined by one Ink rule; first pill yellow, hits Ink, matched code marked yellow, file:line in Graphite.",
+      "html": "<ol class=\"ds-trail\"><li class=\"ds-step ds-hit\"><span class=\"ds-step-label\"><span><mark>Checkout</mark>Page</span><span class=\"ds-type\">Component</span></span><span class=\"ds-where\">client/src/pages/CheckoutPage.tsx:9</span></li><li class=\"ds-step ds-hit\"><span class=\"ds-step-label\"><span>use<mark>Cart</mark>()</span><span class=\"ds-type\">Function</span></span><span class=\"ds-where\">client/src/hooks/useCart.ts:4</span></li><li class=\"ds-step\"><span class=\"ds-step-label\"><span>result.error</span><span class=\"ds-type\">Condition</span></span><span class=\"ds-where\">client/src/pages/CheckoutPage.tsx:19</span></li></ol>",
+      "css": ".ds-trail { position: relative; display: grid; margin: 0; padding: 0; list-style: none; } .ds-trail::before { content: ''; position: absolute; left: 0.31rem; top: 0.6rem; bottom: 0.6rem; width: 1px; background: #16171b; } .ds-step { position: relative; display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); padding-block: 0.42rem; } .ds-step::before { content: ''; grid-row: 1 / span 2; width: 0.64rem; height: 1rem; margin-top: 0.2rem; border: 1.5px solid #16171b; border-radius: 0.32rem; background: #ffffff; } .ds-step.ds-hit::before { background: #16171b; } .ds-step:first-child::before { border-color: #ffc400; background: #ffc400; } .ds-step-label { display: flex; align-items: baseline; gap: 0.6rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92rem; line-height: 1.35; color: #16171b; } .ds-step mark { padding: 0 0.12em; background: #ffc400; color: #16171b; } .ds-type { font: 650 0.7rem/1 'Mona Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: #5d6169; } .ds-where { grid-column: 2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.78rem; color: #5d6169; } .ds-step:hover .ds-step-label { text-decoration: underline; text-decoration-color: #8e949b; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Alphabet Storm",
+    "overview": "Language becomes landscape. The visitor's question is set as monumental, narrow, black capitals; the words LogicTrail sets aside are blown aside and settle grey, the search terms condense under a Waymark Yellow tile, and the code path they match is carved beside them as a trail of real steps with file and line. Everything else on the page is a ruled sheet of white paper that holds that weather still: hairline panels, Ink frames, square controls, tracked-capital labels, monospace evidence.\n\nThe system is flat, white and dense with fact. Depth comes from ink weight (1px mist hairlines against 1.5px Ink frames) and from a single Ink-drenched band per page, never from shadows or rounded cards. Yellow is the one flash and it is always attached to Ink: a tile behind Ink letters, the first step of a trail, the first numbered item, a state underline beneath Ink text. The world refuses the dark terminal-mock hero over a three-up feature grid.\n\nThe same world carries the product film (site/assets/logictrail-claude.mp4, poster .jpg) and the social card (docs/brand/social/logictrail-social.png, source social-card.html).",
+    "keyCharacteristics": [
+      "Monumental Mona Sans at weight 900, width 75%, uppercase, for the question and section displays.",
+      "White paper divided into ruled panels by mist hairlines; Ink frames for the panels that matter.",
+      "Waymark Yellow only as a tile or underscore paired with Ink, or at full strength on the one Ink band.",
+      "Code, commands and file:line always in the monospace stack; body copy in the system UI stack.",
+      "Square corners, no shadows, motion that happens once per viewport and settles."
+    ],
+    "rules": [
+      { "name": "The Yellow Holds Ink Rule", "body": "Waymark Yellow never stands alone on white and is never text on a light ground. On paper it is a tile or underscore that always carries or underlines Ink text; only on the Ink band may it be text.", "section": "colors" },
+      { "name": "The First Step Is Yellow Rule", "body": "In any sequence (trail steps, numbered answer steps, process stages, releases) the first item alone takes the yellow tile; the rest stay Ink.", "section": "colors" },
+      { "name": "The Rain Is Large Rule", "body": "Rain grey is for large type, glyphs and strokes. Any small secondary text uses Graphite.", "section": "colors" },
+      { "name": "The One Band Rule", "body": "One Ink-drenched band per page, where hairlines switch to Ink Rule and yellow works at full strength.", "section": "colors" },
+      { "name": "The Three Voices Rule", "body": "Mona Sans displays and labels; the system UI stack explains; monospace proves. Never set code in the sans, never set body copy in Mona Sans.", "section": "typography" },
+      { "name": "The Narrow Black Rule", "body": "Monumental type is Mona Sans 900 at width 75%, uppercase, line-height under 0.9. Don't use a lighter or wider cut for displays.", "section": "typography" },
+      { "name": "The Line Weight Rule", "body": "Hairline (1px mist) divides; frame (1.5px Ink) holds. No third weight, no shadows.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do pair every yellow with Ink: a tile behind Ink text, an underscore beneath Ink text, or text on the Ink band.",
+      "Do give the first item of any sequence the yellow tile and leave the rest Ink.",
+      "Do set displays in Mona Sans 900 at width 75%, uppercase, line-height 0.88-0.9.",
+      "Do put every command, identifier and file:line in the monospace stack, and cite file and line wherever a code step appears.",
+      "Do divide with 1px mist hairlines and hold with 1.5px Ink frames.",
+      "Do keep exactly one Ink band per page, switching its hairlines to Ink Rule and its secondary text to On-Ink Secondary.",
+      "Do let motion run once and settle; ship the settled state for reduced motion."
+    ],
+    "donts": [
+      "Don't set yellow as text, or as a fill with nothing Ink on it, on a light ground.",
+      "Don't use Rain grey for small text; small secondary text is Graphite.",
+      "Don't add drop shadows or rounded corners to buttons, panels or cards.",
+      "Don't set body copy in Mona Sans or code in a sans.",
+      "Don't typeset \"LogicTrail\" beside the symbol; use the lockup files.",
+      "Don't build a dark terminal-mock hero over a three-up feature grid."
+    ]
+  }
+}

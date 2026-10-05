@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>LogicTrail: ask your codebase how it works</title>
+    <meta
+      name="description"
+      content="LogicTrail traces the path your JavaScript or TypeScript code actually takes and, in Claude Code, walks you through it with the file and line behind every step."
+    />
+    <link rel="canonical" href="https://werlen-nevio.github.io/LogicTrail/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LogicTrail" />
+    <meta property="og:title" content="LogicTrail: ask your codebase how it works" />
+    <meta
+      property="og:description"
+      content="Trace the path your code actually takes, with the file and line behind every step. A Claude Code plugin and a CLI."
+    />
+    <meta property="og:url" content="https://werlen-nevio.github.io/LogicTrail/" />
+    <meta property="og:image" content="https://werlen-nevio.github.io/LogicTrail/og.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta
+      property="og:image:alt"
+      content="The question how does checkout work? breaking into search terms above the trail of steps it leads to."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#16171B" />
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link
+      rel="preload"
+      href="assets/fonts/mona-sans.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-copy" viewBox="0 0 16 16">
+        <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+        <path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.5 3 3 7-7" /></symbol>
+      <symbol id="i-right" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" /></symbol>
+      <symbol id="i-down" viewBox="0 0 16 16"><path d="M8 3v10M4 9l4 4 4-4" /></symbol>
+      <symbol id="i-out" viewBox="0 0 16 16"><path d="M5 11l6-6M6 5h5v5" /></symbol>
+    </svg>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="top">
+      <a class="home" href="./" aria-label="LogicTrail home">
+        <img
+          src="assets/brand/logictrail-horizontal.svg"
+          alt="LogicTrail"
+          width="127"
+          height="30"
+        />
+      </a>
+      <nav aria-label="Site">
+        <ul class="nav">
+          <li><a href="claude/">Claude Code</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#evidence">Evidence</a></li>
+          <li><a href="#cli">CLI</a></li>
+          <li><a href="#changelog">Changelog</a></li>
+          <li>
+            <a href="https://github.com/werlen-nevio/LogicTrail"
+              >GitHub<svg class="icon" aria-hidden="true"><use href="#i-out" /></svg
+            ></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="field">
+          <form class="ask" id="ask" autocomplete="off">
+            <label class="sr-only" for="q"
+              >Ask the sample app a question, then press Enter to trace it</label
+            >
+            <div class="question">
+              <span class="storm" aria-hidden="true">how does checkout work?</span>
+              <textarea
+                id="q"
+                name="q"
+                rows="1"
+                maxlength="80"
+                spellcheck="false"
+                enterkeyhint="go"
+              >
+how does checkout work?</textarea>
+            </div>
+          </form>
+          <div class="tries" role="group" aria-label="Sample questions">
+            <span class="label" aria-hidden="true">Try</span>
+            <button class="try" type="button" data-question="how does login work?">
+              how does login work?
+            </button>
+            <button class="try" type="button" data-question="how does checkout work?">
+              how does checkout work?
+            </button>
+            <button class="try" type="button" data-question="what happens when a payment fails?">
+              what happens when a payment fails?
+            </button>
+            <span class="hint">or type your own</span>
+          </div>
+          <div class="lede">
+            <h1 id="hero-title">Ask your codebase how it works.</h1>
+            <p>
+              In Claude Code, <code>/logictrail:explain</code> traces the path your code actually
+              takes, through components, routes, services, database calls, events and external APIs,
+              and walks you through it with the file and line behind every step.
+            </p>
+            <div class="install">
+              <div class="install-head">
+                <h2 class="label">Install in Claude Code</h2>
+                <a href="claude/">What the plugin does</a>
+              </div>
+              <ul class="cmds">
+                <li class="cmd">
+                  <code id="cmd-market">/plugin marketplace add werlen-nevio/LogicTrail</code>
+                  <button class="copy" type="button" data-copy="cmd-market">
+                    <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg
+                    ><span>Copy</span>
+                  </button>
+                </li>
+                <li class="cmd">
+                  <code id="cmd-install">/plugin install logictrail@logictrail</code>
+                  <button class="copy" type="button" data-copy="cmd-install">
+                    <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg
+                    ><span>Copy</span>
+                  </button>
+                </li>
+              </ul>
+              <div class="then">
+                <span class="label">Then ask</span>
+                <div class="then-row">
+                  <code id="cmd-ask" data-asks="explain"
+                    >/logictrail:explain how does checkout work?</code
+                  >
+                  <button class="copy" type="button" data-copy="cmd-ask">
+                    <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg
+                    ><span>Copy</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="alt">
+              Prefer a terminal?
+              <code id="cmd-npx" data-asks="npx">npx logictrail "how does checkout work?"</code>
+            </p>
+          </div>
+        </div>
+
+        <div class="side">
+          <h2 class="label" id="trail-title">The trail, in the sample app</h2>
+          <p class="terms" id="terms" aria-label="Search terms"></p>
+          <p class="trail-more" id="trail-note" hidden></p>
+          <ol class="trail" id="trail" aria-labelledby="trail-title"></ol>
+          <p class="trail-more" id="trail-more"></p>
+          <div class="no-trail" id="no-trail" hidden>
+            <p>
+              The sample shop has no trail for that question. LogicTrail answers it on your own
+              code:
+            </p>
+            <ul class="cmds">
+              <li class="cmd">
+                <code id="cmd-npx-own" data-asks="npx"
+                  >npx logictrail "how does checkout work?"</code
+                >
+                <button class="copy" type="button" data-copy="cmd-npx-own">
+                  <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg><span>Copy</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <noscript>
+            <p class="trail-more">
+              The trail needs JavaScript. Open the
+              <a href="examples/checkout.html">checkout viewer</a> instead.
+            </p>
+          </noscript>
+          <div class="trail-foot" id="trail-foot">
+            <span id="trail-stats"></span>
+            <a href="#demo"
+              >Walk it in the live viewer<svg class="icon" aria-hidden="true">
+                <use href="#i-down" /></svg
+            ></a>
+          </div>
+        </div>
+        <p class="sr-only" role="status" id="status"></p>
+      </section>
+
+      <section class="section" id="demo" aria-labelledby="demo-title">
+        <div class="section-head">
+          <h2 class="display" id="demo-title">The real viewer, live</h2>
+          <p class="prose">
+            This is the file LogicTrail writes: one offline HTML page per question. These three come
+            from the sample shop in the repository, traced by static analysis with no API key. Click
+            a step for its source, callers and callees, or an edge for the line that proves it.
+          </p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Sample flows">
+          <button
+            class="tab"
+            role="tab"
+            id="tab-checkout"
+            aria-selected="true"
+            aria-controls="viewer"
+            data-flow="checkout"
+          >
+            how does checkout work?
+          </button>
+          <button
+            class="tab"
+            role="tab"
+            id="tab-login"
+            aria-selected="false"
+            aria-controls="viewer"
+            tabindex="-1"
+            data-flow="login"
+          >
+            how does login work?
+          </button>
+          <button
+            class="tab"
+            role="tab"
+            id="tab-payment-failure"
+            aria-selected="false"
+            aria-controls="viewer"
+            tabindex="-1"
+            data-flow="payment-failure"
+          >
+            what happens when a payment fails?
+          </button>
+          <a class="open" id="viewer-open" href="examples/checkout.html"
+            >Full screen<svg class="icon" aria-hidden="true"><use href="#i-out" /></svg
+          ></a>
+        </div>
+        <div class="viewer" id="viewer" role="tabpanel" aria-labelledby="tab-checkout">
+          <iframe id="viewer-frame" title="LogicTrail viewer: how does checkout work?"></iframe>
+        </div>
+        <ul class="demo-notes">
+          <li><kbd>/</kbd> search</li>
+          <li><kbd>↑</kbd> <kbd>↓</kbd> step through the flow</li>
+          <li><kbd>F</kbd> fit to screen</li>
+          <li><kbd>T</kbd> switch theme</li>
+        </ul>
+      </section>
+
+      <section class="section" id="evidence" aria-labelledby="evidence-title">
+        <div class="section-head">
+          <h2 class="display" id="evidence-title">Every step cites the code</h2>
+          <p class="prose">
+            An edge is drawn because a line of code makes the call. When a link is likely but no
+            line proves it, LogicTrail still shows it, dashed, with how sure it is and why.
+          </p>
+        </div>
+        <div class="specimens">
+          <figure class="specimen">
+            <figcaption class="label">Proven by a call site</figcaption>
+            <p class="edge">
+              <span>authController.login()</span
+              ><span class="via"><span class="line"></span>calls</span
+              ><span>findUserByEmail()</span>
+            </p>
+            <div>
+              <div class="callsite">
+                <span class="n">17</span><code>const user = await findUserByEmail(email);</code>
+              </div>
+              <p class="callsite-file">server/src/controllers/authController.ts:17</p>
+            </div>
+          </figure>
+          <figure class="specimen inferred">
+            <figcaption class="label">Inferred, not proven</figcaption>
+            <p class="edge">
+              <span>Stripe: paymentIntents.create</span
+              ><span class="via"><span class="line"></span>webhook</span
+              ><span>POST /api/webhooks/stripe</span>
+            </p>
+            <p class="confidence">60%</p>
+            <p class="reason">
+              “Stripe delivers webhook events to POST /api/webhooks/stripe, whose handler processes
+              Stripe webhooks.” No call site can prove it: Stripe calls the webhook from outside the
+              codebase.
+            </p>
+          </figure>
+        </div>
+        <dl class="facts">
+          <dt>Claude chooses, the code decides</dt>
+          <dd>
+            Claude picks and describes steps only inside the part of the code graph that static
+            analysis found. A step it returns that the analysis did not find is dropped.
+          </dd>
+          <dt>No API key needed</dt>
+          <dd>
+            Without <code>ANTHROPIC_API_KEY</code>, static analysis selects the flow and writes the
+            explanation from code facts and doc comments.
+          </dd>
+          <dt>What is sent to Claude</dt>
+          <dd>
+            The question, the candidate steps (names, paths, signatures, doc comments), the edges
+            between them and excerpts of the most relevant functions: about 60k characters at most.
+            <code>--model static</code> keeps everything on your machine.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="section band" id="claude" aria-labelledby="claude-title">
+        <div class="section-head">
+          <h2 class="display" id="claude-title">Built for Claude Code</h2>
+          <p class="prose">
+            Claude runs LogicTrail in your project, reads a compact outline of the flow and checks
+            the source at the steps that matter, so the answer stays on the path the code takes.
+          </p>
+        </div>
+        <div class="commands">
+          <article class="command">
+            <h3>/logictrail:explain</h3>
+            <p>
+              Ask how something works, or start from a route, a function or a file. Claude answers
+              in a few sentences, then walks the path step by step, calls out the branches and marks
+              inferred links.
+            </p>
+            <div class="transcript" role="group" aria-label="Example answer">
+              <p>
+                When Stripe reports a failed payment, the webhook marks the order failed, puts the
+                reserved stock back and emails the customer.
+              </p>
+              <ol>
+                <li>
+                  <code>POST /api/webhooks/stripe</code> runs
+                  <code>handleStripeWebhook()</code>
+                  <span class="loc">server/src/payments/stripe.ts:17</span>
+                </li>
+                <li>
+                  <code>switch (event.type)</code> sends payment_intent.payment_failed to
+                  <code>markOrderFailed()</code>
+                  <span class="loc">server/src/payments/stripe.ts:29</span>
+                </li>
+                <li>
+                  It writes <code>order.update</code>, calls <code>releaseInventory()</code> and
+                  emits
+                  <code>order.paymentFailed</code>
+                  <span class="loc">server/src/services/orderService.ts:30</span>
+                </li>
+                <li>
+                  <code>notifyPaymentFailed()</code> sends the email through Resend
+                  <span class="loc">server/src/email/send.ts:21</span>
+                </li>
+              </ol>
+            </div>
+            <p class="transcript-note">
+              An example on the sample shop, shortened. Claude's wording varies; the steps and lines
+              come from the trace.
+            </p>
+          </article>
+          <article class="command">
+            <h3>/logictrail:update</h3>
+            <p>
+              After the code changes, Claude re-runs your saved flows with the question they were
+              made with and tells you what changed in the path: new and removed steps, connections
+              gained or lost, steps that moved.
+            </p>
+            <div class="transcript" role="group" aria-label="Example update report">
+              <p>✓ what-happens-when-a-payment-fails: steps 1 added, 3 moved; edges 1 added</p>
+              <p class="add">
+                + paymentAttempt.create (database) server/src/services/orderService.ts:35
+              </p>
+              <p class="moved">~ markOrderFailed() server/src/services/orderService.ts:30 → :32</p>
+            </div>
+            <p class="transcript-note">
+              What <code>logictrail update</code> reports after a database write is added to
+              <code>markOrderFailed()</code>. Claude reads it and explains the change.
+            </p>
+          </article>
+        </div>
+        <div class="band-actions">
+          <a class="button lit" href="claude/"
+            >The plugin page<svg class="icon" aria-hidden="true"><use href="#i-right" /></svg
+          ></a>
+          <a class="button ghost" href="#top-install">Install</a>
+        </div>
+      </section>
+
+      <section class="section" id="cli" aria-labelledby="cli-title">
+        <div class="section-head">
+          <h2 class="display" id="cli-title">Or run it yourself</h2>
+          <p class="prose">
+            The same engine as a command line tool for any JavaScript or TypeScript project. It
+            needs Node.js 22 or newer, and npx runs it without installing anything.
+          </p>
+        </div>
+        <div class="cli-grid">
+          <div>
+            <div class="cli-cmd">
+              <ul class="cmds">
+                <li class="cmd">
+                  <code id="cmd-cli" data-asks="npx">npx logictrail "how does checkout work?"</code>
+                  <button class="copy" type="button" data-copy="cmd-cli">
+                    <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg
+                    ><span>Copy</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div class="table-wrap">
+              <table class="formats">
+                <thead>
+                  <tr>
+                    <th scope="col">Output</th>
+                    <th scope="col">Flag</th>
+                    <th scope="col">What you get</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">HTML</th>
+                    <td><code>--output html</code></td>
+                    <td>
+                      One offline file: pan, zoom, search, node details, source, evidence, light and
+                      dark themes, deep links.
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">SVG</th>
+                    <td><code>--output svg</code></td>
+                    <td>A standalone image with light and dark styles.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Mermaid</th>
+                    <td><code>--output mermaid</code></td>
+                    <td>A flowchart for GitHub, GitLab, Notion and docs.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">JSON</th>
+                    <td><code>--output json</code></td>
+                    <td>The full graph, with evidence and source snippets.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3 class="label">Start from anywhere</h3>
+            <ul class="starts">
+              <li>
+                <code>--route "POST /api/orders"</code
+                ><span>The flow behind an HTTP route, including its callers</span>
+              </li>
+              <li>
+                <code>--function createSession</code
+                ><span>From a function, method or component</span>
+              </li>
+              <li>
+                <code>--file src/auth/login.ts</code><span>From the entry points of a file</span>
+              </li>
+              <li>
+                <code>logictrail update</code
+                ><span>Re-run every saved flow against the current code</span>
+              </li>
+            </ul>
+            <p class="prose muted">
+              Static analysis does the selection by default. Set <code>ANTHROPIC_API_KEY</code> to
+              let Claude choose the steps and write the explanation.
+              <a href="https://github.com/werlen-nevio/LogicTrail#readme">Full documentation</a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="changelog" aria-labelledby="changelog-title">
+        <div class="section-head">
+          <h2 class="display" id="changelog-title">Changelog</h2>
+          <p class="prose">
+            The CLI and the Claude Code plugin share one version number.
+            <a href="https://github.com/werlen-nevio/LogicTrail/releases">Releases on GitHub</a>
+          </p>
+        </div>
+        <div class="releases">
+          <!-- build:changelog -->
+        </div>
+      </section>
+
+      <section class="section" id="top-install" aria-labelledby="close-title">
+        <div class="close">
+          <h2 class="display" id="close-title">Two commands away</h2>
+          <div class="install">
+            <div class="install-head">
+              <h3 class="label">In Claude Code</h3>
+              <a href="claude/">Plugin details</a>
+            </div>
+            <ul class="cmds">
+              <li class="cmd">
+                <code id="cmd-market-2">/plugin marketplace add werlen-nevio/LogicTrail</code>
+                <button class="copy" type="button" data-copy="cmd-market-2">
+                  <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg><span>Copy</span>
+                </button>
+              </li>
+              <li class="cmd">
+                <code id="cmd-install-2">/plugin install logictrail@logictrail</code>
+                <button class="copy" type="button" data-copy="cmd-install-2">
+                  <svg class="icon" aria-hidden="true"><use href="#i-copy" /></svg><span>Copy</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <img src="assets/brand/logictrail-horizontal.svg" alt="LogicTrail" width="102" height="24" />
+      <ul>
+        <li><a href="https://github.com/werlen-nevio/LogicTrail">GitHub</a></li>
+        <li><a href="https://www.npmjs.com/package/logictrail">npm</a></li>
+        <li><a href="claude/">Claude Code plugin</a></li>
+        <li><a href="#changelog">Changelog</a></li>
+      </ul>
+      <p>Version {{version}} · MIT license</p>
+    </footer>
+
+    <!-- build:flows -->
+    <script src="assets/terms.js"></script>
+    <script src="assets/storm.js"></script>
+    <script src="assets/site.js"></script>
+  </body>
+</html>

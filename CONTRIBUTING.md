@@ -22,6 +22,8 @@ Useful scripts:
 | `npm run build`                      | Compile to `dist/` and bundle the browser viewer       |
 | `npm run test:package`               | Install the packed CLI and run it (after a build)      |
 | `node scripts/generate-examples.mjs` | Regenerate `docs/examples` (run after `npm run build`) |
+| `npm run site`                       | Build the website into `_site/` (pages in `site/`)     |
+| `npm run site:preview`               | Serve `_site/` at http://localhost:4173/LogicTrail/    |
 
 Node.js 22 or newer is required.
 

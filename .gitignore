@@ -7,3 +7,7 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+_site/
+.impeccable/questions/
+.impeccable/review/
+brag-output*/

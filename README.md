@@ -6,6 +6,12 @@
 
 <p align="center"><strong>Ask your codebase how it works.</strong></p>
 
+<p align="center">
+  <a href="https://werlen-nevio.github.io/LogicTrail/">Website</a> ·
+  <a href="https://werlen-nevio.github.io/LogicTrail/claude/">Claude Code plugin</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
 ```bash
 npx logictrail "how does checkout work?"
 ```

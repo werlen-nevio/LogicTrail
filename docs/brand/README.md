@@ -83,6 +83,14 @@ uses (`ui-sans-serif, system-ui, "Segoe UI", Roboto, …`) and its monospace sta
 
 ![The logo on a README, app icon, website, terminal, sticker and social profile](presentation/in-use.png)
 
+## Social preview
+
+[`social/logictrail-social.png`](social/logictrail-social.png) (1280 × 640) is the GitHub social
+preview and the website's `og:image`: the question "how does checkout work?" with its search term
+on the yellow tile, beside the trail it leads to. Its source is
+[`social/social-card.html`](social/social-card.html), which uses the site's stylesheet; the file
+says how to render it again with Chrome.
+
 ## Notes
 
 - No trademark search has been done. Run one (e.g. WIPO Global Brand Database, USPTO, Swissreg) before registering the
