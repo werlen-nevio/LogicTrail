@@ -102,7 +102,8 @@ codebase.
 
 ## Installation
 
-LogicTrail needs Node.js 22 or newer. Run it without installing:
+LogicTrail needs Node.js 22 or newer and analyzes JavaScript and TypeScript projects. Check
+[Supported frameworks](#supported-frameworks) for what it recognizes. Run it without installing:
 
 ```bash
 npx logictrail "how does authentication work?"
@@ -222,7 +223,12 @@ Relationships that are likely but unproven say so:
 
 The question, the candidate nodes (names, file paths, signatures, doc comments), the edges
 between them, and source excerpts of the most relevant functions (about 60k characters at most).
-Use `--model static` to keep everything on your machine.
+Use `--model static` to keep everything on your machine, or `--show-prompt` to print exactly what
+would be sent without sending it (no API key needed):
+
+```bash
+npx logictrail "how does checkout work?" --show-prompt > prompt.md
+```
 
 ## Output formats
 
@@ -231,7 +237,7 @@ Use `--model static` to keep everything on your machine.
 | HTML    | `--output html`    | A single offline file: pan, zoom, search, node details, source, evidence, dark and light themes, deep links. |
 | SVG     | `--output svg`     | A standalone image with light and dark styles (`--theme light\|dark\|auto`).                                 |
 | Mermaid | `--output mermaid` | A `flowchart` for GitHub, GitLab, Notion and docs.                                                           |
-| JSON    | `--output json`    | The full graph model, with evidence and snippets.                                                            |
+| JSON    | `--output json`    | The full graph model, with evidence and snippets, described by a [JSON Schema](schema/graph-v1.schema.json). |
 
 Combine formats with commas (`--output html,mermaid`) or use `--output all`. Add `--stdout` to
 print a single format instead of writing a file:
@@ -286,6 +292,7 @@ Try them on the bundled sample: `npx logictrail "how does checkout work?" --root
 | `--name <name>`       | Output file name                                                              |
 | `--theme <theme>`     | SVG theme: `auto`, `light` or `dark`                                          |
 | `--stdout`            | Print one format to stdout instead of writing files                           |
+| `--show-prompt`       | Print what would be sent to Claude, without sending it or writing files       |
 | `--no-cache`          | Re-parse every file                                                           |
 | `--config <path>`     | Use a specific config file                                                    |
 | `-v, --verbose`       | Show seeds, skipped files and validation details                              |
@@ -423,6 +430,9 @@ leaves the call out rather than guessing.
   containers configured at runtime, functions stored in maps) are not linked. Claude may propose
   them as inferred edges.
 - Monorepo workspace packages are treated like external packages.
+- Only `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs` and `.cjs` files are read. Code in
+  `.vue`, `.svelte` or `.astro` files is not part of any flow.
+- Files larger than 1 MB, usually generated or bundled code, are skipped.
 - Very large repositories are indexed incrementally thanks to the cache, but the first run parses
   every file.
 

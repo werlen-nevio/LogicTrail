@@ -8,6 +8,14 @@ Claude Code plugin share one version number.
 
 ## [Unreleased]
 
+### Added
+
+- `--show-prompt` prints the prompt LogicTrail would send to Claude (the system prompt, the
+  candidate steps, the edges and the source excerpts) without sending it or writing any files. It
+  needs no API key. `buildFlowPrompt` does the same in the library API.
+- A JSON Schema for the graph output, `schema/graph-v1.schema.json`. JSON files point to it with
+  `$schema`, and the package exports it as `logictrail/graph.schema.json`.
+
 ## [0.2.0] - 2026-10-05
 
 ### Added
