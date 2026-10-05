@@ -1,0 +1,21 @@
+{
+  "name": "logictrail",
+  "displayName": "LogicTrail",
+  "version": "0.1.0",
+  "description": "Ask your codebase how it works. /logictrail:explain traces the execution path behind a question and walks you through it step by step, with the file and line behind every step.",
+  "author": {
+    "name": "LogicTrail contributors",
+    "url": "https://github.com/werlen-nevio/LogicTrail"
+  },
+  "homepage": "https://github.com/werlen-nevio/LogicTrail#readme",
+  "repository": "https://github.com/werlen-nevio/LogicTrail",
+  "license": "MIT",
+  "keywords": [
+    "code-flow",
+    "call-graph",
+    "static-analysis",
+    "onboarding",
+    "typescript",
+    "javascript"
+  ]
+}

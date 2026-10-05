@@ -130,6 +130,17 @@ npx logictrail "how does checkout work?"
 Add `.logictrail/` to your `.gitignore` unless you want to commit generated flows. The cache
 folder ignores itself.
 
+### In Claude Code
+
+The [LogicTrail plugin](claude-plugin) adds `/logictrail:explain`: Claude runs LogicTrail, reads the flow and walks
+you through it with the file and line behind every step.
+
+```text
+/plugin marketplace add werlen-nevio/LogicTrail
+/plugin install logictrail@logictrail
+/logictrail:explain how does checkout work?
+```
+
 ## How it works
 
 ```mermaid

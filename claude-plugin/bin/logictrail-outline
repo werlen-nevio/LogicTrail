@@ -1,0 +1,3 @@
+#!/bin/sh
+# Prints a compact outline of a LogicTrail JSON graph (see ../scripts/summarize.mjs).
+exec node "$(dirname "$0")/../scripts/summarize.mjs" "$@"

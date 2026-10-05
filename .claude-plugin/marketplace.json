@@ -1,0 +1,16 @@
+{
+  "name": "logictrail",
+  "owner": {
+    "name": "LogicTrail contributors",
+    "url": "https://github.com/werlen-nevio/LogicTrail"
+  },
+  "description": "The LogicTrail plugin for Claude Code.",
+  "plugins": [
+    {
+      "name": "logictrail",
+      "source": "./claude-plugin",
+      "description": "Ask your codebase how it works: trace the execution path behind a question, with the file and line behind every step.",
+      "category": "development"
+    }
+  ]
+}
