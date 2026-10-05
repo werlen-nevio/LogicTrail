@@ -10,9 +10,12 @@ export interface HtmlOptions {
   version: string;
 }
 
-export const LOGO_SVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 15.5C7.5 15.5 6.5 4.5 10 4.5S12.5 12 16 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="4" cy="15.5" r="2.2" fill="currentColor"/><circle cx="10" cy="4.5" r="2.2" fill="var(--lt-panel, #fff)" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="12" r="2.2" fill="currentColor"/></svg>`;
+/** The small-size cut of the logo (docs/brand/logo/logictrail-icon-small.svg), drawn on a 16 px grid. */
+const LOGO_MARK = `<rect width="16" height="16" rx="3.5" fill="#ffc400"/><path fill="#16171b" d="M3 9a2 2 0 0 1 4 0v3a2 2 0 0 1-4 0Zm6-5a2 2 0 0 1 4 0v3a2 2 0 0 1-4 0Z"/>`;
 
-const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M4 15.5C7.5 15.5 6.5 4.5 10 4.5S12.5 12 16 12" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="15.5" r="2.4" fill="#2563eb"/><circle cx="10" cy="4.5" r="2.4" fill="#fff" stroke="#2563eb" stroke-width="1.8"/><circle cx="16" cy="12" r="2.4" fill="#2563eb"/></svg>`;
+export const LOGO_SVG = `<svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true">${LOGO_MARK}</svg>`;
+
+const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">${LOGO_MARK}</svg>`;
 
 const ICONS = {
   search: "M7 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z M10.6 10.6 14 14",
