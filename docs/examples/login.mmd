@@ -1,0 +1,92 @@
+%% LogicTrail: how does login work?
+flowchart TD
+  n1["LoginPage<br/><small>client/src/pages/LoginPage.tsx:5</small>"]
+  n2["LoginForm<br/><small>client/src/components/LoginForm.tsx:8</small>"]
+  n3[/"navigate /dashboard<br/><small>client/src/pages/LoginPage.tsx:10</small>"/]
+  n4["handleSubmit()<br/><small>client/src/components/LoginForm.tsx:13</small>"]
+  n5["login()<br/><small>client/src/api/auth.ts:7</small>"]
+  n6[/"POST /api/auth/login<br/><small>server/src/routes/auth.ts:10</small>"/]
+  n7{"!response.ok"}
+  n8["loginRateLimit()<br/><small>server/src/middleware/rateLimit.ts:8</small>"]
+  n9["validateBody()<br/><small>server/src/middleware/validate.ts:5</small>"]
+  n10["authController.login()<br/><small>server/src/controllers/authController.ts:14</small>"]
+  n11(["throw Error<br/><small>client/src/api/auth.ts:15</small>"])
+  n12[("redis.incr<br/><small>server/src/middleware/rateLimit.ts:10</small>")]
+  n13{"attempts === 1"}
+  n14{"attempts #gt; MAX_ATTEMPTS"}
+  n15{"!result.success"}
+  n16[["findUserByEmail()<br/><small>server/src/services/userService.ts:9</small>"]]
+  n17{"!user"}
+  n18[("redis.expire<br/><small>server/src/middleware/rateLimit.ts:12</small>")]
+  n19(["429 Too Many Requests<br/><small>server/src/middleware/rateLimit.ts:15</small>"])
+  n20(["400 Bad Request<br/><small>server/src/middleware/validate.ts:9</small>"])
+  n21[("user.findUnique<br/><small>server/src/services/userService.ts:10</small>")]
+  n22[["recordFailedLogin()<br/><small>server/src/services/userService.ts:14</small>"]]
+  n23(["401 Unauthorized<br/><small>server/src/controllers/authController.ts:20</small>"])
+  n24["verifyPassword()<br/><small>server/src/auth/password.ts:6</small>"]
+  n25{"!valid"}
+  n26[("loginAttempt.create<br/><small>server/src/services/userService.ts:15</small>")]
+  n27["bcrypt.compare<br/><small>server/src/auth/password.ts:7</small>"]
+  n28(["401 Unauthorized<br/><small>server/src/controllers/authController.ts:26</small>"])
+  n29["createSession()<br/><small>server/src/auth/session.ts:8</small>"]
+  n30["setSessionCookie()<br/><small>server/src/auth/session.ts:20</small>"]
+  n31>"user.loggedIn<br/><small>server/src/controllers/authController.ts:31</small>"]
+  n32[["toPublicUser()<br/><small>server/src/services/userService.ts:18</small>"]]
+  n33["randomBytes<br/><small>server/src/auth/session.ts:9</small>"]
+  n34[("session.create<br/><small>server/src/auth/session.ts:10</small>")]
+  n35["on user.loggedIn handler<br/><small>server/src/events/handlers.ts:5</small>"]
+  n36[("user.update<br/><small>server/src/events/handlers.ts:6</small>")]
+  n1 --> n2
+  n1 -->|"onSuccess"| n3
+  n2 -->|"onSubmit"| n4
+  n4 --> n5
+  n5 ==> n6
+  n5 --> n7
+  n6 -->|"middleware"| n8
+  n6 -->|"middleware"| n9
+  n6 --> n10
+  n7 -.->|"yes"| n11
+  n8 --> n12
+  n8 --> n13
+  n8 --> n14
+  n9 --> n15
+  n10 --> n16
+  n10 --> n17
+  n13 -->|"yes"| n18
+  n14 -.->|"yes"| n19
+  n15 -.->|"yes"| n20
+  n16 --> n21
+  n17 -->|"yes"| n22
+  n17 -.->|"yes"| n23
+  n17 -->|"no"| n24
+  n17 -->|"no"| n25
+  n22 --> n26
+  n24 --> n27
+  n25 -->|"yes"| n22
+  n25 -.->|"yes"| n28
+  n25 -->|"no"| n29
+  n25 -->|"no"| n30
+  n25 -->|"no"| n31
+  n25 -->|"no"| n32
+  n29 --> n33
+  n29 --> n34
+  n31 -->|"listener"| n35
+  n35 --> n36
+  classDef component fill:#f5f3ff,stroke:#7c3aed,color:#18181b
+  classDef route fill:#eff6ff,stroke:#2563eb,color:#18181b
+  classDef function fill:#ffffff,stroke:#71717a,color:#18181b
+  classDef condition fill:#fefce8,stroke:#a16207,color:#18181b
+  classDef error fill:#fef2f2,stroke:#dc2626,color:#7f1d1d
+  classDef database fill:#fff7ed,stroke:#c2410c,color:#18181b
+  classDef service fill:#f0fdfa,stroke:#0d9488,color:#18181b
+  classDef library fill:#ecfeff,stroke:#0e7490,color:#18181b
+  classDef event fill:#fdf4ff,stroke:#a21caf,color:#18181b
+  class n1,n2 component
+  class n3,n6 route
+  class n4,n5,n8,n9,n10,n24,n29,n30,n35 function
+  class n7,n13,n14,n15,n17,n25 condition
+  class n11,n19,n20,n23,n28 error
+  class n12,n18,n21,n26,n34,n36 database
+  class n16,n22,n32 service
+  class n27,n33 library
+  class n31 event

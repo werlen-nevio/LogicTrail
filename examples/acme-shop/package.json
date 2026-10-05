@@ -1,0 +1,9 @@
+{
+  "name": "acme-shop",
+  "private": true,
+  "description": "Sample full-stack app used to demo and test LogicTrail. Not meant to be run.",
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}

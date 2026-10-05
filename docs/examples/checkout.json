@@ -1,0 +1,2834 @@
+{
+  "schemaVersion": 1,
+  "query": "how does checkout work?",
+  "title": "How does checkout work?",
+  "entryPoints": [
+    "client/src/pages/CheckoutPage.tsx#CheckoutPage"
+  ],
+  "nodes": [
+    {
+      "id": "client/src/pages/CheckoutPage.tsx#CheckoutPage",
+      "type": "component",
+      "label": "CheckoutPage",
+      "file": "client/src/pages/CheckoutPage.tsx",
+      "line": 9,
+      "description": "React component rendered for /checkout.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 9,
+          "kind": "definition",
+          "text": "export function CheckoutPage() {"
+        }
+      ],
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "export function CheckoutPage() {",
+          "  const navigate = useNavigate();",
+          "  const { items, shippingAddressId } = useCart();",
+          "  const [submitting, setSubmitting] = useState(false);",
+          "",
+          "  async function handleCheckout() {",
+          "    setSubmitting(true);",
+          "    const { orderId, clientSecret } = await createOrder(shippingAddressId);",
+          "    const stripe = await stripePromise;",
+          "    const result = await stripe!.confirmCardPayment(clientSecret);",
+          "    if (result.error) {",
+          "      setSubmitting(false);",
+          "      navigate(`/checkout/failed?order=${orderId}`);",
+          "      return;",
+          "    }",
+          "    navigate(`/orders/${orderId}`);",
+          "  }",
+          "",
+          "  return (",
+          "    <section>",
+          "      <h1>Checkout</h1>",
+          "      <p>{items.length} items</p>",
+          "      <button onClick={handleCheckout} disabled={submitting}>",
+          "        Pay now",
+          "      </button>",
+          "    </section>",
+          "  );",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "component",
+        "qualifiedName": "CheckoutPage",
+        "signature": "export function CheckoutPage()",
+        "async": false,
+        "pages": [
+          "/checkout"
+        ],
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "client/src/hooks/useCart.ts#useCart",
+      "type": "function",
+      "label": "useCart()",
+      "file": "client/src/hooks/useCart.ts",
+      "line": 4,
+      "description": "export function useCart()",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/hooks/useCart.ts",
+          "line": 4,
+          "kind": "definition",
+          "text": "export function useCart() {"
+        }
+      ],
+      "snippet": {
+        "startLine": 4,
+        "lines": [
+          "export function useCart() {",
+          "  const [items, setItems] = useState<{ productId: string; quantity: number }[]>([]);",
+          "  const [shippingAddressId] = useState(\"default\");",
+          "",
+          "  useEffect(() => {",
+          "    api.get(\"/cart\").then((response) => setItems(response.data.items));",
+          "  }, []);",
+          "",
+          "  return { items, shippingAddressId };",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "useCart",
+        "signature": "export function useCart()",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout",
+      "type": "function",
+      "label": "handleCheckout()",
+      "file": "client/src/pages/CheckoutPage.tsx",
+      "line": 14,
+      "description": "async function handleCheckout()",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 14,
+          "kind": "definition",
+          "text": "async function handleCheckout() {"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "  async function handleCheckout() {",
+          "    setSubmitting(true);",
+          "    const { orderId, clientSecret } = await createOrder(shippingAddressId);",
+          "    const stripe = await stripePromise;",
+          "    const result = await stripe!.confirmCardPayment(clientSecret);",
+          "    if (result.error) {",
+          "      setSubmitting(false);",
+          "      navigate(`/checkout/failed?order=${orderId}`);",
+          "      return;",
+          "    }",
+          "    navigate(`/orders/${orderId}`);",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "CheckoutPage.handleCheckout",
+        "signature": "async function handleCheckout()",
+        "async": true,
+        "parent": "CheckoutPage",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "http:GET /api/cart",
+      "type": "external",
+      "label": "GET /api/cart",
+      "description": "HTTP GET request to /cart.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/hooks/useCart.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "api.get(\"/cart\").then((response) => setItems(response.data.items));"
+        }
+      ],
+      "metadata": {
+        "service": "HTTP",
+        "method": "GET",
+        "url": "/cart",
+        "client": "axios",
+        "unmatched": true,
+        "kind": "external"
+      },
+      "file": "client/src/hooks/useCart.ts",
+      "line": 9,
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "  useEffect(() => {",
+          "    api.get(\"/cart\").then((response) => setItems(response.data.items));",
+          "  }, []);"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "client/src/api/orders.ts#createOrder",
+      "type": "function",
+      "label": "createOrder()",
+      "file": "client/src/api/orders.ts",
+      "line": 8,
+      "description": "export async function createOrder(shippingAddressId: string): Promise<CreatedOrder>",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/orders.ts",
+          "line": 8,
+          "kind": "definition",
+          "text": "export async function createOrder(shippingAddressId: string): Promise<CreatedOrder> {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function createOrder(shippingAddressId: string): Promise<CreatedOrder> {",
+          "  const response = await api.post(\"/orders\", { shippingAddressId });",
+          "  return response.data;",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "createOrder",
+        "signature": "export async function createOrder(shippingAddressId: string): Promise<CreatedOrder>",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "ext:Stripe.js:confirmCardPayment",
+      "type": "external",
+      "label": "Stripe.js: confirmCardPayment",
+      "description": "Calls Stripe.js: confirmCardPayment.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 18,
+          "kind": "call",
+          "text": "const result = await stripe!.confirmCardPayment(clientSecret);"
+        }
+      ],
+      "metadata": {
+        "service": "Stripe.js",
+        "operation": "confirmCardPayment",
+        "package": "@stripe/stripe-js",
+        "kind": "external"
+      },
+      "file": "client/src/pages/CheckoutPage.tsx",
+      "line": 18,
+      "snippet": {
+        "startLine": 17,
+        "lines": [
+          "    const stripe = await stripePromise;",
+          "    const result = await stripe!.confirmCardPayment(clientSecret);",
+          "    if (result.error) {"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "cond:client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout:19",
+      "type": "condition",
+      "label": "result.error",
+      "file": "client/src/pages/CheckoutPage.tsx",
+      "line": 19,
+      "description": "handleCheckout() branches on `result.error`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 19,
+          "kind": "branch",
+          "text": "if (result.error) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 19,
+        "lines": [
+          "    if (result.error) {",
+          "      setSubmitting(false);",
+          "      navigate(`/checkout/failed?order=${orderId}`);",
+          "      return;"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout",
+        "test": "result.error"
+      }
+    },
+    {
+      "id": "route:POST /api/orders",
+      "type": "route",
+      "label": "POST /api/orders",
+      "file": "server/src/routes/orders.ts",
+      "line": 8,
+      "description": "express route POST /api/orders.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/orders.ts",
+          "line": 8,
+          "kind": "route",
+          "text": "router.post(\"/\", validateBody(createOrderSchema), ordersController.create);"
+        }
+      ],
+      "snippet": {
+        "startLine": 7,
+        "lines": [
+          "",
+          "router.post(\"/\", validateBody(createOrderSchema), ordersController.create);",
+          "router.get(\"/:id\", ordersController.show);",
+          "",
+          "export default router;"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "method": "POST",
+        "path": "/api/orders",
+        "framework": "express",
+        "kind": "route"
+      }
+    },
+    {
+      "id": "nav:/checkout/failed",
+      "type": "route",
+      "label": "navigate /checkout/failed",
+      "description": "Client-side navigation to /checkout/failed.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 21,
+          "kind": "call",
+          "text": "navigate(`/checkout/failed?order=${orderId}`);"
+        }
+      ],
+      "metadata": {
+        "navigation": true,
+        "path": "/checkout/failed",
+        "framework": "react-router",
+        "kind": "navigation"
+      },
+      "file": "client/src/pages/CheckoutPage.tsx",
+      "line": 21,
+      "snippet": {
+        "startLine": 20,
+        "lines": [
+          "      setSubmitting(false);",
+          "      navigate(`/checkout/failed?order=${orderId}`);",
+          "      return;"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "nav:/orders/:param",
+      "type": "route",
+      "label": "navigate /orders/:param",
+      "description": "Client-side navigation to /orders/:param.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 24,
+          "kind": "call",
+          "text": "navigate(`/orders/${orderId}`);"
+        }
+      ],
+      "metadata": {
+        "navigation": true,
+        "path": "/orders/:param",
+        "framework": "react-router",
+        "kind": "navigation"
+      },
+      "file": "client/src/pages/CheckoutPage.tsx",
+      "line": 24,
+      "snippet": {
+        "startLine": 23,
+        "lines": [
+          "    }",
+          "    navigate(`/orders/${orderId}`);",
+          "  }"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/middleware/requireAuth.ts#requireAuth",
+      "type": "function",
+      "label": "requireAuth()",
+      "file": "server/src/middleware/requireAuth.ts",
+      "line": 5,
+      "description": "Rejects requests without a valid session cookie.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 5,
+          "kind": "definition",
+          "text": "export async function requireAuth(req: Request, res: Response, next: NextFunction) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "export async function requireAuth(req: Request, res: Response, next: NextFunction) {",
+          "  const sessionId = req.cookies.sid;",
+          "  const session = sessionId",
+          "    ? await db.session.findUnique({ where: { id: sessionId }, include: { user: true } })",
+          "    : null;",
+          "  if (!session || session.expiresAt < new Date()) {",
+          "    return res.status(401).json({ error: \"Not signed in\" });",
+          "  }",
+          "  req.user = session.user;",
+          "  next();",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "requireAuth",
+        "signature": "export async function requireAuth(req: Request, res: Response, next: NextFunction)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/middleware/validate.ts#validateBody",
+      "type": "function",
+      "label": "validateBody()",
+      "file": "server/src/middleware/validate.ts",
+      "line": 5,
+      "description": "Validates the request body against a zod schema.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 5,
+          "kind": "definition",
+          "text": "export function validateBody(schema: ZodType) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "export function validateBody(schema: ZodType) {",
+          "  return (req: Request, res: Response, next: NextFunction) => {",
+          "    const result = schema.safeParse(req.body);",
+          "    if (!result.success) {",
+          "      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });",
+          "    }",
+          "    req.body = result.data;",
+          "    next();",
+          "  };",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "validateBody",
+        "signature": "export function validateBody(schema: ZodType)",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/controllers/ordersController.ts#OrdersController.create",
+      "type": "function",
+      "label": "OrdersController.create()",
+      "file": "server/src/controllers/ordersController.ts",
+      "line": 10,
+      "description": "Turns the user's cart into an order and starts a Stripe payment.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 10,
+          "kind": "definition",
+          "text": "create = async (req: Request, res: Response) => {"
+        }
+      ],
+      "snippet": {
+        "startLine": 10,
+        "lines": [
+          "  create = async (req: Request, res: Response) => {",
+          "    const cart = await getCart(req.user.id);",
+          "    const validation = validateCart(cart);",
+          "    if (!validation.ok) {",
+          "      return res.status(400).json({ errors: validation.errors });",
+          "    }",
+          "",
+          "    const order = await this.orders.createOrder(req.user.id, cart);",
+          "    const payment = await createPaymentIntent(order);",
+          "",
+          "    return res.status(201).json({ orderId: order.id, clientSecret: payment.client_secret });",
+          "  };"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "method",
+        "qualifiedName": "OrdersController.create",
+        "signature": "create = async (req: Request, res: Response) =>",
+        "async": true,
+        "parent": "OrdersController",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:session:findUnique",
+      "type": "database",
+      "label": "session.findUnique",
+      "description": "Reads from session via prisma (findUnique).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 8,
+          "kind": "call",
+          "text": "? await db.session.findUnique({ where: { id: sessionId }, include: { user: true } })"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "session",
+        "operation": "findUnique",
+        "access": "read",
+        "kind": "database"
+      },
+      "file": "server/src/middleware/requireAuth.ts",
+      "line": 8,
+      "snippet": {
+        "startLine": 7,
+        "lines": [
+          "  const session = sessionId",
+          "    ? await db.session.findUnique({ where: { id: sessionId }, include: { user: true } })",
+          "    : null;"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "cond:server/src/middleware/requireAuth.ts#requireAuth:10",
+      "type": "condition",
+      "label": "!session || session.expiresAt < new Date()",
+      "file": "server/src/middleware/requireAuth.ts",
+      "line": 10,
+      "description": "requireAuth() branches on `!session || session.expiresAt < new Date()`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 10,
+          "kind": "branch",
+          "text": "if (!session || session.expiresAt < new Date()) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 10,
+        "lines": [
+          "  if (!session || session.expiresAt < new Date()) {",
+          "    return res.status(401).json({ error: \"Not signed in\" });",
+          "  }",
+          "  req.user = session.user;"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/middleware/requireAuth.ts#requireAuth",
+        "test": "!session || session.expiresAt < new Date()"
+      }
+    },
+    {
+      "id": "cond:server/src/middleware/validate.ts#validateBody:8",
+      "type": "condition",
+      "label": "!result.success",
+      "file": "server/src/middleware/validate.ts",
+      "line": 8,
+      "description": "validateBody() branches on `!result.success`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 8,
+          "kind": "branch",
+          "text": "if (!result.success) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "    if (!result.success) {",
+          "      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });",
+          "    }",
+          "    req.body = result.data;"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/middleware/validate.ts#validateBody",
+        "test": "!result.success"
+      }
+    },
+    {
+      "id": "server/src/services/cart.ts#getCart",
+      "type": "service",
+      "label": "getCart()",
+      "file": "server/src/services/cart.ts",
+      "line": 14,
+      "description": "export async function getCart(userId: string): Promise<Cart>",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/cart.ts",
+          "line": 14,
+          "kind": "definition",
+          "text": "export async function getCart(userId: string): Promise<Cart> {"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "export async function getCart(userId: string): Promise<Cart> {",
+          "  const items = await db.cartItem.findMany({ where: { userId }, include: { product: true } });",
+          "  return {",
+          "    userId,",
+          "    items: items.map((item) => ({",
+          "      productId: item.productId,",
+          "      quantity: item.quantity,",
+          "      price: item.product.price,",
+          "    })),",
+          "  };",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "getCart",
+        "signature": "export async function getCart(userId: string): Promise<Cart>",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/services/cart.ts#validateCart",
+      "type": "service",
+      "label": "validateCart()",
+      "file": "server/src/services/cart.ts",
+      "line": 27,
+      "description": "Checks that the cart is not empty and every quantity is positive.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/cart.ts",
+          "line": 27,
+          "kind": "definition",
+          "text": "export function validateCart(cart: Cart): { ok: boolean; errors: string[] } {"
+        }
+      ],
+      "snippet": {
+        "startLine": 27,
+        "lines": [
+          "export function validateCart(cart: Cart): { ok: boolean; errors: string[] } {",
+          "  const errors: string[] = [];",
+          "  if (cart.items.length === 0) errors.push(\"Cart is empty\");",
+          "  for (const item of cart.items) {",
+          "    if (item.quantity <= 0) errors.push(`Invalid quantity for ${item.productId}`);",
+          "  }",
+          "  return { ok: errors.length === 0, errors };",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "validateCart",
+        "signature": "export function validateCart(cart: Cart): { ok: boolean; errors: string[] }",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "cond:server/src/controllers/ordersController.ts#OrdersController.create:13",
+      "type": "condition",
+      "label": "!validation.ok",
+      "file": "server/src/controllers/ordersController.ts",
+      "line": 13,
+      "description": "OrdersController.create() branches on `!validation.ok`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 13,
+          "kind": "branch",
+          "text": "if (!validation.ok) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 13,
+        "lines": [
+          "    if (!validation.ok) {",
+          "      return res.status(400).json({ errors: validation.errors });",
+          "    }",
+          ""
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/controllers/ordersController.ts#OrdersController.create",
+        "test": "!validation.ok"
+      }
+    },
+    {
+      "id": "exit:server/src/middleware/requireAuth.ts:11",
+      "type": "error",
+      "label": "401 Unauthorized",
+      "file": "server/src/middleware/requireAuth.ts",
+      "line": 11,
+      "description": "requireAuth() responds with HTTP 401.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 11,
+          "kind": "exit",
+          "text": "return res.status(401).json({ error: \"Not signed in\" });"
+        }
+      ],
+      "snippet": {
+        "startLine": 10,
+        "lines": [
+          "  if (!session || session.expiresAt < new Date()) {",
+          "    return res.status(401).json({ error: \"Not signed in\" });",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/middleware/requireAuth.ts#requireAuth",
+        "status": 401
+      }
+    },
+    {
+      "id": "exit:server/src/middleware/validate.ts:9",
+      "type": "error",
+      "label": "400 Bad Request",
+      "file": "server/src/middleware/validate.ts",
+      "line": 9,
+      "description": "validateBody() responds with HTTP 400.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 9,
+          "kind": "exit",
+          "text": "return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "    if (!result.success) {",
+          "      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/middleware/validate.ts#validateBody",
+        "status": 400
+      }
+    },
+    {
+      "id": "db:prisma:cartItem:findMany",
+      "type": "database",
+      "label": "cartItem.findMany",
+      "description": "Reads from cartItem via prisma (findMany).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/cart.ts",
+          "line": 15,
+          "kind": "call",
+          "text": "const items = await db.cartItem.findMany({ where: { userId }, include: { product: true } });"
+        },
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 24,
+          "kind": "call",
+          "text": "const lines = await db.cartItem.findMany({ where: { orderId } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "cartItem",
+        "operation": "findMany",
+        "access": "read",
+        "kind": "database"
+      },
+      "file": "server/src/services/cart.ts",
+      "line": 15,
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "export async function getCart(userId: string): Promise<Cart> {",
+          "  const items = await db.cartItem.findMany({ where: { userId }, include: { product: true } });",
+          "  return {"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "exit:server/src/controllers/ordersController.ts:14",
+      "type": "error",
+      "label": "400 Bad Request",
+      "file": "server/src/controllers/ordersController.ts",
+      "line": 14,
+      "description": "OrdersController.create() responds with HTTP 400.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 14,
+          "kind": "exit",
+          "text": "return res.status(400).json({ errors: validation.errors });"
+        }
+      ],
+      "snippet": {
+        "startLine": 13,
+        "lines": [
+          "    if (!validation.ok) {",
+          "      return res.status(400).json({ errors: validation.errors });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/controllers/ordersController.ts#OrdersController.create",
+        "status": 400
+      }
+    },
+    {
+      "id": "server/src/services/orderService.ts#OrderService.createOrder",
+      "type": "service",
+      "label": "OrderService.createOrder()",
+      "file": "server/src/services/orderService.ts",
+      "line": 9,
+      "description": "Persists a pending order and reserves stock for its items.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 9,
+          "kind": "definition",
+          "text": "async createOrder(userId: string, cart: Cart) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "  async createOrder(userId: string, cart: Cart) {",
+          "    const order = await db.order.create({",
+          "      data: { userId, status: \"pending\", total: cartTotal(cart) },",
+          "    });",
+          "    await reserveInventory(cart.items);",
+          "    orderEvents.emit(\"order.created\", { orderId: order.id });",
+          "    return order;",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "method",
+        "qualifiedName": "OrderService.createOrder",
+        "signature": "async createOrder(userId: string, cart: Cart)",
+        "async": true,
+        "parent": "OrderService",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/payments/stripe.ts#createPaymentIntent",
+      "type": "function",
+      "label": "createPaymentIntent()",
+      "file": "server/src/payments/stripe.ts",
+      "line": 8,
+      "description": "Creates a Stripe PaymentIntent for the order total.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 8,
+          "kind": "definition",
+          "text": "export async function createPaymentIntent(order: { id: string; total: number }) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function createPaymentIntent(order: { id: string; total: number }) {",
+          "  return stripe.paymentIntents.create({",
+          "    amount: order.total,",
+          "    currency: \"usd\",",
+          "    metadata: { orderId: order.id },",
+          "  });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "createPaymentIntent",
+        "signature": "export async function createPaymentIntent(order: { id: string; total: number })",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/services/cart.ts#cartTotal",
+      "type": "service",
+      "label": "cartTotal()",
+      "file": "server/src/services/cart.ts",
+      "line": 36,
+      "description": "export function cartTotal(cart: Cart): number",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/cart.ts",
+          "line": 36,
+          "kind": "definition",
+          "text": "export function cartTotal(cart: Cart): number {"
+        }
+      ],
+      "snippet": {
+        "startLine": 36,
+        "lines": [
+          "export function cartTotal(cart: Cart): number {",
+          "  return cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "cartTotal",
+        "signature": "export function cartTotal(cart: Cart): number",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:order:create",
+      "type": "database",
+      "label": "order.create",
+      "description": "Writes to order via prisma (create).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "const order = await db.order.create({"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "order",
+        "operation": "create",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 10,
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "  async createOrder(userId: string, cart: Cart) {",
+          "    const order = await db.order.create({",
+          "      data: { userId, status: \"pending\", total: cartTotal(cart) },"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/services/inventory.ts#reserveInventory",
+      "type": "service",
+      "label": "reserveInventory()",
+      "file": "server/src/services/inventory.ts",
+      "line": 11,
+      "description": "Decrements stock for every cart line; fails if a product runs out.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 11,
+          "kind": "definition",
+          "text": "export async function reserveInventory(items: CartLine[]) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 11,
+        "lines": [
+          "export async function reserveInventory(items: CartLine[]) {",
+          "  for (const item of items) {",
+          "    const product = await db.product.update({",
+          "      where: { id: item.productId },",
+          "      data: { stock: { decrement: item.quantity } },",
+          "    });",
+          "    if (product.stock < 0) {",
+          "      throw new OutOfStockError(item.productId);",
+          "    }",
+          "  }",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "reserveInventory",
+        "signature": "export async function reserveInventory(items: CartLine[])",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "event:event:order.created",
+      "type": "event",
+      "label": "order.created",
+      "description": "Event \"order.created\".",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 14,
+          "kind": "emit",
+          "text": "orderEvents.emit(\"order.created\", { orderId: order.id });"
+        }
+      ],
+      "metadata": {
+        "channel": "event",
+        "event": "order.created",
+        "system": "events",
+        "kind": "event"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 14,
+      "snippet": {
+        "startLine": 13,
+        "lines": [
+          "    await reserveInventory(cart.items);",
+          "    orderEvents.emit(\"order.created\", { orderId: order.id });",
+          "    return order;"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "ext:Stripe:paymentIntents.create",
+      "type": "external",
+      "label": "Stripe: paymentIntents.create",
+      "description": "Calls Stripe: paymentIntents.create.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "return stripe.paymentIntents.create({"
+        }
+      ],
+      "metadata": {
+        "service": "Stripe",
+        "operation": "paymentIntents.create",
+        "package": "stripe",
+        "kind": "external"
+      },
+      "file": "server/src/payments/stripe.ts",
+      "line": 9,
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function createPaymentIntent(order: { id: string; total: number }) {",
+          "  return stripe.paymentIntents.create({",
+          "    amount: order.total,"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "db:prisma:product:update",
+      "type": "database",
+      "label": "product.update",
+      "description": "Writes to product via prisma (update).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 13,
+          "kind": "call",
+          "text": "const product = await db.product.update({"
+        },
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 26,
+          "kind": "call",
+          "text": "await db.product.update({"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "product",
+        "operation": "update",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/services/inventory.ts",
+      "line": 13,
+      "snippet": {
+        "startLine": 12,
+        "lines": [
+          "  for (const item of items) {",
+          "    const product = await db.product.update({",
+          "      where: { id: item.productId },"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "cond:server/src/services/inventory.ts#reserveInventory:17",
+      "type": "condition",
+      "label": "product.stock < 0",
+      "file": "server/src/services/inventory.ts",
+      "line": 17,
+      "description": "reserveInventory() branches on `product.stock < 0`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 17,
+          "kind": "branch",
+          "text": "if (product.stock < 0) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 17,
+        "lines": [
+          "    if (product.stock < 0) {",
+          "      throw new OutOfStockError(item.productId);",
+          "    }",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/services/inventory.ts#reserveInventory",
+        "test": "product.stock < 0"
+      }
+    },
+    {
+      "id": "route:POST /api/webhooks/stripe",
+      "type": "route",
+      "label": "POST /api/webhooks/stripe",
+      "file": "server/src/routes/webhooks.ts",
+      "line": 6,
+      "description": "express route POST /api/webhooks/stripe.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/webhooks.ts",
+          "line": 6,
+          "kind": "route",
+          "text": "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "",
+          "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);",
+          "",
+          "export default router;",
+          ""
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "method": "POST",
+        "path": "/api/webhooks/stripe",
+        "framework": "express",
+        "kind": "route"
+      }
+    },
+    {
+      "id": "exit:server/src/services/inventory.ts:18",
+      "type": "error",
+      "label": "throw OutOfStockError",
+      "file": "server/src/services/inventory.ts",
+      "line": 18,
+      "description": "reserveInventory() throws OutOfStockError.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 18,
+          "kind": "exit",
+          "text": "throw new OutOfStockError(item.productId);"
+        }
+      ],
+      "snippet": {
+        "startLine": 17,
+        "lines": [
+          "    if (product.stock < 0) {",
+          "      throw new OutOfStockError(item.productId);",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "throw",
+        "owner": "server/src/services/inventory.ts#reserveInventory",
+        "errorName": "OutOfStockError"
+      }
+    },
+    {
+      "id": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "type": "function",
+      "label": "handleStripeWebhook()",
+      "file": "server/src/payments/stripe.ts",
+      "line": 17,
+      "description": "Verifies the Stripe signature and applies payment results to orders.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 17,
+          "kind": "definition",
+          "text": "export async function handleStripeWebhook(req: Request, res: Response) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 17,
+        "lines": [
+          "export async function handleStripeWebhook(req: Request, res: Response) {",
+          "  let event: Stripe.Event;",
+          "  try {",
+          "    event = stripe.webhooks.constructEvent(",
+          "      req.body,",
+          "      req.headers[\"stripe-signature\"] as string,",
+          "      process.env.STRIPE_WEBHOOK_SECRET ?? \"\",",
+          "    );",
+          "  } catch {",
+          "    return res.status(400).send(\"Invalid signature\");",
+          "  }",
+          "",
+          "  switch (event.type) {",
+          "    case \"payment_intent.succeeded\": {",
+          "      const intent = event.data.object as Stripe.PaymentIntent;",
+          "      await markOrderPaid(intent.metadata.orderId);",
+          "      break;",
+          "    }",
+          "    case \"payment_intent.payment_failed\": {",
+          "      const intent = event.data.object as Stripe.PaymentIntent;",
+          "      await markOrderFailed(",
+          "        intent.metadata.orderId,",
+          "        intent.last_payment_error?.message ?? \"unknown\",",
+          "      );",
+          "      break;",
+          "    }",
+          "  }",
+          "",
+          "  return res.json({ received: true });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "handleStripeWebhook",
+        "signature": "export async function handleStripeWebhook(req: Request, res: Response)",
+        "async": true,
+        "envVars": [
+          "STRIPE_WEBHOOK_SECRET"
+        ],
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "ext:Stripe:webhooks.constructEvent",
+      "type": "external",
+      "label": "Stripe: webhooks.constructEvent",
+      "description": "Calls Stripe: webhooks.constructEvent.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 20,
+          "kind": "call",
+          "text": "event = stripe.webhooks.constructEvent("
+        }
+      ],
+      "metadata": {
+        "service": "Stripe",
+        "operation": "webhooks.constructEvent",
+        "package": "stripe",
+        "kind": "external"
+      },
+      "file": "server/src/payments/stripe.ts",
+      "line": 20,
+      "snippet": {
+        "startLine": 19,
+        "lines": [
+          "  try {",
+          "    event = stripe.webhooks.constructEvent(",
+          "      req.body,"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "catch:server/src/payments/stripe.ts#handleStripeWebhook:25",
+      "type": "condition",
+      "label": "catch",
+      "file": "server/src/payments/stripe.ts",
+      "line": 25,
+      "description": "Error handling in handleStripeWebhook(): runs when the code above throws.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 25,
+          "kind": "branch",
+          "text": "} catch {"
+        }
+      ],
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "  } catch {",
+          "    return res.status(400).send(\"Invalid signature\");",
+          "  }",
+          ""
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "catch",
+        "owner": "server/src/payments/stripe.ts#handleStripeWebhook"
+      }
+    },
+    {
+      "id": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "type": "condition",
+      "label": "switch (event.type)",
+      "file": "server/src/payments/stripe.ts",
+      "line": 29,
+      "description": "handleStripeWebhook() branches on `switch (event.type)`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 29,
+          "kind": "branch",
+          "text": "switch (event.type) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 29,
+        "lines": [
+          "  switch (event.type) {",
+          "    case \"payment_intent.succeeded\": {",
+          "      const intent = event.data.object as Stripe.PaymentIntent;",
+          "      await markOrderPaid(intent.metadata.orderId);"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/payments/stripe.ts#handleStripeWebhook",
+        "test": "switch (event.type)"
+      }
+    },
+    {
+      "id": "exit:server/src/payments/stripe.ts:26",
+      "type": "error",
+      "label": "400 Bad Request",
+      "file": "server/src/payments/stripe.ts",
+      "line": 26,
+      "description": "handleStripeWebhook() responds with HTTP 400.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 26,
+          "kind": "exit",
+          "text": "return res.status(400).send(\"Invalid signature\");"
+        }
+      ],
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "  } catch {",
+          "    return res.status(400).send(\"Invalid signature\");",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/payments/stripe.ts#handleStripeWebhook",
+        "status": 400
+      }
+    },
+    {
+      "id": "server/src/services/orderService.ts#markOrderPaid",
+      "type": "service",
+      "label": "markOrderPaid()",
+      "file": "server/src/services/orderService.ts",
+      "line": 24,
+      "description": "Marks an order as paid and queues the confirmation email.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 24,
+          "kind": "definition",
+          "text": "export async function markOrderPaid(orderId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 24,
+        "lines": [
+          "export async function markOrderPaid(orderId: string) {",
+          "  await db.order.update({ where: { id: orderId }, data: { status: \"paid\" } });",
+          "  await emailQueue.add(\"order-confirmation\", { orderId });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "markOrderPaid",
+        "signature": "export async function markOrderPaid(orderId: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/services/orderService.ts#markOrderFailed",
+      "type": "service",
+      "label": "markOrderFailed()",
+      "file": "server/src/services/orderService.ts",
+      "line": 30,
+      "description": "Marks an order as failed, releases its stock and notifies listeners.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 30,
+          "kind": "definition",
+          "text": "export async function markOrderFailed(orderId: string, reason: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 30,
+        "lines": [
+          "export async function markOrderFailed(orderId: string, reason: string) {",
+          "  await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });",
+          "  await releaseInventory(orderId);",
+          "  orderEvents.emit(\"order.paymentFailed\", { orderId, reason });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "markOrderFailed",
+        "signature": "export async function markOrderFailed(orderId: string, reason: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:order:update",
+      "type": "database",
+      "label": "order.update",
+      "description": "Writes to order via prisma (update).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 25,
+          "kind": "call",
+          "text": "await db.order.update({ where: { id: orderId }, data: { status: \"paid\" } });"
+        },
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 31,
+          "kind": "call",
+          "text": "await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "order",
+        "operation": "update",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 25,
+      "snippet": {
+        "startLine": 24,
+        "lines": [
+          "export async function markOrderPaid(orderId: string) {",
+          "  await db.order.update({ where: { id: orderId }, data: { status: \"paid\" } });",
+          "  await emailQueue.add(\"order-confirmation\", { orderId });"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "event:queue:emails",
+      "type": "event",
+      "label": "emails queue",
+      "description": "Background job queue \"emails\".",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 26,
+          "kind": "emit",
+          "text": "await emailQueue.add(\"order-confirmation\", { orderId });"
+        }
+      ],
+      "metadata": {
+        "channel": "queue",
+        "event": "emails",
+        "system": "bullmq",
+        "kind": "event"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 26,
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "  await db.order.update({ where: { id: orderId }, data: { status: \"paid\" } });",
+          "  await emailQueue.add(\"order-confirmation\", { orderId });",
+          "}"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/services/inventory.ts#releaseInventory",
+      "type": "service",
+      "label": "releaseInventory()",
+      "file": "server/src/services/inventory.ts",
+      "line": 23,
+      "description": "export async function releaseInventory(orderId: string)",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 23,
+          "kind": "definition",
+          "text": "export async function releaseInventory(orderId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 23,
+        "lines": [
+          "export async function releaseInventory(orderId: string) {",
+          "  const lines = await db.cartItem.findMany({ where: { orderId } });",
+          "  for (const line of lines) {",
+          "    await db.product.update({",
+          "      where: { id: line.productId },",
+          "      data: { stock: { increment: line.quantity } },",
+          "    });",
+          "  }",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "releaseInventory",
+        "signature": "export async function releaseInventory(orderId: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "event:event:order.paymentFailed",
+      "type": "event",
+      "label": "order.paymentFailed",
+      "description": "Event \"order.paymentFailed\".",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 33,
+          "kind": "emit",
+          "text": "orderEvents.emit(\"order.paymentFailed\", { orderId, reason });"
+        }
+      ],
+      "metadata": {
+        "channel": "event",
+        "event": "order.paymentFailed",
+        "system": "events",
+        "kind": "event"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 33,
+      "snippet": {
+        "startLine": 32,
+        "lines": [
+          "  await releaseInventory(orderId);",
+          "  orderEvents.emit(\"order.paymentFailed\", { orderId, reason });",
+          "}"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/jobs/emailWorker.ts#worker emails",
+      "type": "function",
+      "label": "worker emails handler",
+      "file": "server/src/jobs/emailWorker.ts",
+      "line": 7,
+      "description": "async (job) =>",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/jobs/emailWorker.ts",
+          "line": 7,
+          "kind": "definition",
+          "text": "async (job) => {"
+        }
+      ],
+      "snippet": {
+        "startLine": 7,
+        "lines": [
+          "  async (job) => {",
+          "    if (job.name === \"order-confirmation\") {",
+          "      await sendOrderConfirmation(job.data.orderId);",
+          "    }",
+          "  },"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "handler",
+        "qualifiedName": "worker emails",
+        "signature": "async (job) =>",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/events/handlers.ts#notifyPaymentFailed",
+      "type": "function",
+      "label": "notifyPaymentFailed()",
+      "file": "server/src/events/handlers.ts",
+      "line": 11,
+      "description": "async function notifyPaymentFailed({ orderId }: { orderId: string })",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 11,
+          "kind": "definition",
+          "text": "async function notifyPaymentFailed({ orderId }: { orderId: string }) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 11,
+        "lines": [
+          "async function notifyPaymentFailed({ orderId }: { orderId: string }) {",
+          "  await sendPaymentFailedEmail(orderId);",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "notifyPaymentFailed",
+        "signature": "async function notifyPaymentFailed({ orderId }: { orderId: string })",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "cond:server/src/jobs/emailWorker.ts#worker emails:8",
+      "type": "condition",
+      "label": "job.name === \"order-confirmation\"",
+      "file": "server/src/jobs/emailWorker.ts",
+      "line": 8,
+      "description": "worker emails handler branches on `job.name === \"order-confirmation\"`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/jobs/emailWorker.ts",
+          "line": 8,
+          "kind": "branch",
+          "text": "if (job.name === \"order-confirmation\") {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "    if (job.name === \"order-confirmation\") {",
+          "      await sendOrderConfirmation(job.data.orderId);",
+          "    }",
+          "  },"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/jobs/emailWorker.ts#worker emails",
+        "test": "job.name === \"order-confirmation\""
+      }
+    },
+    {
+      "id": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "type": "function",
+      "label": "sendPaymentFailedEmail()",
+      "file": "server/src/email/send.ts",
+      "line": 18,
+      "description": "export async function sendPaymentFailedEmail(orderId: string)",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 18,
+          "kind": "definition",
+          "text": "export async function sendPaymentFailedEmail(orderId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 18,
+        "lines": [
+          "export async function sendPaymentFailedEmail(orderId: string) {",
+          "  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });",
+          "  if (!order) return;",
+          "  await resend.emails.send({",
+          "    from: \"Acme <orders@acme.test>\",",
+          "    to: order.user.email,",
+          "    subject: \"Your payment failed\",",
+          "    html: `<p>Please update your payment method.</p>`,",
+          "  });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "sendPaymentFailedEmail",
+        "signature": "export async function sendPaymentFailedEmail(orderId: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/email/send.ts#sendOrderConfirmation",
+      "type": "function",
+      "label": "sendOrderConfirmation()",
+      "file": "server/src/email/send.ts",
+      "line": 7,
+      "description": "Emails the customer a receipt for a paid order.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 7,
+          "kind": "definition",
+          "text": "export async function sendOrderConfirmation(orderId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 7,
+        "lines": [
+          "export async function sendOrderConfirmation(orderId: string) {",
+          "  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });",
+          "  if (!order) return;",
+          "  await resend.emails.send({",
+          "    from: \"Acme <orders@acme.test>\",",
+          "    to: order.user.email,",
+          "    subject: `Order ${order.id} confirmed`,",
+          "    html: `<p>Thanks for your order!</p>`,",
+          "  });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "sendOrderConfirmation",
+        "signature": "export async function sendOrderConfirmation(orderId: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:order:findUnique",
+      "type": "database",
+      "label": "order.findUnique",
+      "description": "Reads from order via prisma (findUnique).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 8,
+          "kind": "call",
+          "text": "const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"
+        },
+        {
+          "file": "server/src/email/send.ts",
+          "line": 19,
+          "kind": "call",
+          "text": "const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "order",
+        "operation": "findUnique",
+        "access": "read",
+        "kind": "database"
+      },
+      "file": "server/src/email/send.ts",
+      "line": 8,
+      "snippet": {
+        "startLine": 7,
+        "lines": [
+          "export async function sendOrderConfirmation(orderId: string) {",
+          "  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });",
+          "  if (!order) return;"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "ext:Resend:emails.send",
+      "type": "external",
+      "label": "Resend: emails.send",
+      "description": "Calls Resend: emails.send.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "await resend.emails.send({"
+        },
+        {
+          "file": "server/src/email/send.ts",
+          "line": 21,
+          "kind": "call",
+          "text": "await resend.emails.send({"
+        }
+      ],
+      "metadata": {
+        "service": "Resend",
+        "operation": "emails.send",
+        "package": "resend",
+        "kind": "external"
+      },
+      "file": "server/src/email/send.ts",
+      "line": 10,
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "  if (!order) return;",
+          "  await resend.emails.send({",
+          "    from: \"Acme <orders@acme.test>\","
+        ],
+        "truncated": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "client/src/pages/CheckoutPage.tsx#CheckoutPage",
+      "to": "client/src/hooks/useCart.ts#useCart",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 11,
+          "kind": "call",
+          "text": "const { items, shippingAddressId } = useCart();"
+        }
+      ]
+    },
+    {
+      "id": "e2",
+      "from": "client/src/pages/CheckoutPage.tsx#CheckoutPage",
+      "to": "client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout",
+      "type": "calls",
+      "label": "onClick",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 31,
+          "kind": "call",
+          "text": "<button onClick={handleCheckout} disabled={submitting}>"
+        }
+      ]
+    },
+    {
+      "id": "e3",
+      "from": "client/src/hooks/useCart.ts#useCart",
+      "to": "http:GET /api/cart",
+      "type": "requests",
+      "label": "useEffect",
+      "confidence": 0.7,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/hooks/useCart.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "api.get(\"/cart\").then((response) => setItems(response.data.items));"
+        }
+      ]
+    },
+    {
+      "id": "e4",
+      "from": "client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout",
+      "to": "client/src/api/orders.ts#createOrder",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 16,
+          "kind": "call",
+          "text": "const { orderId, clientSecret } = await createOrder(shippingAddressId);"
+        }
+      ]
+    },
+    {
+      "id": "e5",
+      "from": "client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout",
+      "to": "ext:Stripe.js:confirmCardPayment",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 18,
+          "kind": "call",
+          "text": "const result = await stripe!.confirmCardPayment(clientSecret);"
+        }
+      ]
+    },
+    {
+      "id": "e6",
+      "from": "client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout",
+      "to": "cond:client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout:19",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 19,
+          "kind": "branch",
+          "text": "if (result.error) {"
+        }
+      ]
+    },
+    {
+      "id": "e7",
+      "from": "client/src/api/orders.ts#createOrder",
+      "to": "route:POST /api/orders",
+      "type": "requests",
+      "confidence": 0.95,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/orders.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "const response = await api.post(\"/orders\", { shippingAddressId });"
+        }
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "cond:client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout:19",
+      "to": "nav:/checkout/failed",
+      "type": "navigates",
+      "label": "yes",
+      "branch": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 21,
+          "kind": "call",
+          "text": "navigate(`/checkout/failed?order=${orderId}`);"
+        }
+      ]
+    },
+    {
+      "id": "e9",
+      "from": "cond:client/src/pages/CheckoutPage.tsx#CheckoutPage.handleCheckout:19",
+      "to": "nav:/orders/:param",
+      "type": "navigates",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/CheckoutPage.tsx",
+          "line": 24,
+          "kind": "call",
+          "text": "navigate(`/orders/${orderId}`);"
+        }
+      ]
+    },
+    {
+      "id": "e10",
+      "from": "route:POST /api/orders",
+      "to": "server/src/middleware/requireAuth.ts#requireAuth",
+      "type": "calls",
+      "label": "middleware",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/app.ts",
+          "line": 5,
+          "kind": "route",
+          "text": "import webhooksRouter from \"./routes/webhooks.js\";"
+        }
+      ]
+    },
+    {
+      "id": "e11",
+      "from": "route:POST /api/orders",
+      "to": "server/src/middleware/validate.ts#validateBody",
+      "type": "calls",
+      "label": "middleware",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/orders.ts",
+          "line": 8,
+          "kind": "route",
+          "text": "router.post(\"/\", validateBody(createOrderSchema), ordersController.create);"
+        }
+      ]
+    },
+    {
+      "id": "e12",
+      "from": "route:POST /api/orders",
+      "to": "server/src/controllers/ordersController.ts#OrdersController.create",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/orders.ts",
+          "line": 8,
+          "kind": "route",
+          "text": "router.post(\"/\", validateBody(createOrderSchema), ordersController.create);"
+        }
+      ]
+    },
+    {
+      "id": "e13",
+      "from": "server/src/middleware/requireAuth.ts#requireAuth",
+      "to": "db:prisma:session:findUnique",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 8,
+          "kind": "call",
+          "text": "? await db.session.findUnique({ where: { id: sessionId }, include: { user: true } })"
+        }
+      ]
+    },
+    {
+      "id": "e14",
+      "from": "server/src/middleware/requireAuth.ts#requireAuth",
+      "to": "cond:server/src/middleware/requireAuth.ts#requireAuth:10",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 10,
+          "kind": "branch",
+          "text": "if (!session || session.expiresAt < new Date()) {"
+        }
+      ]
+    },
+    {
+      "id": "e15",
+      "from": "server/src/middleware/validate.ts#validateBody",
+      "to": "cond:server/src/middleware/validate.ts#validateBody:8",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 8,
+          "kind": "branch",
+          "text": "if (!result.success) {"
+        }
+      ]
+    },
+    {
+      "id": "e16",
+      "from": "server/src/controllers/ordersController.ts#OrdersController.create",
+      "to": "server/src/services/cart.ts#getCart",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 11,
+          "kind": "call",
+          "text": "const cart = await getCart(req.user.id);"
+        }
+      ]
+    },
+    {
+      "id": "e17",
+      "from": "server/src/controllers/ordersController.ts#OrdersController.create",
+      "to": "server/src/services/cart.ts#validateCart",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 12,
+          "kind": "call",
+          "text": "const validation = validateCart(cart);"
+        }
+      ]
+    },
+    {
+      "id": "e18",
+      "from": "server/src/controllers/ordersController.ts#OrdersController.create",
+      "to": "cond:server/src/controllers/ordersController.ts#OrdersController.create:13",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 13,
+          "kind": "branch",
+          "text": "if (!validation.ok) {"
+        }
+      ]
+    },
+    {
+      "id": "e19",
+      "from": "cond:server/src/middleware/requireAuth.ts#requireAuth:10",
+      "to": "exit:server/src/middleware/requireAuth.ts:11",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/requireAuth.ts",
+          "line": 11,
+          "kind": "exit",
+          "text": "return res.status(401).json({ error: \"Not signed in\" });"
+        }
+      ]
+    },
+    {
+      "id": "e20",
+      "from": "cond:server/src/middleware/validate.ts#validateBody:8",
+      "to": "exit:server/src/middleware/validate.ts:9",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 9,
+          "kind": "exit",
+          "text": "return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });"
+        }
+      ]
+    },
+    {
+      "id": "e21",
+      "from": "server/src/services/cart.ts#getCart",
+      "to": "db:prisma:cartItem:findMany",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/cart.ts",
+          "line": 15,
+          "kind": "call",
+          "text": "const items = await db.cartItem.findMany({ where: { userId }, include: { product: true } });"
+        }
+      ]
+    },
+    {
+      "id": "e22",
+      "from": "cond:server/src/controllers/ordersController.ts#OrdersController.create:13",
+      "to": "exit:server/src/controllers/ordersController.ts:14",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 14,
+          "kind": "exit",
+          "text": "return res.status(400).json({ errors: validation.errors });"
+        }
+      ]
+    },
+    {
+      "id": "e23",
+      "from": "cond:server/src/controllers/ordersController.ts#OrdersController.create:13",
+      "to": "server/src/services/orderService.ts#OrderService.createOrder",
+      "type": "calls",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 17,
+          "kind": "call",
+          "text": "const order = await this.orders.createOrder(req.user.id, cart);"
+        }
+      ]
+    },
+    {
+      "id": "e24",
+      "from": "cond:server/src/controllers/ordersController.ts#OrdersController.create:13",
+      "to": "server/src/payments/stripe.ts#createPaymentIntent",
+      "type": "calls",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/ordersController.ts",
+          "line": 18,
+          "kind": "call",
+          "text": "const payment = await createPaymentIntent(order);"
+        }
+      ]
+    },
+    {
+      "id": "e25",
+      "from": "server/src/services/orderService.ts#OrderService.createOrder",
+      "to": "server/src/services/cart.ts#cartTotal",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 11,
+          "kind": "call",
+          "text": "data: { userId, status: \"pending\", total: cartTotal(cart) },"
+        }
+      ]
+    },
+    {
+      "id": "e26",
+      "from": "server/src/services/orderService.ts#OrderService.createOrder",
+      "to": "db:prisma:order:create",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "const order = await db.order.create({"
+        }
+      ]
+    },
+    {
+      "id": "e27",
+      "from": "server/src/services/orderService.ts#OrderService.createOrder",
+      "to": "server/src/services/inventory.ts#reserveInventory",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 13,
+          "kind": "call",
+          "text": "await reserveInventory(cart.items);"
+        }
+      ]
+    },
+    {
+      "id": "e28",
+      "from": "server/src/services/orderService.ts#OrderService.createOrder",
+      "to": "event:event:order.created",
+      "type": "emits",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 14,
+          "kind": "emit",
+          "text": "orderEvents.emit(\"order.created\", { orderId: order.id });"
+        }
+      ]
+    },
+    {
+      "id": "e29",
+      "from": "server/src/payments/stripe.ts#createPaymentIntent",
+      "to": "ext:Stripe:paymentIntents.create",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "return stripe.paymentIntents.create({"
+        }
+      ]
+    },
+    {
+      "id": "e30",
+      "from": "server/src/services/inventory.ts#reserveInventory",
+      "to": "db:prisma:product:update",
+      "type": "writes",
+      "label": "for each",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 13,
+          "kind": "call",
+          "text": "const product = await db.product.update({"
+        }
+      ]
+    },
+    {
+      "id": "e31",
+      "from": "server/src/services/inventory.ts#reserveInventory",
+      "to": "cond:server/src/services/inventory.ts#reserveInventory:17",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 17,
+          "kind": "branch",
+          "text": "if (product.stock < 0) {"
+        }
+      ]
+    },
+    {
+      "id": "e32",
+      "from": "ext:Stripe:paymentIntents.create",
+      "to": "route:POST /api/webhooks/stripe",
+      "type": "triggers",
+      "label": "webhook",
+      "confidence": 0.6,
+      "source": "inferred",
+      "reason": "Stripe delivers webhook events to POST /api/webhooks/stripe, whose handler processes Stripe webhooks.",
+      "evidence": [
+        {
+          "file": "server/src/routes/webhooks.ts",
+          "line": 6,
+          "kind": "route",
+          "text": "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"
+        }
+      ]
+    },
+    {
+      "id": "e33",
+      "from": "cond:server/src/services/inventory.ts#reserveInventory:17",
+      "to": "exit:server/src/services/inventory.ts:18",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 18,
+          "kind": "exit",
+          "text": "throw new OutOfStockError(item.productId);"
+        }
+      ]
+    },
+    {
+      "id": "e34",
+      "from": "route:POST /api/webhooks/stripe",
+      "to": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/webhooks.ts",
+          "line": 6,
+          "kind": "route",
+          "text": "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"
+        }
+      ]
+    },
+    {
+      "id": "e35",
+      "from": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "to": "ext:Stripe:webhooks.constructEvent",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 20,
+          "kind": "call",
+          "text": "event = stripe.webhooks.constructEvent("
+        }
+      ]
+    },
+    {
+      "id": "e36",
+      "from": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "to": "catch:server/src/payments/stripe.ts#handleStripeWebhook:25",
+      "type": "condition",
+      "label": "on error",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 25,
+          "kind": "branch",
+          "text": "} catch {"
+        }
+      ]
+    },
+    {
+      "id": "e37",
+      "from": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "to": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 29,
+          "kind": "branch",
+          "text": "switch (event.type) {"
+        }
+      ]
+    },
+    {
+      "id": "e38",
+      "from": "catch:server/src/payments/stripe.ts#handleStripeWebhook:25",
+      "to": "exit:server/src/payments/stripe.ts:26",
+      "type": "returns",
+      "branch": "error",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 26,
+          "kind": "exit",
+          "text": "return res.status(400).send(\"Invalid signature\");"
+        }
+      ]
+    },
+    {
+      "id": "e39",
+      "from": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "to": "server/src/services/orderService.ts#markOrderPaid",
+      "type": "calls",
+      "label": "payment_intent.succeeded",
+      "branch": "payment_intent.succeeded",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 32,
+          "kind": "call",
+          "text": "await markOrderPaid(intent.metadata.orderId);"
+        }
+      ]
+    },
+    {
+      "id": "e40",
+      "from": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "to": "server/src/services/orderService.ts#markOrderFailed",
+      "type": "calls",
+      "label": "payment_intent.payment_failed",
+      "branch": "payment_intent.payment_failed",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 37,
+          "kind": "call",
+          "text": "await markOrderFailed("
+        }
+      ]
+    },
+    {
+      "id": "e41",
+      "from": "server/src/services/orderService.ts#markOrderPaid",
+      "to": "db:prisma:order:update",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 25,
+          "kind": "call",
+          "text": "await db.order.update({ where: { id: orderId }, data: { status: \"paid\" } });"
+        }
+      ]
+    },
+    {
+      "id": "e42",
+      "from": "server/src/services/orderService.ts#markOrderPaid",
+      "to": "event:queue:emails",
+      "type": "emits",
+      "label": "order-confirmation",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 26,
+          "kind": "emit",
+          "text": "await emailQueue.add(\"order-confirmation\", { orderId });"
+        }
+      ]
+    },
+    {
+      "id": "e43",
+      "from": "server/src/services/orderService.ts#markOrderFailed",
+      "to": "db:prisma:order:update",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 31,
+          "kind": "call",
+          "text": "await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });"
+        }
+      ]
+    },
+    {
+      "id": "e44",
+      "from": "server/src/services/orderService.ts#markOrderFailed",
+      "to": "server/src/services/inventory.ts#releaseInventory",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 32,
+          "kind": "call",
+          "text": "await releaseInventory(orderId);"
+        }
+      ]
+    },
+    {
+      "id": "e45",
+      "from": "server/src/services/orderService.ts#markOrderFailed",
+      "to": "event:event:order.paymentFailed",
+      "type": "emits",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 33,
+          "kind": "emit",
+          "text": "orderEvents.emit(\"order.paymentFailed\", { orderId, reason });"
+        }
+      ]
+    },
+    {
+      "id": "e46",
+      "from": "event:queue:emails",
+      "to": "server/src/jobs/emailWorker.ts#worker emails",
+      "type": "triggers",
+      "label": "worker",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/jobs/emailWorker.ts",
+          "line": 5,
+          "kind": "listener",
+          "text": "export const emailWorker = new Worker("
+        }
+      ]
+    },
+    {
+      "id": "e47",
+      "from": "server/src/services/inventory.ts#releaseInventory",
+      "to": "db:prisma:cartItem:findMany",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 24,
+          "kind": "call",
+          "text": "const lines = await db.cartItem.findMany({ where: { orderId } });"
+        }
+      ]
+    },
+    {
+      "id": "e48",
+      "from": "server/src/services/inventory.ts#releaseInventory",
+      "to": "db:prisma:product:update",
+      "type": "writes",
+      "label": "for each",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 26,
+          "kind": "call",
+          "text": "await db.product.update({"
+        }
+      ]
+    },
+    {
+      "id": "e49",
+      "from": "event:event:order.paymentFailed",
+      "to": "server/src/events/handlers.ts#notifyPaymentFailed",
+      "type": "triggers",
+      "label": "listener",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 9,
+          "kind": "listener",
+          "text": "orderEvents.on(\"order.paymentFailed\", notifyPaymentFailed);"
+        }
+      ]
+    },
+    {
+      "id": "e50",
+      "from": "server/src/jobs/emailWorker.ts#worker emails",
+      "to": "cond:server/src/jobs/emailWorker.ts#worker emails:8",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/jobs/emailWorker.ts",
+          "line": 8,
+          "kind": "branch",
+          "text": "if (job.name === \"order-confirmation\") {"
+        }
+      ]
+    },
+    {
+      "id": "e51",
+      "from": "server/src/events/handlers.ts#notifyPaymentFailed",
+      "to": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 12,
+          "kind": "call",
+          "text": "await sendPaymentFailedEmail(orderId);"
+        }
+      ]
+    },
+    {
+      "id": "e52",
+      "from": "cond:server/src/jobs/emailWorker.ts#worker emails:8",
+      "to": "server/src/email/send.ts#sendOrderConfirmation",
+      "type": "calls",
+      "label": "yes",
+      "branch": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/jobs/emailWorker.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "await sendOrderConfirmation(job.data.orderId);"
+        }
+      ]
+    },
+    {
+      "id": "e53",
+      "from": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "to": "db:prisma:order:findUnique",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 19,
+          "kind": "call",
+          "text": "const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"
+        }
+      ]
+    },
+    {
+      "id": "e54",
+      "from": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "to": "ext:Resend:emails.send",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 21,
+          "kind": "call",
+          "text": "await resend.emails.send({"
+        }
+      ]
+    },
+    {
+      "id": "e55",
+      "from": "server/src/email/send.ts#sendOrderConfirmation",
+      "to": "db:prisma:order:findUnique",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 8,
+          "kind": "call",
+          "text": "const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"
+        }
+      ]
+    },
+    {
+      "id": "e56",
+      "from": "server/src/email/send.ts#sendOrderConfirmation",
+      "to": "ext:Resend:emails.send",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "await resend.emails.send({"
+        }
+      ]
+    }
+  ],
+  "explanation": "The flow starts at `CheckoutPage` (client/src/pages/CheckoutPage.tsx:9).\n\n1. `CheckoutPage` calls `useCart()` and `handleCheckout()` on onClick.\n2. `useCart()` sends `GET /api/cart`.\n3. `handleCheckout()` calls `createOrder()` and `Stripe.js: confirmCardPayment`; checks `result.error` (yes → `navigate /checkout/failed`; no → `navigate /orders/:param`).\n4. `createOrder()` sends `POST /api/orders`.\n5. `POST /api/orders` runs middleware `requireAuth()` and `validateBody()`; calls `OrdersController.create()`.\n6. `requireAuth()` reads `session.findUnique`; checks `!session || session.expiresAt < new Date()` (yes → `401 Unauthorized`).\n7. `validateBody()` checks `!result.success` (yes → `400 Bad Request`).\n8. `OrdersController.create()` calls `getCart()` and `validateCart()`; checks `!validation.ok` (yes → `400 Bad Request`; no → `OrderService.createOrder()`, `createPaymentIntent()`).\n9. `getCart()` reads `cartItem.findMany`.\n10. `OrderService.createOrder()` calls `cartTotal()` and `reserveInventory()`; writes `order.create`; emits `order.created`.\n11. `createPaymentIntent()` calls `Stripe: paymentIntents.create`.\n12. `reserveInventory()` writes `product.update`; checks `product.stock < 0` (yes → `throw OutOfStockError`).\n13. `Stripe: paymentIntents.create` leads to `POST /api/webhooks/stripe` (inferred).\n14. `POST /api/webhooks/stripe` calls `handleStripeWebhook()`.\n15. `handleStripeWebhook()` calls `Stripe: webhooks.constructEvent`; on error: `400 Bad Request`; checks `switch (event.type)` (payment_intent.succeeded → `markOrderPaid()`; payment_intent.payment_failed → `markOrderFailed()`).\n16. `markOrderPaid()` writes `order.update`; emits `emails queue`.\n17. `markOrderFailed()` writes `order.update`; calls `releaseInventory()`; emits `order.paymentFailed`.\n18. `emails queue` triggers `worker emails handler`.\n19. `releaseInventory()` reads `cartItem.findMany`; writes `product.update`.\n20. `order.paymentFailed` triggers `notifyPaymentFailed()`.\n21. `worker emails handler` checks `job.name === \"order-confirmation\"` (yes → `sendOrderConfirmation()`).\n22. `notifyPaymentFailed()` calls `sendPaymentFailedEmail()`.\n23. `sendPaymentFailedEmail()` reads `order.findUnique`; calls `Resend: emails.send`.\n24. `sendOrderConfirmation()` reads `order.findUnique`; calls `Resend: emails.send`.\n\nGenerated by static analysis without an LLM: descriptions come from doc comments and code facts. Steps marked (inferred) are likely but not proven by a call site.",
+  "analysis": {
+    "provider": "static",
+    "generatedAt": "2026-10-05T00:00:00.000Z",
+    "repository": "acme-shop",
+    "stats": {
+      "files": 42,
+      "symbols": 57,
+      "relationships": 95,
+      "candidates": 39
+    },
+    "warnings": []
+  }
+}

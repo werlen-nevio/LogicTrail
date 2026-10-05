@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="lt-svg" width="1026" height="1104" viewBox="0 0 1026 1104" role="img" aria-label="What happens when a payment fails?">
+<style>.lt-svg {
+  --lt-bg: #ffffff;
+  --lt-canvas: #fafafa;
+  --lt-dot: #e4e4e7;
+  --lt-node-bg: #ffffff;
+  --lt-node-border: #e4e4e7;
+  --lt-node-border-hover: #a1a1aa;
+  --lt-text: #18181b;
+  --lt-text-muted: #71717a;
+  --lt-edge: #a1a1aa;
+  --lt-edge-strong: #52525b;
+  --lt-label-bg: #ffffff;
+  --lt-accent: #2563eb;
+  --lt-panel: #ffffff;
+  --lt-border: #e4e4e7;
+  --lt-hover: #f4f4f5;
+  --lt-subtle: #f6f6f7;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+  --lt-error-bg: #fef2f2;
+  --lt-error-border: #fecaca;
+  --lt-response-bg: #f0fdf4;
+  --lt-response-border: #bbf7d0;
+  --lt-c-component: #7c3aed;
+  --lt-c-function: #52525b;
+  --lt-c-service: #0d9488;
+  --lt-c-route: #2563eb;
+  --lt-c-database: #c2410c;
+  --lt-c-external: #db2777;
+  --lt-c-library: #0e7490;
+  --lt-c-condition: #a16207;
+  --lt-c-event: #a21caf;
+  --lt-c-error: #dc2626;
+  --lt-c-response: #15803d;
+}
+@media (prefers-color-scheme: dark) {
+  .lt-svg:not([data-theme="light"]) {
+  --lt-bg: #0b0b0c;
+  --lt-canvas: #0b0b0c;
+  --lt-dot: #1f1f23;
+  --lt-node-bg: #141416;
+  --lt-node-border: #2a2a2e;
+  --lt-node-border-hover: #52525b;
+  --lt-text: #f4f4f5;
+  --lt-text-muted: #a1a1aa;
+  --lt-edge: #4b4b52;
+  --lt-edge-strong: #a1a1aa;
+  --lt-label-bg: #141416;
+  --lt-accent: #60a5fa;
+  --lt-panel: #101012;
+  --lt-border: #232327;
+  --lt-hover: #1c1c20;
+  --lt-subtle: #17171a;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --lt-error-bg: #2a1215;
+  --lt-error-border: #5c2127;
+  --lt-response-bg: #0f2418;
+  --lt-response-border: #1d4d2e;
+  --lt-c-component: #a78bfa;
+  --lt-c-function: #a1a1aa;
+  --lt-c-service: #2dd4bf;
+  --lt-c-route: #60a5fa;
+  --lt-c-database: #fb923c;
+  --lt-c-external: #f472b6;
+  --lt-c-library: #22d3ee;
+  --lt-c-condition: #facc15;
+  --lt-c-event: #e879f9;
+  --lt-c-error: #f87171;
+  --lt-c-response: #4ade80;
+  }
+}
+.lt-svg[data-theme="dark"] {
+  --lt-bg: #0b0b0c;
+  --lt-canvas: #0b0b0c;
+  --lt-dot: #1f1f23;
+  --lt-node-bg: #141416;
+  --lt-node-border: #2a2a2e;
+  --lt-node-border-hover: #52525b;
+  --lt-text: #f4f4f5;
+  --lt-text-muted: #a1a1aa;
+  --lt-edge: #4b4b52;
+  --lt-edge-strong: #a1a1aa;
+  --lt-label-bg: #141416;
+  --lt-accent: #60a5fa;
+  --lt-panel: #101012;
+  --lt-border: #232327;
+  --lt-hover: #1c1c20;
+  --lt-subtle: #17171a;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --lt-error-bg: #2a1215;
+  --lt-error-border: #5c2127;
+  --lt-response-bg: #0f2418;
+  --lt-response-border: #1d4d2e;
+  --lt-c-component: #a78bfa;
+  --lt-c-function: #a1a1aa;
+  --lt-c-service: #2dd4bf;
+  --lt-c-route: #60a5fa;
+  --lt-c-database: #fb923c;
+  --lt-c-external: #f472b6;
+  --lt-c-library: #22d3ee;
+  --lt-c-condition: #facc15;
+  --lt-c-event: #e879f9;
+  --lt-c-error: #f87171;
+  --lt-c-response: #4ade80;
+}
+.lt-svg {
+  --lt-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --lt-font-mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.lt-node { cursor: pointer; }
+.lt-node__box { fill: var(--lt-node-bg); stroke: var(--lt-node-border); stroke-width: 1; transition: stroke .12s ease; }
+.lt-node:hover .lt-node__box { stroke: var(--lt-node-border-hover); }
+.lt-node__chip { fill: var(--lt-type); fill-opacity: .1; }
+.lt-node__icon { fill: none; stroke: var(--lt-type); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.lt-node__label { font: 600 12.5px var(--lt-font-mono); fill: var(--lt-text); }
+.lt-node__meta { font: 400 11px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-node--component { --lt-type: var(--lt-c-component); }
+.lt-node--function { --lt-type: var(--lt-c-function); }
+.lt-node--service { --lt-type: var(--lt-c-service); }
+.lt-node--route { --lt-type: var(--lt-c-route); }
+.lt-node--database { --lt-type: var(--lt-c-database); }
+.lt-node--external { --lt-type: var(--lt-c-external); }
+.lt-node--library { --lt-type: var(--lt-c-library); }
+.lt-node--condition { --lt-type: var(--lt-c-condition); }
+.lt-node--event { --lt-type: var(--lt-c-event); }
+.lt-node--error { --lt-type: var(--lt-c-error); }
+.lt-node--response { --lt-type: var(--lt-c-response); }
+.lt-node--condition .lt-node__box { stroke: var(--lt-c-condition); stroke-opacity: .55; stroke-dasharray: 4 3; }
+.lt-node--error .lt-node__box { fill: var(--lt-error-bg); stroke: var(--lt-error-border); }
+.lt-node--response .lt-node__box { fill: var(--lt-response-bg); stroke: var(--lt-response-border); }
+.lt-node--entry .lt-node__box { stroke: var(--lt-type); stroke-width: 1.5; }
+.lt-edge__path { fill: none; stroke: var(--lt-edge); stroke-width: 1.4; marker-end: url(#lt-arrow); }
+.lt-edge--reads .lt-edge__path, .lt-edge--writes .lt-edge__path { stroke: var(--lt-c-database); stroke-opacity: .55; marker-end: url(#lt-arrow-database); }
+.lt-edge--requests .lt-edge__path { stroke: var(--lt-c-route); stroke-opacity: .6; marker-end: url(#lt-arrow-route); }
+.lt-edge--emits .lt-edge__path, .lt-edge--triggers .lt-edge__path { stroke: var(--lt-c-event); stroke-opacity: .55; marker-end: url(#lt-arrow-event); }
+.lt-edge--returns .lt-edge__path { stroke-dasharray: 2 3; }
+.lt-edge--inferred .lt-edge__path { stroke-dasharray: 6 4; }
+.lt-edge__label rect { fill: var(--lt-label-bg); stroke: var(--lt-node-border); }
+.lt-edge__label text { font: 500 10.5px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-edge--branch .lt-edge__label text { fill: var(--lt-c-condition); }
+.lt-edge--inferred .lt-edge__label text { font-style: italic; }
+.lt-arrow { fill: var(--lt-edge); }
+.lt-arrow--database { fill: var(--lt-c-database); }
+.lt-arrow--route { fill: var(--lt-c-route); }
+.lt-arrow--event { fill: var(--lt-c-event); }
+.lt-arrow--accent { fill: var(--lt-accent); }
+
+.lt-svg__bg { fill: var(--lt-canvas); }
+.lt-svg__title { font: 600 15px var(--lt-font-sans); fill: var(--lt-text); }
+.lt-svg__subtitle { font: 400 11.5px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-node { cursor: default; }</style>
+<defs><marker id="lt-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-database" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--database" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-route" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--route" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-event" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--event" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--accent" d="M0,1 L9,5 L0,9 z"/></marker></defs>
+<rect class="lt-svg__bg" width="100%" height="100%"/>
+<text class="lt-svg__title" x="40" y="32">What happens when a payment fails?</text>
+<text class="lt-svg__subtitle" x="40" y="50">LogicTrail · 16 nodes · 15 edges · static analysis</text>
+<g transform="translate(0,64)"><g class="lt-edges"><g class="lt-edge lt-edge--triggers lt-edge--inferred" data-id="e1" data-from="ext:Stripe:paymentIntents.create" data-to="route:POST /api/webhooks/stripe"><title>Stripe: paymentIntents.create triggers POST /api/webhooks/stripe (inferred, 60%)</title><path class="lt-edge__path" d="M734.3,94 L734.3,99.8 C734.3,105.7 734.3,117.3 734.3,129 C734.3,140.7 734.3,152.3 734.3,164"/><g class="lt-edge__label" transform="translate(734.3,129)"><rect x="-29.05" y="-9" width="58.1" height="18" rx="4"/><text text-anchor="middle" y="3.5">webhook</text></g></g><g class="lt-edge lt-edge--calls" data-id="e2" data-from="route:POST /api/webhooks/stripe" data-to="server/src/payments/stripe.ts#handleStripeWebhook"><title>POST /api/webhooks/stripe calls handleStripeWebhook()</title><path class="lt-edge__path" d="M734.3,218 L734.3,222.3 C734.3,226.7 734.3,235.3 734.3,244 C734.3,252.7 734.3,261.3 734.3,270"/></g><g class="lt-edge lt-edge--condition" data-id="e3" data-from="server/src/payments/stripe.ts#handleStripeWebhook" data-to="catch:server/src/payments/stripe.ts#handleStripeWebhook:25"><title>handleStripeWebhook() condition catch</title><path class="lt-edge__path" d="M788,324 L799.6,329.8 C811.3,335.7 834.5,347.3 846.2,359 C857.8,370.7 857.8,382.3 857.8,394"/><g class="lt-edge__label" transform="translate(857.8,359)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">on error</text></g></g><g class="lt-edge lt-edge--condition" data-id="e4" data-from="server/src/payments/stripe.ts#handleStripeWebhook" data-to="cond:server/src/payments/stripe.ts#handleStripeWebhook:29"><title>handleStripeWebhook() condition switch (event.type)</title><path class="lt-edge__path" d="M680.5,324 L668.9,329.8 C657.3,335.7 634,347.3 622.4,359 C610.8,370.7 610.8,382.3 610.8,394"/></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e5" data-from="catch:server/src/payments/stripe.ts#handleStripeWebhook:25" data-to="exit:server/src/payments/stripe.ts:26"><title>catch returns 400 Bad Request</title><path class="lt-edge__path" d="M857.8,434 L857.8,439.8 C857.8,445.7 857.8,457.3 857.8,469.3 C857.8,481.3 857.8,493.7 857.8,506"/></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e6" data-from="cond:server/src/payments/stripe.ts#handleStripeWebhook:29" data-to="server/src/services/orderService.ts#markOrderFailed"><title>switch (event.type) calls markOrderFailed()</title><path class="lt-edge__path" d="M610.8,434 L610.8,439.8 C610.8,445.7 610.8,457.3 610.8,469 C610.8,480.7 610.8,492.3 610.8,504"/><g class="lt-edge__label" transform="translate(610.8,469)"><rect x="-95.2" y="-9" width="190.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">payment_intent.payment_fail…</text></g></g><g class="lt-edge lt-edge--writes" data-id="e7" data-from="server/src/services/orderService.ts#markOrderFailed" data-to="db:prisma:order:update"><title>markOrderFailed() writes order.update</title><path class="lt-edge__path" d="M730.3,555.8 L752.9,560.5 C775.5,565.2 820.6,574.6 843.2,583.6 C865.8,592.7 865.8,601.3 865.8,610"/></g><g class="lt-edge lt-edge--calls" data-id="e8" data-from="server/src/services/orderService.ts#markOrderFailed" data-to="server/src/services/inventory.ts#releaseInventory"><title>markOrderFailed() calls releaseInventory()</title><path class="lt-edge__path" d="M610.8,558 L610.8,562.3 C610.8,566.7 610.8,575.3 610.8,584 C610.8,592.7 610.8,601.3 610.8,610"/></g><g class="lt-edge lt-edge--emits" data-id="e9" data-from="server/src/services/orderService.ts#markOrderFailed" data-to="event:event:order.paymentFailed"><title>markOrderFailed() emits order.paymentFailed</title><path class="lt-edge__path" d="M491.3,548 L449.2,554 C407,560 322.8,572 280.6,582.3 C238.5,592.7 238.5,601.3 238.5,610"/></g><g class="lt-edge lt-edge--reads" data-id="e10" data-from="server/src/services/inventory.ts#releaseInventory" data-to="db:prisma:cartItem:findMany"><title>releaseInventory() reads cartItem.findMany</title><path class="lt-edge__path" d="M664.1,664 L675.6,669.8 C687.2,675.7 710.2,687.3 721.8,699 C733.3,710.7 733.3,722.3 733.3,734"/></g><g class="lt-edge lt-edge--writes" data-id="e11" data-from="server/src/services/inventory.ts#releaseInventory" data-to="db:prisma:product:update"><title>releaseInventory() writes product.update</title><path class="lt-edge__path" d="M557.4,664 L545.9,669.8 C534.4,675.7 511.3,687.3 499.8,699 C488.3,710.7 488.3,722.3 488.3,734"/><g class="lt-edge__label" transform="translate(488.3,699)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">for each</text></g></g><g class="lt-edge lt-edge--triggers" data-id="e12" data-from="event:event:order.paymentFailed" data-to="server/src/events/handlers.ts#notifyPaymentFailed"><title>order.paymentFailed triggers notifyPaymentFailed()</title><path class="lt-edge__path" d="M238.5,664 L238.5,669.8 C238.5,675.7 238.5,687.3 238.5,699 C238.5,710.7 238.5,722.3 238.5,734"/><g class="lt-edge__label" transform="translate(238.5,699)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">listener</text></g></g><g class="lt-edge lt-edge--calls" data-id="e13" data-from="server/src/events/handlers.ts#notifyPaymentFailed" data-to="server/src/email/send.ts#sendPaymentFailedEmail"><title>notifyPaymentFailed() calls sendPaymentFailedEmail()</title><path class="lt-edge__path" d="M238.5,788 L238.5,792.3 C238.5,796.7 238.5,805.3 238.5,814 C238.5,822.7 238.5,831.3 238.5,840"/></g><g class="lt-edge lt-edge--reads" data-id="e14" data-from="server/src/email/send.ts#sendPaymentFailedEmail" data-to="db:prisma:order:findUnique"><title>sendPaymentFailedEmail() reads order.findUnique</title><path class="lt-edge__path" d="M183.2,894 L174.3,898.3 C165.5,902.7 147.7,911.3 138.9,920 C130,928.7 130,937.3 130,946"/></g><g class="lt-edge lt-edge--calls" data-id="e15" data-from="server/src/email/send.ts#sendPaymentFailedEmail" data-to="ext:Resend:emails.send"><title>sendPaymentFailedEmail() calls Resend: emails.send</title><path class="lt-edge__path" d="M293.8,894 L302.7,898.3 C311.5,902.7 329.3,911.3 338.1,920 C347,928.7 347,937.3 347,946"/></g></g><g class="lt-nodes"><g class="lt-node lt-node--external lt-node--entry" data-id="ext:Stripe:paymentIntents.create" transform="translate(595.3,40)" tabindex="0" role="button" aria-label="Stripe: paymentIntents.create"><title>Stripe: paymentIntents.create
+Calls Stripe: paymentIntents.create.</title><rect class="lt-node__box" width="278" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M2 8h12 M8 2c1.7 1.8 2.5 3.8 2.5 6S9.7 12.2 8 14 M8 2C6.3 3.8 5.5 5.8 5.5 8s.8 4.2 2.5 6"/><text class="lt-node__label" x="42" y="24">Stripe: paymentIntents.create</text><text class="lt-node__meta" x="42" y="40">payments/stripe.ts:9</text></g><g class="lt-node lt-node--route" data-id="route:POST /api/webhooks/stripe" transform="translate(610.3,164)" tabindex="0" role="button" aria-label="POST /api/webhooks/stripe"><title>POST /api/webhooks/stripe
+express route POST /api/webhooks/stripe.</title><rect class="lt-node__box" width="248" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M2.5 8h10M9.5 4.5 13 8l-3.5 3.5"/><text class="lt-node__label" x="42" y="24">POST /api/webhooks/stripe</text><text class="lt-node__meta" x="42" y="40">routes/webhooks.ts:6</text></g><g class="lt-node lt-node--function" data-id="server/src/payments/stripe.ts#handleStripeWebhook" transform="translate(625.3,270)" tabindex="0" role="button" aria-label="handleStripeWebhook()"><title>handleStripeWebhook()
+Verifies the Stripe signature and applies payment results to orders.</title><rect class="lt-node__box" width="218" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">handleStripeWebhook()</text><text class="lt-node__meta" x="42" y="40">payments/stripe.ts:17</text></g><g class="lt-node lt-node--condition" data-id="catch:server/src/payments/stripe.ts#handleStripeWebhook:25" transform="translate(797.8,394)" tabindex="0" role="button" aria-label="catch"><title>catch
+Error handling in handleStripeWebhook(): runs when the code above throws.</title><polygon class="lt-node__box" points="12,0 108,0 120,20 108,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">catch</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/payments/stripe.ts#handleStripeWebhook:29" transform="translate(506.8,394)" tabindex="0" role="button" aria-label="switch (event.type)"><title>switch (event.type)
+handleStripeWebhook() branches on `switch (event.type)`.</title><polygon class="lt-node__box" points="12,0 196,0 208,20 196,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">switch (event.type)</text></g><g class="lt-node lt-node--error" data-id="exit:server/src/payments/stripe.ts:26" transform="translate(756.3,506)" tabindex="0" role="button" aria-label="400 Bad Request"><title>400 Bad Request
+handleStripeWebhook() responds with HTTP 400.</title><rect class="lt-node__box" width="203" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">400 Bad Request</text><text class="lt-node__meta" x="42" y="38">payments/stripe.ts:26</text></g><g class="lt-node lt-node--service" data-id="server/src/services/orderService.ts#markOrderFailed" transform="translate(491.3,504)" tabindex="0" role="button" aria-label="markOrderFailed()"><title>markOrderFailed()
+Marks an order as failed, releases its stock and notifies listeners.</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">markOrderFailed()</text><text class="lt-node__meta" x="42" y="40">services/orderService.ts:30</text></g><g class="lt-node lt-node--database" data-id="db:prisma:order:update" transform="translate(746.3,610)" tabindex="0" role="button" aria-label="order.update"><title>order.update
+Writes to order via prisma (update).</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">order.update</text><text class="lt-node__meta" x="42" y="40">services/orderService.ts:31</text></g><g class="lt-node lt-node--service" data-id="server/src/services/inventory.ts#releaseInventory" transform="translate(501.3,610)" tabindex="0" role="button" aria-label="releaseInventory()"><title>releaseInventory()
+export async function releaseInventory(orderId: string)</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">releaseInventory()</text><text class="lt-node__meta" x="42" y="40">services/inventory.ts:23</text></g><g class="lt-node lt-node--event" data-id="event:event:order.paymentFailed" transform="translate(119,610)" tabindex="0" role="button" aria-label="order.paymentFailed"><title>order.paymentFailed
+Event &quot;order.paymentFailed&quot;.</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8Z"/><text class="lt-node__label" x="42" y="24">order.paymentFailed</text><text class="lt-node__meta" x="42" y="40">services/orderService.ts:33</text></g><g class="lt-node lt-node--database" data-id="db:prisma:cartItem:findMany" transform="translate(623.8,734)" tabindex="0" role="button" aria-label="cartItem.findMany"><title>cartItem.findMany
+Reads from cartItem via prisma (findMany).</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">cartItem.findMany</text><text class="lt-node__meta" x="42" y="40">services/inventory.ts:24</text></g><g class="lt-node lt-node--database" data-id="db:prisma:product:update" transform="translate(378.8,734)" tabindex="0" role="button" aria-label="product.update"><title>product.update
+Writes to product via prisma (update).</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">product.update</text><text class="lt-node__meta" x="42" y="40">services/inventory.ts:26</text></g><g class="lt-node lt-node--function" data-id="server/src/events/handlers.ts#notifyPaymentFailed" transform="translate(129.5,734)" tabindex="0" role="button" aria-label="notifyPaymentFailed()"><title>notifyPaymentFailed()
+async function notifyPaymentFailed({ orderId }: { orderId: string })</title><rect class="lt-node__box" width="218" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">notifyPaymentFailed()</text><text class="lt-node__meta" x="42" y="40">events/handlers.ts:11</text></g><g class="lt-node lt-node--function" data-id="server/src/email/send.ts#sendPaymentFailedEmail" transform="translate(118.5,840)" tabindex="0" role="button" aria-label="sendPaymentFailedEmail()"><title>sendPaymentFailedEmail()
+export async function sendPaymentFailedEmail(orderId: string)</title><rect class="lt-node__box" width="240" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">sendPaymentFailedEmail()</text><text class="lt-node__meta" x="42" y="40">email/send.ts:18</text></g><g class="lt-node lt-node--database" data-id="db:prisma:order:findUnique" transform="translate(40,946)" tabindex="0" role="button" aria-label="order.findUnique"><title>order.findUnique
+Reads from order via prisma (findUnique).</title><rect class="lt-node__box" width="180" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">order.findUnique</text><text class="lt-node__meta" x="42" y="40">email/send.ts:19</text></g><g class="lt-node lt-node--external" data-id="ext:Resend:emails.send" transform="translate(246,946)" tabindex="0" role="button" aria-label="Resend: emails.send"><title>Resend: emails.send
+Calls Resend: emails.send.</title><rect class="lt-node__box" width="202" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M2 8h12 M8 2c1.7 1.8 2.5 3.8 2.5 6S9.7 12.2 8 14 M8 2C6.3 3.8 5.5 5.8 5.5 8s.8 4.2 2.5 6"/><text class="lt-node__label" x="42" y="24">Resend: emails.send</text><text class="lt-node__meta" x="42" y="40">email/send.ts:21</text></g></g></g>
+</svg>

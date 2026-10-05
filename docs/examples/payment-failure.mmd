@@ -1,0 +1,49 @@
+%% LogicTrail: what happens when a payment fails?
+flowchart TD
+  n1{{"Stripe: paymentIntents.create<br/><small>server/src/payments/stripe.ts:9</small>"}}
+  n2[/"POST /api/webhooks/stripe<br/><small>server/src/routes/webhooks.ts:6</small>"/]
+  n3["handleStripeWebhook()<br/><small>server/src/payments/stripe.ts:17</small>"]
+  n4{"catch"}
+  n5{"switch (event.type)"}
+  n6(["400 Bad Request<br/><small>server/src/payments/stripe.ts:26</small>"])
+  n7[["markOrderFailed()<br/><small>server/src/services/orderService.ts:30</small>"]]
+  n8[("order.update<br/><small>server/src/services/orderService.ts:31</small>")]
+  n9[["releaseInventory()<br/><small>server/src/services/inventory.ts:23</small>"]]
+  n10>"order.paymentFailed<br/><small>server/src/services/orderService.ts:33</small>"]
+  n11[("cartItem.findMany<br/><small>server/src/services/inventory.ts:24</small>")]
+  n12[("product.update<br/><small>server/src/services/inventory.ts:26</small>")]
+  n13["notifyPaymentFailed()<br/><small>server/src/events/handlers.ts:11</small>"]
+  n14["sendPaymentFailedEmail()<br/><small>server/src/email/send.ts:18</small>"]
+  n15[("order.findUnique<br/><small>server/src/email/send.ts:19</small>")]
+  n16{{"Resend: emails.send<br/><small>server/src/email/send.ts:21</small>"}}
+  n1 -.->|"webhook · inferred 60%"| n2
+  n2 --> n3
+  n3 -->|"on error"| n4
+  n3 --> n5
+  n4 -.-> n6
+  n5 -->|"payment_intent.payment_failed"| n7
+  n7 --> n8
+  n7 --> n9
+  n7 --> n10
+  n9 --> n11
+  n9 -->|"for each"| n12
+  n10 -->|"listener"| n13
+  n13 --> n14
+  n14 --> n15
+  n14 --> n16
+  classDef external fill:#fdf2f8,stroke:#db2777,color:#18181b
+  classDef route fill:#eff6ff,stroke:#2563eb,color:#18181b
+  classDef function fill:#ffffff,stroke:#71717a,color:#18181b
+  classDef condition fill:#fefce8,stroke:#a16207,color:#18181b
+  classDef error fill:#fef2f2,stroke:#dc2626,color:#7f1d1d
+  classDef service fill:#f0fdfa,stroke:#0d9488,color:#18181b
+  classDef database fill:#fff7ed,stroke:#c2410c,color:#18181b
+  classDef event fill:#fdf4ff,stroke:#a21caf,color:#18181b
+  class n1,n16 external
+  class n2 route
+  class n3,n13,n14 function
+  class n4,n5 condition
+  class n6 error
+  class n7,n9 service
+  class n8,n11,n12,n15 database
+  class n10 event

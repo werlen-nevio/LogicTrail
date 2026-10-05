@@ -1,0 +1,1900 @@
+{
+  "schemaVersion": 1,
+  "query": "how does login work?",
+  "title": "How does login work?",
+  "entryPoints": [
+    "client/src/pages/LoginPage.tsx#LoginPage"
+  ],
+  "nodes": [
+    {
+      "id": "client/src/pages/LoginPage.tsx#LoginPage",
+      "type": "component",
+      "label": "LoginPage",
+      "file": "client/src/pages/LoginPage.tsx",
+      "line": 5,
+      "description": "React component rendered for /login.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/LoginPage.tsx",
+          "line": 5,
+          "kind": "definition",
+          "text": "export function LoginPage() {"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "export function LoginPage() {",
+          "  const navigate = useNavigate();",
+          "",
+          "  return (",
+          "    <AuthLayout title=\"Sign in to Acme\">",
+          "      <LoginForm onSuccess={() => navigate(\"/dashboard\")} />",
+          "    </AuthLayout>",
+          "  );",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "component",
+        "qualifiedName": "LoginPage",
+        "signature": "export function LoginPage()",
+        "async": false,
+        "pages": [
+          "/login"
+        ],
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "client/src/components/LoginForm.tsx#LoginForm",
+      "type": "component",
+      "label": "LoginForm",
+      "file": "client/src/components/LoginForm.tsx",
+      "line": 8,
+      "description": "React component.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/components/LoginForm.tsx",
+          "line": 8,
+          "kind": "definition",
+          "text": "export function LoginForm({ onSuccess }: LoginFormProps) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export function LoginForm({ onSuccess }: LoginFormProps) {",
+          "  const [email, setEmail] = useState(\"\");",
+          "  const [password, setPassword] = useState(\"\");",
+          "  const [error, setError] = useState<string | null>(null);",
+          "",
+          "  async function handleSubmit(event: FormEvent) {",
+          "    event.preventDefault();",
+          "    setError(null);",
+          "    try {",
+          "      const user = await login(email, password);",
+          "      onSuccess(user);",
+          "    } catch (err) {",
+          "      setError((err as Error).message);",
+          "    }",
+          "  }",
+          "",
+          "  return (",
+          "    <form onSubmit={handleSubmit}>",
+          "      <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder=\"Email\" />",
+          "      <input",
+          "        type=\"password\"",
+          "        value={password}",
+          "        onChange={(e) => setPassword(e.target.value)}",
+          "        placeholder=\"Password\"",
+          "      />",
+          "      {error && <p role=\"alert\">{error}</p>}",
+          "      <button type=\"submit\">Sign in</button>",
+          "    </form>",
+          "  );",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "component",
+        "qualifiedName": "LoginForm",
+        "signature": "export function LoginForm({ onSuccess }: LoginFormProps)",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "nav:/dashboard",
+      "type": "route",
+      "label": "navigate /dashboard",
+      "description": "Client-side navigation to /dashboard.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/LoginPage.tsx",
+          "line": 10,
+          "kind": "call",
+          "text": "<LoginForm onSuccess={() => navigate(\"/dashboard\")} />"
+        }
+      ],
+      "metadata": {
+        "navigation": true,
+        "path": "/dashboard",
+        "framework": "react-router",
+        "kind": "navigation"
+      },
+      "file": "client/src/pages/LoginPage.tsx",
+      "line": 10,
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "    <AuthLayout title=\"Sign in to Acme\">",
+          "      <LoginForm onSuccess={() => navigate(\"/dashboard\")} />",
+          "    </AuthLayout>"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "client/src/components/LoginForm.tsx#LoginForm.handleSubmit",
+      "type": "function",
+      "label": "handleSubmit()",
+      "file": "client/src/components/LoginForm.tsx",
+      "line": 13,
+      "description": "async function handleSubmit(event: FormEvent)",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/components/LoginForm.tsx",
+          "line": 13,
+          "kind": "definition",
+          "text": "async function handleSubmit(event: FormEvent) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 13,
+        "lines": [
+          "  async function handleSubmit(event: FormEvent) {",
+          "    event.preventDefault();",
+          "    setError(null);",
+          "    try {",
+          "      const user = await login(email, password);",
+          "      onSuccess(user);",
+          "    } catch (err) {",
+          "      setError((err as Error).message);",
+          "    }",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "LoginForm.handleSubmit",
+        "signature": "async function handleSubmit(event: FormEvent)",
+        "async": true,
+        "parent": "LoginForm",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "client/src/api/auth.ts#login",
+      "type": "function",
+      "label": "login()",
+      "file": "client/src/api/auth.ts",
+      "line": 7,
+      "description": "Sends the credentials to the API; the server answers with a session cookie.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "client/src/api/auth.ts",
+          "line": 7,
+          "kind": "definition",
+          "text": "export async function login(email: string, password: string): Promise<SignedInUser> {"
+        }
+      ],
+      "snippet": {
+        "startLine": 7,
+        "lines": [
+          "export async function login(email: string, password: string): Promise<SignedInUser> {",
+          "  const response = await fetch(\"/api/auth/login\", {",
+          "    method: \"POST\",",
+          "    headers: { \"Content-Type\": \"application/json\" },",
+          "    credentials: \"include\",",
+          "    body: JSON.stringify({ email, password }),",
+          "  });",
+          "  if (!response.ok) {",
+          "    throw new Error(\"Invalid email or password\");",
+          "  }",
+          "  const body = await response.json();",
+          "  return body.user;",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "login",
+        "signature": "export async function login(email: string, password: string): Promise<SignedInUser>",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "route:POST /api/auth/login",
+      "type": "route",
+      "label": "POST /api/auth/login",
+      "file": "server/src/routes/auth.ts",
+      "line": 10,
+      "description": "express route POST /api/auth/login.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/auth.ts",
+          "line": 10,
+          "kind": "route",
+          "text": "router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"
+        }
+      ],
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "",
+          "router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);",
+          "router.post(\"/logout\", requireAuth, authController.logout);",
+          "router.get(\"/me\", requireAuth, authController.me);",
+          ""
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "method": "POST",
+        "path": "/api/auth/login",
+        "framework": "express",
+        "kind": "route"
+      }
+    },
+    {
+      "id": "cond:client/src/api/auth.ts#login:14",
+      "type": "condition",
+      "label": "!response.ok",
+      "file": "client/src/api/auth.ts",
+      "line": 14,
+      "description": "login() branches on `!response.ok`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/auth.ts",
+          "line": 14,
+          "kind": "branch",
+          "text": "if (!response.ok) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "  if (!response.ok) {",
+          "    throw new Error(\"Invalid email or password\");",
+          "  }",
+          "  const body = await response.json();"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "client/src/api/auth.ts#login",
+        "test": "!response.ok"
+      }
+    },
+    {
+      "id": "server/src/middleware/rateLimit.ts#loginRateLimit",
+      "type": "function",
+      "label": "loginRateLimit()",
+      "file": "server/src/middleware/rateLimit.ts",
+      "line": 8,
+      "description": "Allows at most five login attempts per IP and minute.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 8,
+          "kind": "definition",
+          "text": "export async function loginRateLimit(req: Request, res: Response, next: NextFunction) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function loginRateLimit(req: Request, res: Response, next: NextFunction) {",
+          "  const key = `login-attempts:${req.ip}`;",
+          "  const attempts = await redis.incr(key);",
+          "  if (attempts === 1) {",
+          "    await redis.expire(key, WINDOW_SECONDS);",
+          "  }",
+          "  if (attempts > MAX_ATTEMPTS) {",
+          "    return res.status(429).json({ error: \"Too many login attempts\" });",
+          "  }",
+          "  next();",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "loginRateLimit",
+        "signature": "export async function loginRateLimit(req: Request, res: Response, next: NextFunction)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/middleware/validate.ts#validateBody",
+      "type": "function",
+      "label": "validateBody()",
+      "file": "server/src/middleware/validate.ts",
+      "line": 5,
+      "description": "Validates the request body against a zod schema.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 5,
+          "kind": "definition",
+          "text": "export function validateBody(schema: ZodType) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "export function validateBody(schema: ZodType) {",
+          "  return (req: Request, res: Response, next: NextFunction) => {",
+          "    const result = schema.safeParse(req.body);",
+          "    if (!result.success) {",
+          "      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });",
+          "    }",
+          "    req.body = result.data;",
+          "    next();",
+          "  };",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "validateBody",
+        "signature": "export function validateBody(schema: ZodType)",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/controllers/authController.ts#authController.login",
+      "type": "function",
+      "label": "authController.login()",
+      "file": "server/src/controllers/authController.ts",
+      "line": 14,
+      "description": "Authenticates email + password and starts a cookie-based session.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 14,
+          "kind": "definition",
+          "text": "async login(req: Request, res: Response) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "  async login(req: Request, res: Response) {",
+          "    const { email, password } = req.body;",
+          "",
+          "    const user = await findUserByEmail(email);",
+          "    if (!user) {",
+          "      await recordFailedLogin(email, req.ip);",
+          "      return res.status(401).json({ error: \"Invalid email or password\" });",
+          "    }",
+          "",
+          "    const valid = await verifyPassword(password, user.passwordHash);",
+          "    if (!valid) {",
+          "      await recordFailedLogin(email, req.ip);",
+          "      return res.status(401).json({ error: \"Invalid email or password\" });",
+          "    }",
+          "",
+          "    const session = await createSession(user.id, req.headers[\"user-agent\"]);",
+          "    setSessionCookie(res, session.id);",
+          "    authEvents.emit(\"user.loggedIn\", { userId: user.id });",
+          "",
+          "    return res.json({ user: toPublicUser(user) });",
+          "  },"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "method",
+        "qualifiedName": "authController.login",
+        "signature": "async login(req: Request, res: Response)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "exit:client/src/api/auth.ts:15",
+      "type": "error",
+      "label": "throw Error",
+      "file": "client/src/api/auth.ts",
+      "line": 15,
+      "description": "login() throws Error: \"Invalid email or password\".",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/auth.ts",
+          "line": 15,
+          "kind": "exit",
+          "text": "throw new Error(\"Invalid email or password\");"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "  if (!response.ok) {",
+          "    throw new Error(\"Invalid email or password\");",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "throw",
+        "owner": "client/src/api/auth.ts#login",
+        "errorName": "Error",
+        "message": "Invalid email or password"
+      }
+    },
+    {
+      "id": "db:redis:*:incr",
+      "type": "database",
+      "label": "redis.incr",
+      "description": "Writes to redis via redis (incr).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "const attempts = await redis.incr(key);"
+        }
+      ],
+      "metadata": {
+        "system": "redis",
+        "operation": "incr",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/middleware/rateLimit.ts",
+      "line": 10,
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "  const key = `login-attempts:${req.ip}`;",
+          "  const attempts = await redis.incr(key);",
+          "  if (attempts === 1) {"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "cond:server/src/middleware/rateLimit.ts#loginRateLimit:11",
+      "type": "condition",
+      "label": "attempts === 1",
+      "file": "server/src/middleware/rateLimit.ts",
+      "line": 11,
+      "description": "loginRateLimit() branches on `attempts === 1`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 11,
+          "kind": "branch",
+          "text": "if (attempts === 1) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 11,
+        "lines": [
+          "  if (attempts === 1) {",
+          "    await redis.expire(key, WINDOW_SECONDS);",
+          "  }",
+          "  if (attempts > MAX_ATTEMPTS) {"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/middleware/rateLimit.ts#loginRateLimit",
+        "test": "attempts === 1"
+      }
+    },
+    {
+      "id": "cond:server/src/middleware/rateLimit.ts#loginRateLimit:14",
+      "type": "condition",
+      "label": "attempts > MAX_ATTEMPTS",
+      "file": "server/src/middleware/rateLimit.ts",
+      "line": 14,
+      "description": "loginRateLimit() branches on `attempts > MAX_ATTEMPTS`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 14,
+          "kind": "branch",
+          "text": "if (attempts > MAX_ATTEMPTS) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "  if (attempts > MAX_ATTEMPTS) {",
+          "    return res.status(429).json({ error: \"Too many login attempts\" });",
+          "  }",
+          "  next();"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/middleware/rateLimit.ts#loginRateLimit",
+        "test": "attempts > MAX_ATTEMPTS"
+      }
+    },
+    {
+      "id": "cond:server/src/middleware/validate.ts#validateBody:8",
+      "type": "condition",
+      "label": "!result.success",
+      "file": "server/src/middleware/validate.ts",
+      "line": 8,
+      "description": "validateBody() branches on `!result.success`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 8,
+          "kind": "branch",
+          "text": "if (!result.success) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "    if (!result.success) {",
+          "      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });",
+          "    }",
+          "    req.body = result.data;"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/middleware/validate.ts#validateBody",
+        "test": "!result.success"
+      }
+    },
+    {
+      "id": "server/src/services/userService.ts#findUserByEmail",
+      "type": "service",
+      "label": "findUserByEmail()",
+      "file": "server/src/services/userService.ts",
+      "line": 9,
+      "description": "Looks up a user by their (case-insensitive) email address.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 9,
+          "kind": "definition",
+          "text": "export async function findUserByEmail(email: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "export async function findUserByEmail(email: string) {",
+          "  return db.user.findUnique({ where: { email: email.toLowerCase() } });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "findUserByEmail",
+        "signature": "export async function findUserByEmail(email: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "cond:server/src/controllers/authController.ts#authController.login:18",
+      "type": "condition",
+      "label": "!user",
+      "file": "server/src/controllers/authController.ts",
+      "line": 18,
+      "description": "authController.login() branches on `!user`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 18,
+          "kind": "branch",
+          "text": "if (!user) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 18,
+        "lines": [
+          "    if (!user) {",
+          "      await recordFailedLogin(email, req.ip);",
+          "      return res.status(401).json({ error: \"Invalid email or password\" });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/controllers/authController.ts#authController.login",
+        "test": "!user"
+      }
+    },
+    {
+      "id": "db:redis:*:expire",
+      "type": "database",
+      "label": "redis.expire",
+      "description": "Writes to redis via redis (expire).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 12,
+          "kind": "call",
+          "text": "await redis.expire(key, WINDOW_SECONDS);"
+        }
+      ],
+      "metadata": {
+        "system": "redis",
+        "operation": "expire",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/middleware/rateLimit.ts",
+      "line": 12,
+      "snippet": {
+        "startLine": 11,
+        "lines": [
+          "  if (attempts === 1) {",
+          "    await redis.expire(key, WINDOW_SECONDS);",
+          "  }"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "exit:server/src/middleware/rateLimit.ts:15",
+      "type": "error",
+      "label": "429 Too Many Requests",
+      "file": "server/src/middleware/rateLimit.ts",
+      "line": 15,
+      "description": "loginRateLimit() responds with HTTP 429.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 15,
+          "kind": "exit",
+          "text": "return res.status(429).json({ error: \"Too many login attempts\" });"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "  if (attempts > MAX_ATTEMPTS) {",
+          "    return res.status(429).json({ error: \"Too many login attempts\" });",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/middleware/rateLimit.ts#loginRateLimit",
+        "status": 429
+      }
+    },
+    {
+      "id": "exit:server/src/middleware/validate.ts:9",
+      "type": "error",
+      "label": "400 Bad Request",
+      "file": "server/src/middleware/validate.ts",
+      "line": 9,
+      "description": "validateBody() responds with HTTP 400.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 9,
+          "kind": "exit",
+          "text": "return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "    if (!result.success) {",
+          "      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/middleware/validate.ts#validateBody",
+        "status": 400
+      }
+    },
+    {
+      "id": "db:prisma:user:findUnique",
+      "type": "database",
+      "label": "user.findUnique",
+      "description": "Reads from user via prisma (findUnique).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "return db.user.findUnique({ where: { email: email.toLowerCase() } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "user",
+        "operation": "findUnique",
+        "access": "read",
+        "kind": "database"
+      },
+      "file": "server/src/services/userService.ts",
+      "line": 10,
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "export async function findUserByEmail(email: string) {",
+          "  return db.user.findUnique({ where: { email: email.toLowerCase() } });",
+          "}"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/services/userService.ts#recordFailedLogin",
+      "type": "service",
+      "label": "recordFailedLogin()",
+      "file": "server/src/services/userService.ts",
+      "line": 14,
+      "description": "Stores a failed login attempt so rate limiting and audits can see it.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 14,
+          "kind": "definition",
+          "text": "export async function recordFailedLogin(email: string, ip?: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "export async function recordFailedLogin(email: string, ip?: string) {",
+          "  await db.loginAttempt.create({ data: { email, ip } });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "recordFailedLogin",
+        "signature": "export async function recordFailedLogin(email: string, ip?: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "exit:server/src/controllers/authController.ts:20",
+      "type": "error",
+      "label": "401 Unauthorized",
+      "file": "server/src/controllers/authController.ts",
+      "line": 20,
+      "description": "authController.login() responds with HTTP 401.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 20,
+          "kind": "exit",
+          "text": "return res.status(401).json({ error: \"Invalid email or password\" });"
+        }
+      ],
+      "snippet": {
+        "startLine": 19,
+        "lines": [
+          "      await recordFailedLogin(email, req.ip);",
+          "      return res.status(401).json({ error: \"Invalid email or password\" });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/controllers/authController.ts#authController.login",
+        "status": 401
+      }
+    },
+    {
+      "id": "server/src/auth/password.ts#verifyPassword",
+      "type": "function",
+      "label": "verifyPassword()",
+      "file": "server/src/auth/password.ts",
+      "line": 6,
+      "description": "Compares a plain-text password with the stored bcrypt hash.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/auth/password.ts",
+          "line": 6,
+          "kind": "definition",
+          "text": "export async function verifyPassword(password: string, hash: string): Promise<boolean> {"
+        }
+      ],
+      "snippet": {
+        "startLine": 6,
+        "lines": [
+          "export async function verifyPassword(password: string, hash: string): Promise<boolean> {",
+          "  return bcrypt.compare(password, hash);",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "verifyPassword",
+        "signature": "export async function verifyPassword(password: string, hash: string): Promise<boolean>",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "type": "condition",
+      "label": "!valid",
+      "file": "server/src/controllers/authController.ts",
+      "line": 24,
+      "description": "authController.login() branches on `!valid`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 24,
+          "kind": "branch",
+          "text": "if (!valid) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 24,
+        "lines": [
+          "    if (!valid) {",
+          "      await recordFailedLogin(email, req.ip);",
+          "      return res.status(401).json({ error: \"Invalid email or password\" });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/controllers/authController.ts#authController.login",
+        "test": "!valid"
+      }
+    },
+    {
+      "id": "db:prisma:loginAttempt:create",
+      "type": "database",
+      "label": "loginAttempt.create",
+      "description": "Writes to loginAttempt via prisma (create).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 15,
+          "kind": "call",
+          "text": "await db.loginAttempt.create({ data: { email, ip } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "loginAttempt",
+        "operation": "create",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/services/userService.ts",
+      "line": 15,
+      "snippet": {
+        "startLine": 14,
+        "lines": [
+          "export async function recordFailedLogin(email: string, ip?: string) {",
+          "  await db.loginAttempt.create({ data: { email, ip } });",
+          "}"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "lib:bcrypt:bcrypt.compare",
+      "type": "library",
+      "label": "bcrypt.compare",
+      "description": "Password hashing via bcrypt (compare).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/auth/password.ts",
+          "line": 7,
+          "kind": "call",
+          "text": "return bcrypt.compare(password, hash);"
+        }
+      ],
+      "metadata": {
+        "package": "bcrypt",
+        "operation": "compare",
+        "category": "password hashing",
+        "kind": "library"
+      },
+      "file": "server/src/auth/password.ts",
+      "line": 7,
+      "snippet": {
+        "startLine": 6,
+        "lines": [
+          "export async function verifyPassword(password: string, hash: string): Promise<boolean> {",
+          "  return bcrypt.compare(password, hash);",
+          "}"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "exit:server/src/controllers/authController.ts:26",
+      "type": "error",
+      "label": "401 Unauthorized",
+      "file": "server/src/controllers/authController.ts",
+      "line": 26,
+      "description": "authController.login() responds with HTTP 401.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 26,
+          "kind": "exit",
+          "text": "return res.status(401).json({ error: \"Invalid email or password\" });"
+        }
+      ],
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "      await recordFailedLogin(email, req.ip);",
+          "      return res.status(401).json({ error: \"Invalid email or password\" });",
+          "    }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/controllers/authController.ts#authController.login",
+        "status": 401
+      }
+    },
+    {
+      "id": "server/src/auth/session.ts#createSession",
+      "type": "function",
+      "label": "createSession()",
+      "file": "server/src/auth/session.ts",
+      "line": 8,
+      "description": "Creates a session record that expires after two weeks.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/auth/session.ts",
+          "line": 8,
+          "kind": "definition",
+          "text": "export async function createSession(userId: string, userAgent?: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function createSession(userId: string, userAgent?: string) {",
+          "  const id = randomBytes(32).toString(\"hex\");",
+          "  return db.session.create({",
+          "    data: { id, userId, userAgent, expiresAt: new Date(Date.now() + SESSION_TTL_MS) },",
+          "  });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "createSession",
+        "signature": "export async function createSession(userId: string, userAgent?: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/auth/session.ts#setSessionCookie",
+      "type": "function",
+      "label": "setSessionCookie()",
+      "file": "server/src/auth/session.ts",
+      "line": 20,
+      "description": "Writes the session id to an HTTP-only cookie.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/auth/session.ts",
+          "line": 20,
+          "kind": "definition",
+          "text": "export function setSessionCookie(res: Response, sessionId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 20,
+        "lines": [
+          "export function setSessionCookie(res: Response, sessionId: string) {",
+          "  res.cookie(\"sid\", sessionId, {",
+          "    httpOnly: true,",
+          "    secure: process.env.NODE_ENV === \"production\",",
+          "    sameSite: \"lax\",",
+          "    maxAge: SESSION_TTL_MS,",
+          "  });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "setSessionCookie",
+        "signature": "export function setSessionCookie(res: Response, sessionId: string)",
+        "async": false,
+        "envVars": [
+          "NODE_ENV"
+        ],
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "event:event:user.loggedIn",
+      "type": "event",
+      "label": "user.loggedIn",
+      "description": "Event \"user.loggedIn\".",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 31,
+          "kind": "emit",
+          "text": "authEvents.emit(\"user.loggedIn\", { userId: user.id });"
+        }
+      ],
+      "metadata": {
+        "channel": "event",
+        "event": "user.loggedIn",
+        "system": "events",
+        "kind": "event"
+      },
+      "file": "server/src/controllers/authController.ts",
+      "line": 31,
+      "snippet": {
+        "startLine": 30,
+        "lines": [
+          "    setSessionCookie(res, session.id);",
+          "    authEvents.emit(\"user.loggedIn\", { userId: user.id });",
+          ""
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/services/userService.ts#toPublicUser",
+      "type": "service",
+      "label": "toPublicUser()",
+      "file": "server/src/services/userService.ts",
+      "line": 18,
+      "description": "export function toPublicUser(user: { id: string; email: string }): PublicUser",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 18,
+          "kind": "definition",
+          "text": "export function toPublicUser(user: { id: string; email: string }): PublicUser {"
+        }
+      ],
+      "snippet": {
+        "startLine": 18,
+        "lines": [
+          "export function toPublicUser(user: { id: string; email: string }): PublicUser {",
+          "  return { id: user.id, email: user.email };",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "toPublicUser",
+        "signature": "export function toPublicUser(user: { id: string; email: string }): PublicUser",
+        "async": false,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "lib:crypto:randomBytes",
+      "type": "library",
+      "label": "randomBytes",
+      "description": "Crypto via crypto (randomBytes).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/auth/session.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "const id = randomBytes(32).toString(\"hex\");"
+        }
+      ],
+      "metadata": {
+        "package": "crypto",
+        "operation": "randomBytes",
+        "category": "crypto",
+        "kind": "library"
+      },
+      "file": "server/src/auth/session.ts",
+      "line": 9,
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function createSession(userId: string, userAgent?: string) {",
+          "  const id = randomBytes(32).toString(\"hex\");",
+          "  return db.session.create({"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "db:prisma:session:create",
+      "type": "database",
+      "label": "session.create",
+      "description": "Writes to session via prisma (create).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/auth/session.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "return db.session.create({"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "session",
+        "operation": "create",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/auth/session.ts",
+      "line": 10,
+      "snippet": {
+        "startLine": 9,
+        "lines": [
+          "  const id = randomBytes(32).toString(\"hex\");",
+          "  return db.session.create({",
+          "    data: { id, userId, userAgent, expiresAt: new Date(Date.now() + SESSION_TTL_MS) },"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/events/handlers.ts#on user.loggedIn",
+      "type": "function",
+      "label": "on user.loggedIn handler",
+      "file": "server/src/events/handlers.ts",
+      "line": 5,
+      "description": "async ({ userId }: { userId: string }) =>",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 5,
+          "kind": "definition",
+          "text": "authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {",
+          "  await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });",
+          "});"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "handler",
+        "qualifiedName": "on user.loggedIn",
+        "signature": "async ({ userId }: { userId: string }) =>",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:user:update",
+      "type": "database",
+      "label": "user.update",
+      "description": "Writes to user via prisma (update).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 6,
+          "kind": "call",
+          "text": "await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "user",
+        "operation": "update",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/events/handlers.ts",
+      "line": 6,
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {",
+          "  await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });",
+          "});"
+        ],
+        "truncated": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "client/src/pages/LoginPage.tsx#LoginPage",
+      "to": "client/src/components/LoginForm.tsx#LoginForm",
+      "type": "renders",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/LoginPage.tsx",
+          "line": 10,
+          "kind": "reference",
+          "text": "<LoginForm onSuccess={() => navigate(\"/dashboard\")} />"
+        }
+      ]
+    },
+    {
+      "id": "e2",
+      "from": "client/src/pages/LoginPage.tsx#LoginPage",
+      "to": "nav:/dashboard",
+      "type": "navigates",
+      "label": "onSuccess",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/pages/LoginPage.tsx",
+          "line": 10,
+          "kind": "call",
+          "text": "<LoginForm onSuccess={() => navigate(\"/dashboard\")} />"
+        }
+      ]
+    },
+    {
+      "id": "e3",
+      "from": "client/src/components/LoginForm.tsx#LoginForm",
+      "to": "client/src/components/LoginForm.tsx#LoginForm.handleSubmit",
+      "type": "calls",
+      "label": "onSubmit",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/components/LoginForm.tsx",
+          "line": 25,
+          "kind": "call",
+          "text": "<form onSubmit={handleSubmit}>"
+        }
+      ]
+    },
+    {
+      "id": "e4",
+      "from": "client/src/components/LoginForm.tsx#LoginForm.handleSubmit",
+      "to": "client/src/api/auth.ts#login",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/components/LoginForm.tsx",
+          "line": 17,
+          "kind": "call",
+          "text": "const user = await login(email, password);"
+        }
+      ]
+    },
+    {
+      "id": "e5",
+      "from": "client/src/api/auth.ts#login",
+      "to": "route:POST /api/auth/login",
+      "type": "requests",
+      "confidence": 0.95,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/auth.ts",
+          "line": 8,
+          "kind": "call",
+          "text": "const response = await fetch(\"/api/auth/login\", {"
+        }
+      ]
+    },
+    {
+      "id": "e6",
+      "from": "client/src/api/auth.ts#login",
+      "to": "cond:client/src/api/auth.ts#login:14",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/auth.ts",
+          "line": 14,
+          "kind": "branch",
+          "text": "if (!response.ok) {"
+        }
+      ]
+    },
+    {
+      "id": "e7",
+      "from": "route:POST /api/auth/login",
+      "to": "server/src/middleware/rateLimit.ts#loginRateLimit",
+      "type": "calls",
+      "label": "middleware",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/auth.ts",
+          "line": 10,
+          "kind": "route",
+          "text": "router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"
+        }
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "route:POST /api/auth/login",
+      "to": "server/src/middleware/validate.ts#validateBody",
+      "type": "calls",
+      "label": "middleware",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/auth.ts",
+          "line": 10,
+          "kind": "route",
+          "text": "router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"
+        }
+      ]
+    },
+    {
+      "id": "e9",
+      "from": "route:POST /api/auth/login",
+      "to": "server/src/controllers/authController.ts#authController.login",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/auth.ts",
+          "line": 10,
+          "kind": "route",
+          "text": "router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"
+        }
+      ]
+    },
+    {
+      "id": "e10",
+      "from": "cond:client/src/api/auth.ts#login:14",
+      "to": "exit:client/src/api/auth.ts:15",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "client/src/api/auth.ts",
+          "line": 15,
+          "kind": "exit",
+          "text": "throw new Error(\"Invalid email or password\");"
+        }
+      ]
+    },
+    {
+      "id": "e11",
+      "from": "server/src/middleware/rateLimit.ts#loginRateLimit",
+      "to": "db:redis:*:incr",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "const attempts = await redis.incr(key);"
+        }
+      ]
+    },
+    {
+      "id": "e12",
+      "from": "server/src/middleware/rateLimit.ts#loginRateLimit",
+      "to": "cond:server/src/middleware/rateLimit.ts#loginRateLimit:11",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 11,
+          "kind": "branch",
+          "text": "if (attempts === 1) {"
+        }
+      ]
+    },
+    {
+      "id": "e13",
+      "from": "server/src/middleware/rateLimit.ts#loginRateLimit",
+      "to": "cond:server/src/middleware/rateLimit.ts#loginRateLimit:14",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 14,
+          "kind": "branch",
+          "text": "if (attempts > MAX_ATTEMPTS) {"
+        }
+      ]
+    },
+    {
+      "id": "e14",
+      "from": "server/src/middleware/validate.ts#validateBody",
+      "to": "cond:server/src/middleware/validate.ts#validateBody:8",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 8,
+          "kind": "branch",
+          "text": "if (!result.success) {"
+        }
+      ]
+    },
+    {
+      "id": "e15",
+      "from": "server/src/controllers/authController.ts#authController.login",
+      "to": "server/src/services/userService.ts#findUserByEmail",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 17,
+          "kind": "call",
+          "text": "const user = await findUserByEmail(email);"
+        }
+      ]
+    },
+    {
+      "id": "e16",
+      "from": "server/src/controllers/authController.ts#authController.login",
+      "to": "cond:server/src/controllers/authController.ts#authController.login:18",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 18,
+          "kind": "branch",
+          "text": "if (!user) {"
+        }
+      ]
+    },
+    {
+      "id": "e17",
+      "from": "cond:server/src/middleware/rateLimit.ts#loginRateLimit:11",
+      "to": "db:redis:*:expire",
+      "type": "writes",
+      "label": "yes",
+      "branch": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 12,
+          "kind": "call",
+          "text": "await redis.expire(key, WINDOW_SECONDS);"
+        }
+      ]
+    },
+    {
+      "id": "e18",
+      "from": "cond:server/src/middleware/rateLimit.ts#loginRateLimit:14",
+      "to": "exit:server/src/middleware/rateLimit.ts:15",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/rateLimit.ts",
+          "line": 15,
+          "kind": "exit",
+          "text": "return res.status(429).json({ error: \"Too many login attempts\" });"
+        }
+      ]
+    },
+    {
+      "id": "e19",
+      "from": "cond:server/src/middleware/validate.ts#validateBody:8",
+      "to": "exit:server/src/middleware/validate.ts:9",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/middleware/validate.ts",
+          "line": 9,
+          "kind": "exit",
+          "text": "return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });"
+        }
+      ]
+    },
+    {
+      "id": "e20",
+      "from": "server/src/services/userService.ts#findUserByEmail",
+      "to": "db:prisma:user:findUnique",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "return db.user.findUnique({ where: { email: email.toLowerCase() } });"
+        }
+      ]
+    },
+    {
+      "id": "e21",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:18",
+      "to": "server/src/services/userService.ts#recordFailedLogin",
+      "type": "calls",
+      "label": "yes",
+      "branch": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 19,
+          "kind": "call",
+          "text": "await recordFailedLogin(email, req.ip);"
+        }
+      ]
+    },
+    {
+      "id": "e22",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:18",
+      "to": "exit:server/src/controllers/authController.ts:20",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 20,
+          "kind": "exit",
+          "text": "return res.status(401).json({ error: \"Invalid email or password\" });"
+        }
+      ]
+    },
+    {
+      "id": "e23",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:18",
+      "to": "server/src/auth/password.ts#verifyPassword",
+      "type": "calls",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 23,
+          "kind": "call",
+          "text": "const valid = await verifyPassword(password, user.passwordHash);"
+        }
+      ]
+    },
+    {
+      "id": "e24",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:18",
+      "to": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "type": "condition",
+      "branch": "no",
+      "label": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 24,
+          "kind": "branch",
+          "text": "if (!valid) {"
+        }
+      ]
+    },
+    {
+      "id": "e25",
+      "from": "server/src/services/userService.ts#recordFailedLogin",
+      "to": "db:prisma:loginAttempt:create",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/userService.ts",
+          "line": 15,
+          "kind": "call",
+          "text": "await db.loginAttempt.create({ data: { email, ip } });"
+        }
+      ]
+    },
+    {
+      "id": "e26",
+      "from": "server/src/auth/password.ts#verifyPassword",
+      "to": "lib:bcrypt:bcrypt.compare",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/auth/password.ts",
+          "line": 7,
+          "kind": "call",
+          "text": "return bcrypt.compare(password, hash);"
+        }
+      ]
+    },
+    {
+      "id": "e27",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "to": "server/src/services/userService.ts#recordFailedLogin",
+      "type": "calls",
+      "label": "yes",
+      "branch": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 25,
+          "kind": "call",
+          "text": "await recordFailedLogin(email, req.ip);"
+        }
+      ]
+    },
+    {
+      "id": "e28",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "to": "exit:server/src/controllers/authController.ts:26",
+      "type": "returns",
+      "branch": "yes",
+      "label": "yes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 26,
+          "kind": "exit",
+          "text": "return res.status(401).json({ error: \"Invalid email or password\" });"
+        }
+      ]
+    },
+    {
+      "id": "e29",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "to": "server/src/auth/session.ts#createSession",
+      "type": "calls",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 29,
+          "kind": "call",
+          "text": "const session = await createSession(user.id, req.headers[\"user-agent\"]);"
+        }
+      ]
+    },
+    {
+      "id": "e30",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "to": "server/src/auth/session.ts#setSessionCookie",
+      "type": "calls",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 30,
+          "kind": "call",
+          "text": "setSessionCookie(res, session.id);"
+        }
+      ]
+    },
+    {
+      "id": "e31",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "to": "event:event:user.loggedIn",
+      "type": "emits",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 31,
+          "kind": "emit",
+          "text": "authEvents.emit(\"user.loggedIn\", { userId: user.id });"
+        }
+      ]
+    },
+    {
+      "id": "e32",
+      "from": "cond:server/src/controllers/authController.ts#authController.login:24",
+      "to": "server/src/services/userService.ts#toPublicUser",
+      "type": "calls",
+      "label": "no",
+      "branch": "no",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/controllers/authController.ts",
+          "line": 33,
+          "kind": "call",
+          "text": "return res.json({ user: toPublicUser(user) });"
+        }
+      ]
+    },
+    {
+      "id": "e33",
+      "from": "server/src/auth/session.ts#createSession",
+      "to": "lib:crypto:randomBytes",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/auth/session.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "const id = randomBytes(32).toString(\"hex\");"
+        }
+      ]
+    },
+    {
+      "id": "e34",
+      "from": "server/src/auth/session.ts#createSession",
+      "to": "db:prisma:session:create",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/auth/session.ts",
+          "line": 10,
+          "kind": "call",
+          "text": "return db.session.create({"
+        }
+      ]
+    },
+    {
+      "id": "e35",
+      "from": "event:event:user.loggedIn",
+      "to": "server/src/events/handlers.ts#on user.loggedIn",
+      "type": "triggers",
+      "label": "listener",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 5,
+          "kind": "listener",
+          "text": "authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {"
+        }
+      ]
+    },
+    {
+      "id": "e36",
+      "from": "server/src/events/handlers.ts#on user.loggedIn",
+      "to": "db:prisma:user:update",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 6,
+          "kind": "call",
+          "text": "await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });"
+        }
+      ]
+    }
+  ],
+  "explanation": "The flow starts at `LoginPage` (client/src/pages/LoginPage.tsx:5).\n\n1. `LoginPage` renders `LoginForm`; navigates to `/dashboard`.\n2. `LoginForm` calls `handleSubmit()` on onSubmit.\n3. `handleSubmit()` calls `login()`.\n4. `login()` sends `POST /api/auth/login`; checks `!response.ok` (yes → `throw Error`).\n5. `POST /api/auth/login` runs middleware `loginRateLimit()` and `validateBody()`; calls `authController.login()`.\n6. `loginRateLimit()` writes `redis.incr`; checks `attempts === 1` (yes → `redis.expire`); checks `attempts > MAX_ATTEMPTS` (yes → `429 Too Many Requests`).\n7. `validateBody()` checks `!result.success` (yes → `400 Bad Request`).\n8. `authController.login()` calls `findUserByEmail()`; checks `!user` (yes → `recordFailedLogin()`, `401 Unauthorized`; no → `verifyPassword()`, checks `!valid`).\n9. `findUserByEmail()` reads `user.findUnique`.\n10. `recordFailedLogin()` writes `loginAttempt.create`.\n11. `verifyPassword()` calls `bcrypt.compare`.\n12. If `!valid`: yes → `recordFailedLogin()`, `401 Unauthorized`; no → `createSession()`, `setSessionCookie()`, `user.loggedIn`, `toPublicUser()`.\n13. `createSession()` calls `randomBytes`; writes `session.create`.\n14. `user.loggedIn` triggers `on user.loggedIn handler`.\n15. `on user.loggedIn handler` writes `user.update`.\n\nGenerated by static analysis without an LLM: descriptions come from doc comments and code facts.",
+  "analysis": {
+    "provider": "static",
+    "generatedAt": "2026-10-05T00:00:00.000Z",
+    "repository": "acme-shop",
+    "stats": {
+      "files": 42,
+      "symbols": 57,
+      "relationships": 95,
+      "candidates": 25
+    },
+    "warnings": []
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "name": "logictrail",
+  "version": "0.1.0",
+  "description": "Ask your codebase how it works. LogicTrail turns a question into an evidence-backed, interactive execution flow.",
+  "keywords": [
+    "cli",
+    "code-visualization",
+    "call-graph",
+    "static-analysis",
+    "typescript",
+    "javascript",
+    "mermaid",
+    "llm",
+    "claude",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/werlen-nevio/LogicTrail.git"
+  },
+  "homepage": "https://github.com/werlen-nevio/LogicTrail#readme",
+  "bugs": {
+    "url": "https://github.com/werlen-nevio/LogicTrail/issues"
+  },
+  "type": "module",
+  "bin": {
+    "logictrail": "./dist/cli/main.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "tsx src/cli/main.ts",
+    "demo": "tsx src/cli/main.ts \"how does login work?\" --root examples/acme-shop --output html,mermaid,svg,json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p src/viewer/tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "prepublishOnly": "npm run check && npm run build"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@dagrejs/dagre": "^3.1.1",
+    "commander": "^15.0.0",
+    "ignore": "^7.0.12",
+    "jiti": "^2.7.0",
+    "picocolors": "^1.1.1",
+    "typescript": "~6.0.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}

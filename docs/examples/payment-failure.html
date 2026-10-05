@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="LogicTrail 0.1.0">
+<meta name="color-scheme" content="light dark">
+<title>What happens when a payment fails? · LogicTrail</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M4%2015.5C7.5%2015.5%206.5%204.5%2010%204.5S12.5%2012%2016%2012%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%224%22%20cy%3D%2215.5%22%20r%3D%222.4%22%20fill%3D%22%232563eb%22%2F%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%224.5%22%20r%3D%222.4%22%20fill%3D%22%23fff%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%221.8%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2212%22%20r%3D%222.4%22%20fill%3D%22%232563eb%22%2F%3E%3C%2Fsvg%3E">
+<style>
+:root {
+  --lt-bg: #ffffff;
+  --lt-canvas: #fafafa;
+  --lt-dot: #e4e4e7;
+  --lt-node-bg: #ffffff;
+  --lt-node-border: #e4e4e7;
+  --lt-node-border-hover: #a1a1aa;
+  --lt-text: #18181b;
+  --lt-text-muted: #71717a;
+  --lt-edge: #a1a1aa;
+  --lt-edge-strong: #52525b;
+  --lt-label-bg: #ffffff;
+  --lt-accent: #2563eb;
+  --lt-panel: #ffffff;
+  --lt-border: #e4e4e7;
+  --lt-hover: #f4f4f5;
+  --lt-subtle: #f6f6f7;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+  --lt-error-bg: #fef2f2;
+  --lt-error-border: #fecaca;
+  --lt-response-bg: #f0fdf4;
+  --lt-response-border: #bbf7d0;
+  --lt-c-component: #7c3aed;
+  --lt-c-function: #52525b;
+  --lt-c-service: #0d9488;
+  --lt-c-route: #2563eb;
+  --lt-c-database: #c2410c;
+  --lt-c-external: #db2777;
+  --lt-c-library: #0e7490;
+  --lt-c-condition: #a16207;
+  --lt-c-event: #a21caf;
+  --lt-c-error: #dc2626;
+  --lt-c-response: #15803d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --lt-bg: #0b0b0c;
+  --lt-canvas: #0b0b0c;
+  --lt-dot: #1f1f23;
+  --lt-node-bg: #141416;
+  --lt-node-border: #2a2a2e;
+  --lt-node-border-hover: #52525b;
+  --lt-text: #f4f4f5;
+  --lt-text-muted: #a1a1aa;
+  --lt-edge: #4b4b52;
+  --lt-edge-strong: #a1a1aa;
+  --lt-label-bg: #141416;
+  --lt-accent: #60a5fa;
+  --lt-panel: #101012;
+  --lt-border: #232327;
+  --lt-hover: #1c1c20;
+  --lt-subtle: #17171a;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --lt-error-bg: #2a1215;
+  --lt-error-border: #5c2127;
+  --lt-response-bg: #0f2418;
+  --lt-response-border: #1d4d2e;
+  --lt-c-component: #a78bfa;
+  --lt-c-function: #a1a1aa;
+  --lt-c-service: #2dd4bf;
+  --lt-c-route: #60a5fa;
+  --lt-c-database: #fb923c;
+  --lt-c-external: #f472b6;
+  --lt-c-library: #22d3ee;
+  --lt-c-condition: #facc15;
+  --lt-c-event: #e879f9;
+  --lt-c-error: #f87171;
+  --lt-c-response: #4ade80;
+  }
+}
+:root[data-theme="dark"] {
+  --lt-bg: #0b0b0c;
+  --lt-canvas: #0b0b0c;
+  --lt-dot: #1f1f23;
+  --lt-node-bg: #141416;
+  --lt-node-border: #2a2a2e;
+  --lt-node-border-hover: #52525b;
+  --lt-text: #f4f4f5;
+  --lt-text-muted: #a1a1aa;
+  --lt-edge: #4b4b52;
+  --lt-edge-strong: #a1a1aa;
+  --lt-label-bg: #141416;
+  --lt-accent: #60a5fa;
+  --lt-panel: #101012;
+  --lt-border: #232327;
+  --lt-hover: #1c1c20;
+  --lt-subtle: #17171a;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --lt-error-bg: #2a1215;
+  --lt-error-border: #5c2127;
+  --lt-response-bg: #0f2418;
+  --lt-response-border: #1d4d2e;
+  --lt-c-component: #a78bfa;
+  --lt-c-function: #a1a1aa;
+  --lt-c-service: #2dd4bf;
+  --lt-c-route: #60a5fa;
+  --lt-c-database: #fb923c;
+  --lt-c-external: #f472b6;
+  --lt-c-library: #22d3ee;
+  --lt-c-condition: #facc15;
+  --lt-c-event: #e879f9;
+  --lt-c-error: #f87171;
+  --lt-c-response: #4ade80;
+}
+:root {
+  --lt-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --lt-font-mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.lt-node { cursor: pointer; }
+.lt-node__box { fill: var(--lt-node-bg); stroke: var(--lt-node-border); stroke-width: 1; transition: stroke .12s ease; }
+.lt-node:hover .lt-node__box { stroke: var(--lt-node-border-hover); }
+.lt-node__chip { fill: var(--lt-type); fill-opacity: .1; }
+.lt-node__icon { fill: none; stroke: var(--lt-type); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.lt-node__label { font: 600 12.5px var(--lt-font-mono); fill: var(--lt-text); }
+.lt-node__meta { font: 400 11px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-node--component { --lt-type: var(--lt-c-component); }
+.lt-node--function { --lt-type: var(--lt-c-function); }
+.lt-node--service { --lt-type: var(--lt-c-service); }
+.lt-node--route { --lt-type: var(--lt-c-route); }
+.lt-node--database { --lt-type: var(--lt-c-database); }
+.lt-node--external { --lt-type: var(--lt-c-external); }
+.lt-node--library { --lt-type: var(--lt-c-library); }
+.lt-node--condition { --lt-type: var(--lt-c-condition); }
+.lt-node--event { --lt-type: var(--lt-c-event); }
+.lt-node--error { --lt-type: var(--lt-c-error); }
+.lt-node--response { --lt-type: var(--lt-c-response); }
+.lt-node--condition .lt-node__box { stroke: var(--lt-c-condition); stroke-opacity: .55; stroke-dasharray: 4 3; }
+.lt-node--error .lt-node__box { fill: var(--lt-error-bg); stroke: var(--lt-error-border); }
+.lt-node--response .lt-node__box { fill: var(--lt-response-bg); stroke: var(--lt-response-border); }
+.lt-node--entry .lt-node__box { stroke: var(--lt-type); stroke-width: 1.5; }
+.lt-edge__path { fill: none; stroke: var(--lt-edge); stroke-width: 1.4; marker-end: url(#lt-arrow); }
+.lt-edge--reads .lt-edge__path, .lt-edge--writes .lt-edge__path { stroke: var(--lt-c-database); stroke-opacity: .55; marker-end: url(#lt-arrow-database); }
+.lt-edge--requests .lt-edge__path { stroke: var(--lt-c-route); stroke-opacity: .6; marker-end: url(#lt-arrow-route); }
+.lt-edge--emits .lt-edge__path, .lt-edge--triggers .lt-edge__path { stroke: var(--lt-c-event); stroke-opacity: .55; marker-end: url(#lt-arrow-event); }
+.lt-edge--returns .lt-edge__path { stroke-dasharray: 2 3; }
+.lt-edge--inferred .lt-edge__path { stroke-dasharray: 6 4; }
+.lt-edge__label rect { fill: var(--lt-label-bg); stroke: var(--lt-node-border); }
+.lt-edge__label text { font: 500 10.5px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-edge--branch .lt-edge__label text { fill: var(--lt-c-condition); }
+.lt-edge--inferred .lt-edge__label text { font-style: italic; }
+.lt-arrow { fill: var(--lt-edge); }
+.lt-arrow--database { fill: var(--lt-c-database); }
+.lt-arrow--route { fill: var(--lt-c-route); }
+.lt-arrow--event { fill: var(--lt-c-event); }
+.lt-arrow--accent { fill: var(--lt-accent); }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--lt-bg);
+  color: var(--lt-text);
+  font: 14px/1.5 var(--lt-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--lt-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+kbd {
+  font-family: var(--lt-font-mono);
+}
+
+/* ---------------------------------------------------------------- Layout */
+
+.app {
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--lt-border);
+  background: var(--lt-panel);
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  flex: none;
+}
+
+.brand svg {
+  color: var(--lt-accent);
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--lt-border);
+  flex: none;
+}
+
+.query {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.query__text {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.query__meta {
+  font: 11.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search {
+  position: relative;
+  width: 280px;
+  flex: none;
+}
+
+.search__icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lt-text-muted);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  height: 32px;
+  padding: 0 34px 0 32px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+  background: var(--lt-bg);
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.search input::placeholder {
+  color: var(--lt-text-muted);
+}
+
+.search input:focus {
+  border-color: var(--lt-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lt-accent) 18%, transparent);
+}
+
+.search kbd {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+kbd {
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+  border: 1px solid var(--lt-border);
+  border-radius: 4px;
+  color: var(--lt-text-muted);
+  background: var(--lt-subtle);
+}
+
+.search__results {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 340px;
+  overflow: auto;
+  padding: 4px;
+  background: var(--lt-panel);
+  border: 1px solid var(--lt-border);
+  border-radius: 10px;
+  box-shadow: var(--lt-shadow);
+}
+
+.search__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search__item[aria-selected="true"],
+.search__item:hover {
+  background: var(--lt-hover);
+}
+
+.search__label {
+  font: 12.5px var(--lt-font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search__file {
+  margin-left: auto;
+  font: 11px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+
+.search__empty {
+  padding: 8px;
+  font-size: 12.5px;
+  color: var(--lt-text-muted);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--lt-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.icon-button:hover {
+  background: var(--lt-hover);
+  color: var(--lt-text);
+}
+
+.icon-button:focus-visible,
+.search__item:focus-visible,
+.link-list button:focus-visible,
+.text-button:focus-visible {
+  outline: 2px solid var(--lt-accent);
+  outline-offset: 1px;
+}
+
+.icon-button[aria-pressed="true"] {
+  color: var(--lt-text);
+  background: var(--lt-hover);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  min-height: 0;
+}
+
+.app.panel-hidden .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app.panel-hidden .panel {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- Canvas */
+
+.canvas {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  background-color: var(--lt-canvas);
+  background-image: radial-gradient(var(--lt-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.canvas.is-panning {
+  cursor: grabbing;
+}
+
+#graph {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  max-width: min(560px, calc(100% - 140px));
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+  background: var(--lt-panel);
+  border: 1px solid var(--lt-border);
+  border-radius: 10px;
+  box-shadow: var(--lt-shadow);
+}
+
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.legend__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.legend__line {
+  width: 16px;
+  border-top: 1.5px dashed var(--lt-text-muted);
+}
+
+.zoom-indicator {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  padding: 3px 8px;
+  font: 11.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+  background: var(--lt-panel);
+  border: 1px solid var(--lt-border);
+  border-radius: 6px;
+}
+
+/* Graph interaction states */
+
+.lt-node,
+.lt-edge {
+  transition: opacity 0.15s ease;
+}
+
+.has-selection .lt-node:not(.is-trail),
+.has-selection .lt-edge:not(.is-trail) {
+  opacity: 0.14;
+}
+
+.lt-edge.is-trail .lt-edge__path,
+.lt-edge.is-selected .lt-edge__path {
+  stroke: var(--lt-accent);
+  stroke-opacity: 1;
+  stroke-width: 1.8;
+  marker-end: url(#lt-arrow-accent);
+}
+
+.lt-edge.is-hover .lt-edge__path {
+  stroke: var(--lt-edge-strong);
+  stroke-opacity: 1;
+}
+
+.lt-edge {
+  cursor: pointer;
+}
+
+.lt-edge__hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+}
+
+.lt-node.is-selected .lt-node__box,
+.lt-node:focus-visible .lt-node__box {
+  stroke: var(--lt-accent);
+  stroke-width: 2;
+  stroke-dasharray: none;
+  stroke-opacity: 1;
+}
+
+.lt-node:focus {
+  outline: none;
+}
+
+.has-search .lt-node:not(.is-match),
+.has-search .lt-edge {
+  opacity: 0.2;
+}
+
+.has-search .lt-node.is-match .lt-node__box {
+  stroke: var(--lt-accent);
+  stroke-width: 1.5;
+}
+
+/* ----------------------------------------------------------------- Panel */
+
+.panel {
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--lt-border);
+  background: var(--lt-panel);
+}
+
+.panel__section {
+  padding: 20px 20px 28px;
+}
+
+.panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lt-text-muted);
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.panel h2 {
+  margin: 24px 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lt-text-muted);
+}
+
+.question {
+  margin: 6px 0 0;
+  font: 12.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+}
+
+.prose {
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.prose p {
+  margin: 0 0 10px;
+}
+
+.prose ol,
+.prose ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.prose li {
+  margin: 3px 0;
+}
+
+.prose code {
+  font-size: 12px;
+  padding: 1px 4px;
+  border: 1px solid var(--lt-border);
+  border-radius: 4px;
+  background: var(--lt-subtle);
+  word-break: break-word;
+}
+
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--chip);
+  background: color-mix(in srgb, var(--chip) 11%, transparent);
+}
+
+.type-chip svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.node-title {
+  margin: 10px 0 4px;
+  font: 600 15px/1.4 var(--lt-font-mono);
+  word-break: break-word;
+}
+
+.location {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font: 12px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--lt-accent);
+  font: 12px var(--lt-font-sans);
+  cursor: pointer;
+}
+
+.text-button:hover {
+  text-decoration: underline;
+}
+
+.description {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.source-note {
+  display: inline-flex;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--lt-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--lt-text-muted);
+  white-space: nowrap;
+}
+
+.badge--inferred {
+  color: var(--lt-c-condition);
+  border-color: color-mix(in srgb, var(--lt-c-condition) 45%, transparent);
+}
+
+.badge--branch {
+  color: var(--lt-c-condition);
+}
+
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.link-list button:hover {
+  background: var(--lt-hover);
+}
+
+.link-list__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.link-list__label {
+  min-width: 0;
+  font: 12.5px var(--lt-font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-list__kind {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  color: var(--lt-text-muted);
+}
+
+.empty {
+  font-size: 12.5px;
+  color: var(--lt-text-muted);
+}
+
+.code {
+  margin: 0;
+  padding: 8px 0;
+  max-height: 380px;
+  overflow: auto;
+  font: 12px/1.65 var(--lt-font-mono);
+  background: var(--lt-subtle);
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+}
+
+.code__line {
+  display: flex;
+  min-width: max-content;
+  padding-right: 14px;
+  white-space: pre;
+}
+
+.code__line.is-focus {
+  background: color-mix(in srgb, var(--lt-accent) 13%, transparent);
+}
+
+.code__num {
+  flex: none;
+  width: 46px;
+  padding-right: 14px;
+  text-align: right;
+  color: var(--lt-text-muted);
+  opacity: 0.7;
+  user-select: none;
+}
+
+.code__more {
+  padding: 2px 14px 0 60px;
+  color: var(--lt-text-muted);
+}
+
+.tok-k {
+  color: var(--lt-c-component);
+}
+
+.tok-s {
+  color: var(--lt-c-response);
+}
+
+.tok-c {
+  color: var(--lt-text-muted);
+  font-style: italic;
+}
+
+.tok-n {
+  color: var(--lt-c-database);
+}
+
+.evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidence li {
+  padding: 8px 10px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+}
+
+.evidence__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 11.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+}
+
+.evidence__text {
+  margin-top: 4px;
+  font: 12px/1.5 var(--lt-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.meta-table {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 5px 14px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.meta-table dt {
+  color: var(--lt-text-muted);
+}
+
+.meta-table dd {
+  margin: 0;
+  font-family: var(--lt-font-mono);
+  word-break: break-word;
+}
+
+.notice {
+  margin-top: 14px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  border: 1px solid color-mix(in srgb, var(--lt-c-condition) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-c-condition) 8%, transparent);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  padding: 8px 10px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+}
+
+.stat__value {
+  font: 600 15px var(--lt-font-mono);
+}
+
+.stat__label {
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+}
+
+.footer-note {
+  margin-top: 20px;
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+}
+
+.shortcuts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  font-size: 12.5px;
+  color: var(--lt-text-muted);
+}
+
+/* ---------------------------------------------------------------- Mobile */
+
+@media (max-width: 820px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .panel {
+    max-height: 46vh;
+    border-left: 0;
+    border-top: 1px solid var(--lt-border);
+  }
+
+  .topbar {
+    gap: 8px;
+    padding: 0 8px 0 12px;
+  }
+
+  .brand span,
+  .divider,
+  .query,
+  .legend,
+  .search kbd {
+    display: none;
+  }
+
+  .search {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-node,
+  .lt-edge,
+  .icon-button,
+  .search input {
+    transition: none;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 15.5C7.5 15.5 6.5 4.5 10 4.5S12.5 12 16 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="4" cy="15.5" r="2.2" fill="currentColor"/><circle cx="10" cy="4.5" r="2.2" fill="var(--lt-panel, #fff)" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="12" r="2.2" fill="currentColor"/></svg><span>LogicTrail</span></div>
+    <div class="divider"></div>
+    <div class="query">
+      <span class="query__text" title="what happens when a payment fails?">What happens when a payment fails?</span>
+      <span class="query__meta">16 nodes · 15 edges · static analysis</span>
+    </div>
+    <div class="search" role="search">
+      <span class="search__icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z M10.6 10.6 14 14"/></svg></span>
+      <input id="search" type="search" placeholder="Search nodes" autocomplete="off" spellcheck="false" aria-label="Search nodes" aria-controls="search-results">
+      <kbd>/</kbd>
+      <div class="search__results" id="search-results" role="listbox" hidden></div>
+    </div>
+    <div class="toolbar">
+      <button class="icon-button" type="button" id="zoom-out" title="Zoom out (−)" aria-label="Zoom out (−)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8h9"/></svg></button>
+      <button class="icon-button" type="button" id="zoom-in" title="Zoom in (+)" aria-label="Zoom in (+)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
+      <button class="icon-button" type="button" id="fit" title="Fit to screen (F)" aria-label="Fit to screen (F)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V3.5a1 1 0 0 1 1-1H6M10 2.5h2.5a1 1 0 0 1 1 1V6M13.5 10v2.5a1 1 0 0 1-1 1H10M6 13.5H3.5a1 1 0 0 1-1-1V10"/></svg></button>
+      <button class="icon-button" type="button" id="theme" title="Toggle theme (T)" aria-label="Toggle theme (T)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z M8 2.5v11 M8 5h3 M8 8h4.5 M8 11h3"/></svg></button>
+      <button class="icon-button" type="button" id="panel-toggle" title="Toggle details panel" aria-label="Toggle details panel" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h10a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5v-9A.5.5 0 0 1 3 3Z M10 3v10"/></svg></button>
+    </div>
+  </header>
+  <main class="workspace">
+    <div class="canvas" id="canvas">
+      <svg id="graph" role="group" aria-label="What happens when a payment fails?"><defs><marker id="lt-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-database" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--database" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-route" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--route" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-event" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--event" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--accent" d="M0,1 L9,5 L0,9 z"/></marker></defs><g id="viewport"><g class="lt-edges"><g class="lt-edge lt-edge--triggers lt-edge--inferred" data-id="e1" data-from="ext:Stripe:paymentIntents.create" data-to="route:POST /api/webhooks/stripe"><title>Stripe: paymentIntents.create triggers POST /api/webhooks/stripe (inferred, 60%)</title><path class="lt-edge__path" d="M734.3,94 L734.3,99.8 C734.3,105.7 734.3,117.3 734.3,129 C734.3,140.7 734.3,152.3 734.3,164"/><g class="lt-edge__label" transform="translate(734.3,129)"><rect x="-29.05" y="-9" width="58.1" height="18" rx="4"/><text text-anchor="middle" y="3.5">webhook</text></g></g><g class="lt-edge lt-edge--calls" data-id="e2" data-from="route:POST /api/webhooks/stripe" data-to="server/src/payments/stripe.ts#handleStripeWebhook"><title>POST /api/webhooks/stripe calls handleStripeWebhook()</title><path class="lt-edge__path" d="M734.3,218 L734.3,222.3 C734.3,226.7 734.3,235.3 734.3,244 C734.3,252.7 734.3,261.3 734.3,270"/></g><g class="lt-edge lt-edge--condition" data-id="e3" data-from="server/src/payments/stripe.ts#handleStripeWebhook" data-to="catch:server/src/payments/stripe.ts#handleStripeWebhook:25"><title>handleStripeWebhook() condition catch</title><path class="lt-edge__path" d="M788,324 L799.6,329.8 C811.3,335.7 834.5,347.3 846.2,359 C857.8,370.7 857.8,382.3 857.8,394"/><g class="lt-edge__label" transform="translate(857.8,359)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">on error</text></g></g><g class="lt-edge lt-edge--condition" data-id="e4" data-from="server/src/payments/stripe.ts#handleStripeWebhook" data-to="cond:server/src/payments/stripe.ts#handleStripeWebhook:29"><title>handleStripeWebhook() condition switch (event.type)</title><path class="lt-edge__path" d="M680.5,324 L668.9,329.8 C657.3,335.7 634,347.3 622.4,359 C610.8,370.7 610.8,382.3 610.8,394"/></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e5" data-from="catch:server/src/payments/stripe.ts#handleStripeWebhook:25" data-to="exit:server/src/payments/stripe.ts:26"><title>catch returns 400 Bad Request</title><path class="lt-edge__path" d="M857.8,434 L857.8,439.8 C857.8,445.7 857.8,457.3 857.8,469.3 C857.8,481.3 857.8,493.7 857.8,506"/></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e6" data-from="cond:server/src/payments/stripe.ts#handleStripeWebhook:29" data-to="server/src/services/orderService.ts#markOrderFailed"><title>switch (event.type) calls markOrderFailed()</title><path class="lt-edge__path" d="M610.8,434 L610.8,439.8 C610.8,445.7 610.8,457.3 610.8,469 C610.8,480.7 610.8,492.3 610.8,504"/><g class="lt-edge__label" transform="translate(610.8,469)"><rect x="-95.2" y="-9" width="190.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">payment_intent.payment_fail…</text></g></g><g class="lt-edge lt-edge--writes" data-id="e7" data-from="server/src/services/orderService.ts#markOrderFailed" data-to="db:prisma:order:update"><title>markOrderFailed() writes order.update</title><path class="lt-edge__path" d="M730.3,555.8 L752.9,560.5 C775.5,565.2 820.6,574.6 843.2,583.6 C865.8,592.7 865.8,601.3 865.8,610"/></g><g class="lt-edge lt-edge--calls" data-id="e8" data-from="server/src/services/orderService.ts#markOrderFailed" data-to="server/src/services/inventory.ts#releaseInventory"><title>markOrderFailed() calls releaseInventory()</title><path class="lt-edge__path" d="M610.8,558 L610.8,562.3 C610.8,566.7 610.8,575.3 610.8,584 C610.8,592.7 610.8,601.3 610.8,610"/></g><g class="lt-edge lt-edge--emits" data-id="e9" data-from="server/src/services/orderService.ts#markOrderFailed" data-to="event:event:order.paymentFailed"><title>markOrderFailed() emits order.paymentFailed</title><path class="lt-edge__path" d="M491.3,548 L449.2,554 C407,560 322.8,572 280.6,582.3 C238.5,592.7 238.5,601.3 238.5,610"/></g><g class="lt-edge lt-edge--reads" data-id="e10" data-from="server/src/services/inventory.ts#releaseInventory" data-to="db:prisma:cartItem:findMany"><title>releaseInventory() reads cartItem.findMany</title><path class="lt-edge__path" d="M664.1,664 L675.6,669.8 C687.2,675.7 710.2,687.3 721.8,699 C733.3,710.7 733.3,722.3 733.3,734"/></g><g class="lt-edge lt-edge--writes" data-id="e11" data-from="server/src/services/inventory.ts#releaseInventory" data-to="db:prisma:product:update"><title>releaseInventory() writes product.update</title><path class="lt-edge__path" d="M557.4,664 L545.9,669.8 C534.4,675.7 511.3,687.3 499.8,699 C488.3,710.7 488.3,722.3 488.3,734"/><g class="lt-edge__label" transform="translate(488.3,699)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">for each</text></g></g><g class="lt-edge lt-edge--triggers" data-id="e12" data-from="event:event:order.paymentFailed" data-to="server/src/events/handlers.ts#notifyPaymentFailed"><title>order.paymentFailed triggers notifyPaymentFailed()</title><path class="lt-edge__path" d="M238.5,664 L238.5,669.8 C238.5,675.7 238.5,687.3 238.5,699 C238.5,710.7 238.5,722.3 238.5,734"/><g class="lt-edge__label" transform="translate(238.5,699)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">listener</text></g></g><g class="lt-edge lt-edge--calls" data-id="e13" data-from="server/src/events/handlers.ts#notifyPaymentFailed" data-to="server/src/email/send.ts#sendPaymentFailedEmail"><title>notifyPaymentFailed() calls sendPaymentFailedEmail()</title><path class="lt-edge__path" d="M238.5,788 L238.5,792.3 C238.5,796.7 238.5,805.3 238.5,814 C238.5,822.7 238.5,831.3 238.5,840"/></g><g class="lt-edge lt-edge--reads" data-id="e14" data-from="server/src/email/send.ts#sendPaymentFailedEmail" data-to="db:prisma:order:findUnique"><title>sendPaymentFailedEmail() reads order.findUnique</title><path class="lt-edge__path" d="M183.2,894 L174.3,898.3 C165.5,902.7 147.7,911.3 138.9,920 C130,928.7 130,937.3 130,946"/></g><g class="lt-edge lt-edge--calls" data-id="e15" data-from="server/src/email/send.ts#sendPaymentFailedEmail" data-to="ext:Resend:emails.send"><title>sendPaymentFailedEmail() calls Resend: emails.send</title><path class="lt-edge__path" d="M293.8,894 L302.7,898.3 C311.5,902.7 329.3,911.3 338.1,920 C347,928.7 347,937.3 347,946"/></g></g><g class="lt-nodes"><g class="lt-node lt-node--external lt-node--entry" data-id="ext:Stripe:paymentIntents.create" transform="translate(595.3,40)" tabindex="0" role="button" aria-label="Stripe: paymentIntents.create"><title>Stripe: paymentIntents.create
+Calls Stripe: paymentIntents.create.</title><rect class="lt-node__box" width="278" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M2 8h12 M8 2c1.7 1.8 2.5 3.8 2.5 6S9.7 12.2 8 14 M8 2C6.3 3.8 5.5 5.8 5.5 8s.8 4.2 2.5 6"/><text class="lt-node__label" x="42" y="24">Stripe: paymentIntents.create</text><text class="lt-node__meta" x="42" y="40">payments/stripe.ts:9</text></g><g class="lt-node lt-node--route" data-id="route:POST /api/webhooks/stripe" transform="translate(610.3,164)" tabindex="0" role="button" aria-label="POST /api/webhooks/stripe"><title>POST /api/webhooks/stripe
+express route POST /api/webhooks/stripe.</title><rect class="lt-node__box" width="248" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M2.5 8h10M9.5 4.5 13 8l-3.5 3.5"/><text class="lt-node__label" x="42" y="24">POST /api/webhooks/stripe</text><text class="lt-node__meta" x="42" y="40">routes/webhooks.ts:6</text></g><g class="lt-node lt-node--function" data-id="server/src/payments/stripe.ts#handleStripeWebhook" transform="translate(625.3,270)" tabindex="0" role="button" aria-label="handleStripeWebhook()"><title>handleStripeWebhook()
+Verifies the Stripe signature and applies payment results to orders.</title><rect class="lt-node__box" width="218" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">handleStripeWebhook()</text><text class="lt-node__meta" x="42" y="40">payments/stripe.ts:17</text></g><g class="lt-node lt-node--condition" data-id="catch:server/src/payments/stripe.ts#handleStripeWebhook:25" transform="translate(797.8,394)" tabindex="0" role="button" aria-label="catch"><title>catch
+Error handling in handleStripeWebhook(): runs when the code above throws.</title><polygon class="lt-node__box" points="12,0 108,0 120,20 108,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">catch</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/payments/stripe.ts#handleStripeWebhook:29" transform="translate(506.8,394)" tabindex="0" role="button" aria-label="switch (event.type)"><title>switch (event.type)
+handleStripeWebhook() branches on `switch (event.type)`.</title><polygon class="lt-node__box" points="12,0 196,0 208,20 196,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">switch (event.type)</text></g><g class="lt-node lt-node--error" data-id="exit:server/src/payments/stripe.ts:26" transform="translate(756.3,506)" tabindex="0" role="button" aria-label="400 Bad Request"><title>400 Bad Request
+handleStripeWebhook() responds with HTTP 400.</title><rect class="lt-node__box" width="203" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">400 Bad Request</text><text class="lt-node__meta" x="42" y="38">payments/stripe.ts:26</text></g><g class="lt-node lt-node--service" data-id="server/src/services/orderService.ts#markOrderFailed" transform="translate(491.3,504)" tabindex="0" role="button" aria-label="markOrderFailed()"><title>markOrderFailed()
+Marks an order as failed, releases its stock and notifies listeners.</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">markOrderFailed()</text><text class="lt-node__meta" x="42" y="40">services/orderService.ts:30</text></g><g class="lt-node lt-node--database" data-id="db:prisma:order:update" transform="translate(746.3,610)" tabindex="0" role="button" aria-label="order.update"><title>order.update
+Writes to order via prisma (update).</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">order.update</text><text class="lt-node__meta" x="42" y="40">services/orderService.ts:31</text></g><g class="lt-node lt-node--service" data-id="server/src/services/inventory.ts#releaseInventory" transform="translate(501.3,610)" tabindex="0" role="button" aria-label="releaseInventory()"><title>releaseInventory()
+export async function releaseInventory(orderId: string)</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">releaseInventory()</text><text class="lt-node__meta" x="42" y="40">services/inventory.ts:23</text></g><g class="lt-node lt-node--event" data-id="event:event:order.paymentFailed" transform="translate(119,610)" tabindex="0" role="button" aria-label="order.paymentFailed"><title>order.paymentFailed
+Event &quot;order.paymentFailed&quot;.</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8Z"/><text class="lt-node__label" x="42" y="24">order.paymentFailed</text><text class="lt-node__meta" x="42" y="40">services/orderService.ts:33</text></g><g class="lt-node lt-node--database" data-id="db:prisma:cartItem:findMany" transform="translate(623.8,734)" tabindex="0" role="button" aria-label="cartItem.findMany"><title>cartItem.findMany
+Reads from cartItem via prisma (findMany).</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">cartItem.findMany</text><text class="lt-node__meta" x="42" y="40">services/inventory.ts:24</text></g><g class="lt-node lt-node--database" data-id="db:prisma:product:update" transform="translate(378.8,734)" tabindex="0" role="button" aria-label="product.update"><title>product.update
+Writes to product via prisma (update).</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">product.update</text><text class="lt-node__meta" x="42" y="40">services/inventory.ts:26</text></g><g class="lt-node lt-node--function" data-id="server/src/events/handlers.ts#notifyPaymentFailed" transform="translate(129.5,734)" tabindex="0" role="button" aria-label="notifyPaymentFailed()"><title>notifyPaymentFailed()
+async function notifyPaymentFailed({ orderId }: { orderId: string })</title><rect class="lt-node__box" width="218" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">notifyPaymentFailed()</text><text class="lt-node__meta" x="42" y="40">events/handlers.ts:11</text></g><g class="lt-node lt-node--function" data-id="server/src/email/send.ts#sendPaymentFailedEmail" transform="translate(118.5,840)" tabindex="0" role="button" aria-label="sendPaymentFailedEmail()"><title>sendPaymentFailedEmail()
+export async function sendPaymentFailedEmail(orderId: string)</title><rect class="lt-node__box" width="240" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">sendPaymentFailedEmail()</text><text class="lt-node__meta" x="42" y="40">email/send.ts:18</text></g><g class="lt-node lt-node--database" data-id="db:prisma:order:findUnique" transform="translate(40,946)" tabindex="0" role="button" aria-label="order.findUnique"><title>order.findUnique
+Reads from order via prisma (findUnique).</title><rect class="lt-node__box" width="180" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">order.findUnique</text><text class="lt-node__meta" x="42" y="40">email/send.ts:19</text></g><g class="lt-node lt-node--external" data-id="ext:Resend:emails.send" transform="translate(246,946)" tabindex="0" role="button" aria-label="Resend: emails.send"><title>Resend: emails.send
+Calls Resend: emails.send.</title><rect class="lt-node__box" width="202" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M2 8h12 M8 2c1.7 1.8 2.5 3.8 2.5 6S9.7 12.2 8 14 M8 2C6.3 3.8 5.5 5.8 5.5 8s.8 4.2 2.5 6"/><text class="lt-node__label" x="42" y="24">Resend: emails.send</text><text class="lt-node__meta" x="42" y="40">email/send.ts:21</text></g></g></g></svg>
+      <div class="legend" aria-label="Legend"><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-external)"></span>External service</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-route)"></span>Route</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-function)"></span>Function</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-condition)"></span>Condition</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-error)"></span>Error</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-service)"></span>Service</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-database)"></span>Database</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-event)"></span>Event / queue</span><span class="legend__item"><span class="legend__line"></span>Inferred</span></div>
+      <div class="zoom-indicator" id="zoom-indicator">100%</div>
+    </div>
+    <aside class="panel" id="panel" aria-label="Details"></aside>
+  </main>
+</div>
+<noscript><p style="padding:16px">Enable JavaScript to explore this LogicTrail flow interactively.</p></noscript>
+<script id="logictrail-data" type="application/json">{"graph":{"schemaVersion":1,"query":"what happens when a payment fails?","title":"What happens when a payment fails?","entryPoints":["ext:Stripe:paymentIntents.create"],"nodes":[{"id":"ext:Stripe:paymentIntents.create","type":"external","label":"Stripe: paymentIntents.create","description":"Calls Stripe: paymentIntents.create.","descriptionSource":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":9,"kind":"call","text":"return stripe.paymentIntents.create({"}],"metadata":{"service":"Stripe","operation":"paymentIntents.create","package":"stripe","kind":"external"},"file":"server/src/payments/stripe.ts","line":9,"snippet":{"startLine":8,"lines":["export async function createPaymentIntent(order: { id: string; total: number }) {","  return stripe.paymentIntents.create({","    amount: order.total,"],"truncated":false}},{"id":"route:POST /api/webhooks/stripe","type":"route","label":"POST /api/webhooks/stripe","file":"server/src/routes/webhooks.ts","line":6,"description":"express route POST /api/webhooks/stripe.","descriptionSource":"static","evidence":[{"file":"server/src/routes/webhooks.ts","line":6,"kind":"route","text":"router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"}],"snippet":{"startLine":5,"lines":["","router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);","","export default router;",""],"truncated":false},"metadata":{"method":"POST","path":"/api/webhooks/stripe","framework":"express","kind":"route"}},{"id":"server/src/payments/stripe.ts#handleStripeWebhook","type":"function","label":"handleStripeWebhook()","file":"server/src/payments/stripe.ts","line":17,"description":"Verifies the Stripe signature and applies payment results to orders.","descriptionSource":"doc","evidence":[{"file":"server/src/payments/stripe.ts","line":17,"kind":"definition","text":"export async function handleStripeWebhook(req: Request, res: Response) {"}],"snippet":{"startLine":17,"lines":["export async function handleStripeWebhook(req: Request, res: Response) {","  let event: Stripe.Event;","  try {","    event = stripe.webhooks.constructEvent(","      req.body,","      req.headers[\"stripe-signature\"] as string,","      process.env.STRIPE_WEBHOOK_SECRET ?? \"\",","    );","  } catch {","    return res.status(400).send(\"Invalid signature\");","  }","","  switch (event.type) {","    case \"payment_intent.succeeded\": {","      const intent = event.data.object as Stripe.PaymentIntent;","      await markOrderPaid(intent.metadata.orderId);","      break;","    }","    case \"payment_intent.payment_failed\": {","      const intent = event.data.object as Stripe.PaymentIntent;","      await markOrderFailed(","        intent.metadata.orderId,","        intent.last_payment_error?.message ?? \"unknown\",","      );","      break;","    }","  }","","  return res.json({ received: true });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"handleStripeWebhook","signature":"export async function handleStripeWebhook(req: Request, res: Response)","async":true,"envVars":["STRIPE_WEBHOOK_SECRET"],"kind":"symbol"}},{"id":"catch:server/src/payments/stripe.ts#handleStripeWebhook:25","type":"condition","label":"catch","file":"server/src/payments/stripe.ts","line":25,"description":"Error handling in handleStripeWebhook(): runs when the code above throws.","descriptionSource":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":25,"kind":"branch","text":"} catch {"}],"snippet":{"startLine":25,"lines":["  } catch {","    return res.status(400).send(\"Invalid signature\");","  }",""],"truncated":false},"metadata":{"kind":"catch","owner":"server/src/payments/stripe.ts#handleStripeWebhook"}},{"id":"cond:server/src/payments/stripe.ts#handleStripeWebhook:29","type":"condition","label":"switch (event.type)","file":"server/src/payments/stripe.ts","line":29,"description":"handleStripeWebhook() branches on `switch (event.type)`.","descriptionSource":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":29,"kind":"branch","text":"switch (event.type) {"}],"snippet":{"startLine":29,"lines":["  switch (event.type) {","    case \"payment_intent.succeeded\": {","      const intent = event.data.object as Stripe.PaymentIntent;","      await markOrderPaid(intent.metadata.orderId);"],"truncated":false},"metadata":{"kind":"branch","owner":"server/src/payments/stripe.ts#handleStripeWebhook","test":"switch (event.type)"}},{"id":"exit:server/src/payments/stripe.ts:26","type":"error","label":"400 Bad Request","file":"server/src/payments/stripe.ts","line":26,"description":"handleStripeWebhook() responds with HTTP 400.","descriptionSource":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":26,"kind":"exit","text":"return res.status(400).send(\"Invalid signature\");"}],"snippet":{"startLine":25,"lines":["  } catch {","    return res.status(400).send(\"Invalid signature\");","  }"],"truncated":false},"metadata":{"kind":"response","owner":"server/src/payments/stripe.ts#handleStripeWebhook","status":400}},{"id":"server/src/services/orderService.ts#markOrderFailed","type":"service","label":"markOrderFailed()","file":"server/src/services/orderService.ts","line":30,"description":"Marks an order as failed, releases its stock and notifies listeners.","descriptionSource":"doc","evidence":[{"file":"server/src/services/orderService.ts","line":30,"kind":"definition","text":"export async function markOrderFailed(orderId: string, reason: string) {"}],"snippet":{"startLine":30,"lines":["export async function markOrderFailed(orderId: string, reason: string) {","  await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });","  await releaseInventory(orderId);","  orderEvents.emit(\"order.paymentFailed\", { orderId, reason });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"markOrderFailed","signature":"export async function markOrderFailed(orderId: string, reason: string)","async":true,"kind":"symbol"}},{"id":"db:prisma:order:update","type":"database","label":"order.update","description":"Writes to order via prisma (update).","descriptionSource":"static","evidence":[{"file":"server/src/services/orderService.ts","line":31,"kind":"call","text":"await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });"}],"metadata":{"system":"prisma","model":"order","operation":"update","access":"write","kind":"database"},"file":"server/src/services/orderService.ts","line":31,"snippet":{"startLine":30,"lines":["export async function markOrderFailed(orderId: string, reason: string) {","  await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });","  await releaseInventory(orderId);"],"truncated":false}},{"id":"server/src/services/inventory.ts#releaseInventory","type":"service","label":"releaseInventory()","file":"server/src/services/inventory.ts","line":23,"description":"export async function releaseInventory(orderId: string)","descriptionSource":"static","evidence":[{"file":"server/src/services/inventory.ts","line":23,"kind":"definition","text":"export async function releaseInventory(orderId: string) {"}],"snippet":{"startLine":23,"lines":["export async function releaseInventory(orderId: string) {","  const lines = await db.cartItem.findMany({ where: { orderId } });","  for (const line of lines) {","    await db.product.update({","      where: { id: line.productId },","      data: { stock: { increment: line.quantity } },","    });","  }","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"releaseInventory","signature":"export async function releaseInventory(orderId: string)","async":true,"kind":"symbol"}},{"id":"event:event:order.paymentFailed","type":"event","label":"order.paymentFailed","description":"Event \"order.paymentFailed\".","descriptionSource":"static","evidence":[{"file":"server/src/services/orderService.ts","line":33,"kind":"emit","text":"orderEvents.emit(\"order.paymentFailed\", { orderId, reason });"}],"metadata":{"channel":"event","event":"order.paymentFailed","system":"events","kind":"event"},"file":"server/src/services/orderService.ts","line":33,"snippet":{"startLine":32,"lines":["  await releaseInventory(orderId);","  orderEvents.emit(\"order.paymentFailed\", { orderId, reason });","}"],"truncated":false}},{"id":"db:prisma:cartItem:findMany","type":"database","label":"cartItem.findMany","description":"Reads from cartItem via prisma (findMany).","descriptionSource":"static","evidence":[{"file":"server/src/services/inventory.ts","line":24,"kind":"call","text":"const lines = await db.cartItem.findMany({ where: { orderId } });"}],"metadata":{"system":"prisma","model":"cartItem","operation":"findMany","access":"read","kind":"database"},"file":"server/src/services/inventory.ts","line":24,"snippet":{"startLine":23,"lines":["export async function releaseInventory(orderId: string) {","  const lines = await db.cartItem.findMany({ where: { orderId } });","  for (const line of lines) {"],"truncated":false}},{"id":"db:prisma:product:update","type":"database","label":"product.update","description":"Writes to product via prisma (update).","descriptionSource":"static","evidence":[{"file":"server/src/services/inventory.ts","line":26,"kind":"call","text":"await db.product.update({"}],"metadata":{"system":"prisma","model":"product","operation":"update","access":"write","kind":"database"},"file":"server/src/services/inventory.ts","line":26,"snippet":{"startLine":25,"lines":["  for (const line of lines) {","    await db.product.update({","      where: { id: line.productId },"],"truncated":false}},{"id":"server/src/events/handlers.ts#notifyPaymentFailed","type":"function","label":"notifyPaymentFailed()","file":"server/src/events/handlers.ts","line":11,"description":"async function notifyPaymentFailed({ orderId }: { orderId: string })","descriptionSource":"static","evidence":[{"file":"server/src/events/handlers.ts","line":11,"kind":"definition","text":"async function notifyPaymentFailed({ orderId }: { orderId: string }) {"}],"snippet":{"startLine":11,"lines":["async function notifyPaymentFailed({ orderId }: { orderId: string }) {","  await sendPaymentFailedEmail(orderId);","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"notifyPaymentFailed","signature":"async function notifyPaymentFailed({ orderId }: { orderId: string })","async":true,"kind":"symbol"}},{"id":"server/src/email/send.ts#sendPaymentFailedEmail","type":"function","label":"sendPaymentFailedEmail()","file":"server/src/email/send.ts","line":18,"description":"export async function sendPaymentFailedEmail(orderId: string)","descriptionSource":"static","evidence":[{"file":"server/src/email/send.ts","line":18,"kind":"definition","text":"export async function sendPaymentFailedEmail(orderId: string) {"}],"snippet":{"startLine":18,"lines":["export async function sendPaymentFailedEmail(orderId: string) {","  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });","  if (!order) return;","  await resend.emails.send({","    from: \"Acme \u003corders@acme.test>\",","    to: order.user.email,","    subject: \"Your payment failed\",","    html: `\u003cp>Please update your payment method.\u003c/p>`,","  });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"sendPaymentFailedEmail","signature":"export async function sendPaymentFailedEmail(orderId: string)","async":true,"kind":"symbol"}},{"id":"db:prisma:order:findUnique","type":"database","label":"order.findUnique","description":"Reads from order via prisma (findUnique).","descriptionSource":"static","evidence":[{"file":"server/src/email/send.ts","line":19,"kind":"call","text":"const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"}],"metadata":{"system":"prisma","model":"order","operation":"findUnique","access":"read","kind":"database"},"file":"server/src/email/send.ts","line":19,"snippet":{"startLine":18,"lines":["export async function sendPaymentFailedEmail(orderId: string) {","  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });","  if (!order) return;"],"truncated":false}},{"id":"ext:Resend:emails.send","type":"external","label":"Resend: emails.send","description":"Calls Resend: emails.send.","descriptionSource":"static","evidence":[{"file":"server/src/email/send.ts","line":21,"kind":"call","text":"await resend.emails.send({"}],"metadata":{"service":"Resend","operation":"emails.send","package":"resend","kind":"external"},"file":"server/src/email/send.ts","line":21,"snippet":{"startLine":20,"lines":["  if (!order) return;","  await resend.emails.send({","    from: \"Acme \u003corders@acme.test>\","],"truncated":false}}],"edges":[{"id":"e1","from":"ext:Stripe:paymentIntents.create","to":"route:POST /api/webhooks/stripe","type":"triggers","label":"webhook","confidence":0.6,"source":"inferred","reason":"Stripe delivers webhook events to POST /api/webhooks/stripe, whose handler processes Stripe webhooks.","evidence":[{"file":"server/src/routes/webhooks.ts","line":6,"kind":"route","text":"router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"}]},{"id":"e2","from":"route:POST /api/webhooks/stripe","to":"server/src/payments/stripe.ts#handleStripeWebhook","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/routes/webhooks.ts","line":6,"kind":"route","text":"router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"}]},{"id":"e3","from":"server/src/payments/stripe.ts#handleStripeWebhook","to":"catch:server/src/payments/stripe.ts#handleStripeWebhook:25","type":"condition","label":"on error","confidence":1,"source":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":25,"kind":"branch","text":"} catch {"}]},{"id":"e4","from":"server/src/payments/stripe.ts#handleStripeWebhook","to":"cond:server/src/payments/stripe.ts#handleStripeWebhook:29","type":"condition","confidence":1,"source":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":29,"kind":"branch","text":"switch (event.type) {"}]},{"id":"e5","from":"catch:server/src/payments/stripe.ts#handleStripeWebhook:25","to":"exit:server/src/payments/stripe.ts:26","type":"returns","branch":"error","confidence":1,"source":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":26,"kind":"exit","text":"return res.status(400).send(\"Invalid signature\");"}]},{"id":"e6","from":"cond:server/src/payments/stripe.ts#handleStripeWebhook:29","to":"server/src/services/orderService.ts#markOrderFailed","type":"calls","label":"payment_intent.payment_failed","branch":"payment_intent.payment_failed","confidence":1,"source":"static","evidence":[{"file":"server/src/payments/stripe.ts","line":37,"kind":"call","text":"await markOrderFailed("}]},{"id":"e7","from":"server/src/services/orderService.ts#markOrderFailed","to":"db:prisma:order:update","type":"writes","confidence":1,"source":"static","evidence":[{"file":"server/src/services/orderService.ts","line":31,"kind":"call","text":"await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });"}]},{"id":"e8","from":"server/src/services/orderService.ts#markOrderFailed","to":"server/src/services/inventory.ts#releaseInventory","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/services/orderService.ts","line":32,"kind":"call","text":"await releaseInventory(orderId);"}]},{"id":"e9","from":"server/src/services/orderService.ts#markOrderFailed","to":"event:event:order.paymentFailed","type":"emits","confidence":1,"source":"static","evidence":[{"file":"server/src/services/orderService.ts","line":33,"kind":"emit","text":"orderEvents.emit(\"order.paymentFailed\", { orderId, reason });"}]},{"id":"e10","from":"server/src/services/inventory.ts#releaseInventory","to":"db:prisma:cartItem:findMany","type":"reads","confidence":1,"source":"static","evidence":[{"file":"server/src/services/inventory.ts","line":24,"kind":"call","text":"const lines = await db.cartItem.findMany({ where: { orderId } });"}]},{"id":"e11","from":"server/src/services/inventory.ts#releaseInventory","to":"db:prisma:product:update","type":"writes","label":"for each","confidence":1,"source":"static","evidence":[{"file":"server/src/services/inventory.ts","line":26,"kind":"call","text":"await db.product.update({"}]},{"id":"e12","from":"event:event:order.paymentFailed","to":"server/src/events/handlers.ts#notifyPaymentFailed","type":"triggers","label":"listener","confidence":1,"source":"static","evidence":[{"file":"server/src/events/handlers.ts","line":9,"kind":"listener","text":"orderEvents.on(\"order.paymentFailed\", notifyPaymentFailed);"}]},{"id":"e13","from":"server/src/events/handlers.ts#notifyPaymentFailed","to":"server/src/email/send.ts#sendPaymentFailedEmail","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/events/handlers.ts","line":12,"kind":"call","text":"await sendPaymentFailedEmail(orderId);"}]},{"id":"e14","from":"server/src/email/send.ts#sendPaymentFailedEmail","to":"db:prisma:order:findUnique","type":"reads","confidence":1,"source":"static","evidence":[{"file":"server/src/email/send.ts","line":19,"kind":"call","text":"const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"}]},{"id":"e15","from":"server/src/email/send.ts#sendPaymentFailedEmail","to":"ext:Resend:emails.send","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/email/send.ts","line":21,"kind":"call","text":"await resend.emails.send({"}]}],"explanation":"The flow starts at `Stripe: paymentIntents.create` (server/src/payments/stripe.ts:9).\n\n1. `Stripe: paymentIntents.create` leads to `POST /api/webhooks/stripe` (inferred).\n2. `POST /api/webhooks/stripe` calls `handleStripeWebhook()`.\n3. `handleStripeWebhook()` on error: `400 Bad Request`; checks `switch (event.type)` (payment_intent.payment_failed → `markOrderFailed()`).\n4. `markOrderFailed()` writes `order.update`; calls `releaseInventory()`; emits `order.paymentFailed`.\n5. `releaseInventory()` reads `cartItem.findMany`; writes `product.update`.\n6. `order.paymentFailed` triggers `notifyPaymentFailed()`.\n7. `notifyPaymentFailed()` calls `sendPaymentFailedEmail()`.\n8. `sendPaymentFailedEmail()` reads `order.findUnique`; calls `Resend: emails.send`.\n\nGenerated by static analysis without an LLM: descriptions come from doc comments and code facts. Steps marked (inferred) are likely but not proven by a call site.","analysis":{"provider":"static","generatedAt":"2026-10-05T00:00:00.000Z","repository":"acme-shop","stats":{"files":42,"symbols":57,"relationships":95,"candidates":13},"warnings":[]}},"layout":{"width":1026,"height":1040,"nodes":[{"id":"ext:Stripe:paymentIntents.create","x":734.3,"y":67,"width":278,"height":54},{"id":"route:POST /api/webhooks/stripe","x":734.3,"y":191,"width":248,"height":54},{"id":"server/src/payments/stripe.ts#handleStripeWebhook","x":734.3,"y":297,"width":218,"height":54},{"id":"catch:server/src/payments/stripe.ts#handleStripeWebhook:25","x":857.8,"y":414,"width":120,"height":40},{"id":"cond:server/src/payments/stripe.ts#handleStripeWebhook:29","x":610.8,"y":414,"width":208,"height":40},{"id":"exit:server/src/payments/stripe.ts:26","x":857.8,"y":531,"width":203,"height":50},{"id":"server/src/services/orderService.ts#markOrderFailed","x":610.8,"y":531,"width":239,"height":54},{"id":"db:prisma:order:update","x":865.8,"y":637,"width":239,"height":54},{"id":"server/src/services/inventory.ts#releaseInventory","x":610.8,"y":637,"width":219,"height":54},{"id":"event:event:order.paymentFailed","x":238.5,"y":637,"width":239,"height":54},{"id":"db:prisma:cartItem:findMany","x":733.3,"y":761,"width":219,"height":54},{"id":"db:prisma:product:update","x":488.3,"y":761,"width":219,"height":54},{"id":"server/src/events/handlers.ts#notifyPaymentFailed","x":238.5,"y":761,"width":218,"height":54},{"id":"server/src/email/send.ts#sendPaymentFailedEmail","x":238.5,"y":867,"width":240,"height":54},{"id":"db:prisma:order:findUnique","x":130,"y":973,"width":180,"height":54},{"id":"ext:Resend:emails.send","x":347,"y":973,"width":202,"height":54}],"edges":[{"id":"e1","from":"ext:Stripe:paymentIntents.create","to":"route:POST /api/webhooks/stripe","points":[{"x":734.3,"y":94},{"x":734.3,"y":129},{"x":734.3,"y":164}],"path":"M734.3,94 L734.3,99.8 C734.3,105.7 734.3,117.3 734.3,129 C734.3,140.7 734.3,152.3 734.3,164","label":{"x":734.3,"y":129,"width":58.1,"height":18,"text":"webhook"}},{"id":"e2","from":"route:POST /api/webhooks/stripe","to":"server/src/payments/stripe.ts#handleStripeWebhook","points":[{"x":734.3,"y":218},{"x":734.3,"y":244},{"x":734.3,"y":270}],"path":"M734.3,218 L734.3,222.3 C734.3,226.7 734.3,235.3 734.3,244 C734.3,252.7 734.3,261.3 734.3,270"},{"id":"e3","from":"server/src/payments/stripe.ts#handleStripeWebhook","to":"catch:server/src/payments/stripe.ts#handleStripeWebhook:25","points":[{"x":788,"y":324},{"x":857.8,"y":359},{"x":857.8,"y":394}],"path":"M788,324 L799.6,329.8 C811.3,335.7 834.5,347.3 846.2,359 C857.8,370.7 857.8,382.3 857.8,394","label":{"x":857.8,"y":359,"width":64.4,"height":18,"text":"on error"}},{"id":"e4","from":"server/src/payments/stripe.ts#handleStripeWebhook","to":"cond:server/src/payments/stripe.ts#handleStripeWebhook:29","points":[{"x":680.5,"y":324},{"x":610.8,"y":359},{"x":610.8,"y":394}],"path":"M680.5,324 L668.9,329.8 C657.3,335.7 634,347.3 622.4,359 C610.8,370.7 610.8,382.3 610.8,394"},{"id":"e5","from":"catch:server/src/payments/stripe.ts#handleStripeWebhook:25","to":"exit:server/src/payments/stripe.ts:26","points":[{"x":857.8,"y":434},{"x":857.8,"y":469},{"x":857.8,"y":506}],"path":"M857.8,434 L857.8,439.8 C857.8,445.7 857.8,457.3 857.8,469.3 C857.8,481.3 857.8,493.7 857.8,506"},{"id":"e6","from":"cond:server/src/payments/stripe.ts#handleStripeWebhook:29","to":"server/src/services/orderService.ts#markOrderFailed","points":[{"x":610.8,"y":434},{"x":610.8,"y":469},{"x":610.8,"y":504}],"path":"M610.8,434 L610.8,439.8 C610.8,445.7 610.8,457.3 610.8,469 C610.8,480.7 610.8,492.3 610.8,504","label":{"x":610.8,"y":469,"width":190.4,"height":18,"text":"payment_intent.payment_fail…"}},{"id":"e7","from":"server/src/services/orderService.ts#markOrderFailed","to":"db:prisma:order:update","points":[{"x":730.3,"y":555.8},{"x":865.8,"y":584},{"x":865.8,"y":610}],"path":"M730.3,555.8 L752.9,560.5 C775.5,565.2 820.6,574.6 843.2,583.6 C865.8,592.7 865.8,601.3 865.8,610"},{"id":"e8","from":"server/src/services/orderService.ts#markOrderFailed","to":"server/src/services/inventory.ts#releaseInventory","points":[{"x":610.8,"y":558},{"x":610.8,"y":584},{"x":610.8,"y":610}],"path":"M610.8,558 L610.8,562.3 C610.8,566.7 610.8,575.3 610.8,584 C610.8,592.7 610.8,601.3 610.8,610"},{"id":"e9","from":"server/src/services/orderService.ts#markOrderFailed","to":"event:event:order.paymentFailed","points":[{"x":491.3,"y":548},{"x":238.5,"y":584},{"x":238.5,"y":610}],"path":"M491.3,548 L449.2,554 C407,560 322.8,572 280.6,582.3 C238.5,592.7 238.5,601.3 238.5,610"},{"id":"e10","from":"server/src/services/inventory.ts#releaseInventory","to":"db:prisma:cartItem:findMany","points":[{"x":664.1,"y":664},{"x":733.3,"y":699},{"x":733.3,"y":734}],"path":"M664.1,664 L675.6,669.8 C687.2,675.7 710.2,687.3 721.8,699 C733.3,710.7 733.3,722.3 733.3,734"},{"id":"e11","from":"server/src/services/inventory.ts#releaseInventory","to":"db:prisma:product:update","points":[{"x":557.4,"y":664},{"x":488.3,"y":699},{"x":488.3,"y":734}],"path":"M557.4,664 L545.9,669.8 C534.4,675.7 511.3,687.3 499.8,699 C488.3,710.7 488.3,722.3 488.3,734","label":{"x":488.3,"y":699,"width":64.4,"height":18,"text":"for each"}},{"id":"e12","from":"event:event:order.paymentFailed","to":"server/src/events/handlers.ts#notifyPaymentFailed","points":[{"x":238.5,"y":664},{"x":238.5,"y":699},{"x":238.5,"y":734}],"path":"M238.5,664 L238.5,669.8 C238.5,675.7 238.5,687.3 238.5,699 C238.5,710.7 238.5,722.3 238.5,734","label":{"x":238.5,"y":699,"width":64.4,"height":18,"text":"listener"}},{"id":"e13","from":"server/src/events/handlers.ts#notifyPaymentFailed","to":"server/src/email/send.ts#sendPaymentFailedEmail","points":[{"x":238.5,"y":788},{"x":238.5,"y":814},{"x":238.5,"y":840}],"path":"M238.5,788 L238.5,792.3 C238.5,796.7 238.5,805.3 238.5,814 C238.5,822.7 238.5,831.3 238.5,840"},{"id":"e14","from":"server/src/email/send.ts#sendPaymentFailedEmail","to":"db:prisma:order:findUnique","points":[{"x":183.2,"y":894},{"x":130,"y":920},{"x":130,"y":946}],"path":"M183.2,894 L174.3,898.3 C165.5,902.7 147.7,911.3 138.9,920 C130,928.7 130,937.3 130,946"},{"id":"e15","from":"server/src/email/send.ts#sendPaymentFailedEmail","to":"ext:Resend:emails.send","points":[{"x":293.8,"y":894},{"x":347,"y":920},{"x":347,"y":946}],"path":"M293.8,894 L302.7,898.3 C311.5,902.7 329.3,911.3 338.1,920 C347,928.7 347,937.3 347,946"}]},"version":"0.1.0"}</script>
+<script>"use strict";(()=>{var we=Object.defineProperty;var Ee=(l,e,t)=>e in l?we(l,e,{enumerable:!0,configurable:!0,writable:!0,value:t}):l[e]=t;var g=(l,e,t)=>Ee(l,typeof e!="symbol"?e+"":e,t);function ae(){let l=document.getElementById("logictrail-data");if(!l?.textContent)throw new Error("LogicTrail data block is missing.");return JSON.parse(l.textContent)}function s(l,e={},...t){let n=document.createElement(l);for(let[i,o]of Object.entries(e))o===void 0||o===!1||(i==="class"?n.className=String(o):n.setAttribute(i,o===!0?"":String(o)));return Le(n,t),n}function Le(l,e){for(let t of e)t==null||t===!1||l.appendChild(typeof t=="string"||typeof t=="number"?document.createTextNode(String(t)):t)}var U="http://www.w3.org/2000/svg";function W(l,e=14,t="0 0 16 16"){let n=document.createElementNS(U,"svg");n.setAttribute("width",String(e)),n.setAttribute("height",String(e)),n.setAttribute("viewBox",t),n.setAttribute("aria-hidden","true");let i=document.createElementNS(U,"path");return i.setAttribute("d",l),n.appendChild(i),n}function le(l){return document.createElementNS(U,l)}function T(l){for(;l.firstChild;)l.removeChild(l.firstChild)}function de(l){try{return window.localStorage.getItem(l)}catch{return null}}function ce(l,e){try{window.localStorage.setItem(l,e)}catch{}}async function pe(l){try{return await navigator.clipboard.writeText(l),!0}catch{return!1}}var he={component:"M5.5 4 2 8l3.5 4M10.5 4 14 8l-3.5 4",function:"M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5",service:"M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3",route:"M2.5 8h10M9.5 4.5 13 8l-3.5 3.5",database:"M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2",external:"M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M2 8h12 M8 2c1.7 1.8 2.5 3.8 2.5 6S9.7 12.2 8 14 M8 2C6.3 3.8 5.5 5.8 5.5 8s.8 4.2 2.5 6",library:"M2.5 5 8 2l5.5 3v6L8 14l-5.5-3Z M2.5 5 8 8l5.5-3 M8 8v6",condition:"M8 2 14 8 8 14 2 8Z",event:"M9 1.5 3.5 9H8l-1 5.5L12.5 7H8Z",error:"M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01",response:"M13 4.5 6.5 11 3 7.5"},N={component:"Component",function:"Function",service:"Service",route:"Route",database:"Database",external:"External service",library:"Library",condition:"Condition",event:"Event / queue",error:"Error",response:"Response"};var xe=/(\/\/.*$|\/\*.*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|\b(import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|do|switch|case|break|continue|await|async|new|class|extends|implements|throw|try|catch|finally|typeof|instanceof|interface|type|enum|this|super|null|undefined|true|false|void|private|public|protected|readonly|static)\b|(\b\d+(?:\.\d+)?\b)/g;function ke(l){let e=[],t=0;for(let n of l.matchAll(xe)){let i=n.index;i>t&&e.push(document.createTextNode(l.slice(t,i)));let o=n[1]?"tok-c":n[2]?"tok-s":n[3]?"tok-k":"tok-n";e.push(s("span",{class:o},n[0])),t=i+n[0].length}return t<l.length&&e.push(document.createTextNode(l.slice(t))),e}function fe(l,e){let t=s("pre",{class:"code"});return l.lines.forEach((n,i)=>{let o=l.startLine+i,a=s("div",{class:o===e?"code__line is-focus":"code__line"});a.appendChild(s("span",{class:"code__num"},o));let d=s("span");for(let h of ke(n))d.appendChild(h);a.appendChild(d),t.appendChild(a)}),l.truncated&&t.appendChild(s("div",{class:"code__more"},"\u2026")),t}function ge(l){let e=document.createDocumentFragment(),t=l.replace(/\r\n/g,`
+`).split(`
+`),n=[],i,o=()=>{n.length>0&&e.appendChild(s("p",{},...ue(n.join(" ")))),n=[]},a=()=>{if(!i)return;let d=s(i.ordered?"ol":"ul");for(let h of i.items)d.appendChild(s("li",{},...ue(h)));e.appendChild(d),i=void 0};for(let d of t){let h=d.trim(),f=/^\d+[.)]\s+(.*)$/.exec(h),v=/^[-*•]\s+(.*)$/.exec(h);if(f||v){o();let C=!!f;i&&i.ordered!==C&&a(),i??(i={ordered:C,items:[]}),i.items.push((f?.[1]??v?.[1]??"").trim());continue}if(h===""){o(),a();continue}if(i&&/^\s{2,}/.test(d)&&i.items.length>0){i.items[i.items.length-1]+=` ${h}`;continue}a(),n.push(h.replace(/^#+\s*/,""))}return o(),a(),e}function ue(l){let e=[],t=/(`[^`]+`|\*\*[^*]+\*\*)/g,n=0;for(let i of l.matchAll(t)){let o=i.index;o>n&&e.push(l.slice(n,o));let a=i[0];e.push(a.startsWith("`")?s("code",{},a.slice(1,-1)):s("strong",{},a.slice(2,-2))),n=o+a.length}return n<l.length&&e.push(l.slice(n)),e}function D(l,e=""){return typeof l=="string"?l:typeof l=="number"||typeof l=="boolean"?String(l):Array.isArray(l)?l.map(t=>D(t)).join(", "):e}var Ce="M4 4l8 8M12 4l-8 8",_e=[["method","Method"],["path","Path"],["framework","Framework"],["system","System"],["model","Model"],["operation","Operation"],["access","Access"],["service","Service"],["package","Package"],["category","Category"],["channel","Channel"],["event","Event"],["url","URL"],["status","Status"],["errorName","Error"],["message","Message"],["test","Condition"],["signature","Signature"],["async","Async"],["pages","Pages"],["envVars","Environment"],["directives","Directives"]],G=class{constructor(e,t){g(this,"root",e);g(this,"context",t)}showOverview(){let{graph:e}=this.context,t=s("section",{class:"panel__section"});t.append(s("p",{class:"eyebrow"},"Flow"),s("h1",{},e.title)),e.title.trim().toLowerCase()!==e.query.trim().toLowerCase()&&t.appendChild(s("p",{class:"question"},`\u201C${e.query}\u201D`));for(let f of e.analysis.warnings)t.appendChild(s("div",{class:"notice"},f));t.appendChild(s("h2",{},"Explanation"));let n=s("div",{class:"prose"});n.appendChild(ge(e.explanation)),t.appendChild(n),e.entryPoints.length>0&&(t.appendChild(s("h2",{},"Entry points")),t.appendChild(this.nodeList(e.entryPoints.flatMap(f=>this.context.nodes.get(f)??[])))),t.appendChild(s("h2",{},"Analysis"));let i=e.edges.filter(f=>f.source==="inferred").length,o=s("div",{class:"stats"}),a=(f,v)=>s("div",{class:"stat"},s("div",{class:"stat__value"},f),s("div",{class:"stat__label"},v));o.append(a(e.nodes.length,"nodes in flow"),a(e.edges.length,i>0?`edges (${i} inferred)`:"edges"),a(e.analysis.stats.files,"files indexed"),a(e.analysis.stats.symbols,"symbols")),t.appendChild(o);let d=e.analysis.provider==="static"?"Static analysis only (no LLM)":`Semantic layer: ${e.analysis.model??e.analysis.provider}`;t.appendChild(s("p",{class:"footer-note"},`${d} \xB7 ${e.analysis.repository} \xB7 generated ${new Date(e.analysis.generatedAt).toLocaleString()}`)),t.appendChild(s("h2",{},"Shortcuts"));let h=s("div",{class:"shortcuts"});for(let[f,v]of[["/","Search nodes"],["F","Fit to screen"],["+ / \u2212","Zoom"],["\u2191 / \u2193","Previous / next step"],["T","Toggle theme"],["Esc","Clear selection"]])h.append(s("kbd",{},f),s("span",{},v));t.appendChild(h),this.replace(t)}showNode(e){let{incoming:t,outgoing:n,graph:i}=this.context,o=s("section",{class:"panel__section"});if(o.appendChild(this.header(Me(e.type))),o.appendChild(s("div",{class:"node-title"},e.label)),e.file&&o.appendChild(this.location(e.file,e.line)),e.description){o.appendChild(s("p",{class:"description"},e.description));let v=e.descriptionSource==="llm"?`Description by ${i.analysis.model??"the LLM"}`:e.descriptionSource==="doc"?"From the doc comment":"Generated from code facts";o.appendChild(s("span",{class:"source-note"},v))}let a=s("div",{class:"badges"});i.entryPoints.includes(e.id)&&a.appendChild(s("span",{class:"badge"},"Entry point")),e.metadata?.async===!0&&a.appendChild(s("span",{class:"badge"},"async")),a.childElementCount>0&&o.appendChild(a);let d=e.type==="condition"?this.directRelations(t.get(e.id),"from"):this.logicalCallers(e.id),h=e.type==="condition"?this.directRelations(n.get(e.id),"to"):this.logicalCallees(e.id);o.appendChild(s("h2",{},`Called by \xB7 ${d.length}`)),o.appendChild(d.length>0?this.relationList(d):s("p",{class:"empty"},"Nothing in this flow.")),o.appendChild(s("h2",{},`Calls \xB7 ${h.length}`)),o.appendChild(h.length>0?this.relationList(h):s("p",{class:"empty"},"Nothing in this flow.")),e.snippet&&(o.appendChild(s("h2",{},"Source")),o.appendChild(fe(e.snippet,e.line))),e.evidence&&e.evidence.length>0&&(o.appendChild(s("h2",{},"Evidence")),o.appendChild(this.evidenceList(e.evidence)));let f=this.metadata(e);f&&(o.appendChild(s("h2",{},"Details")),o.appendChild(f)),this.replace(o)}showEdge(e){let{nodes:t}=this.context,n=t.get(e.from),i=t.get(e.to),o=s("section",{class:"panel__section"}),a=s("span",{class:"type-chip",style:"--chip: var(--lt-accent)"},`${e.type} relationship`);o.appendChild(this.header(a)),o.appendChild(s("div",{class:"node-title"},`${n?.label??e.from} \u2192 ${i?.label??e.to}`));let d=s("div",{class:"badges"});e.source==="inferred"?d.appendChild(s("span",{class:"badge badge--inferred"},`Inferred \xB7 ${Math.round(e.confidence*100)}% confidence`)):d.appendChild(s("span",{class:"badge"},e.confidence<1?`Static \xB7 ${Math.round(e.confidence*100)}% match`:"Proven by source")),e.branch&&d.appendChild(s("span",{class:"badge badge--branch"},`branch: ${e.branch}`)),e.label&&e.label!==e.branch&&d.appendChild(s("span",{class:"badge"},e.label)),o.appendChild(d),e.reason&&(o.appendChild(s("h2",{},"Why it is inferred")),o.appendChild(s("p",{class:"description"},e.reason))),o.appendChild(s("h2",{},"Endpoints")),o.appendChild(this.nodeList([n,i].filter(h=>h!==void 0))),o.appendChild(s("h2",{},"Evidence")),o.appendChild(e.evidence&&e.evidence.length>0?this.evidenceList(e.evidence):s("p",{class:"empty"},"No call site proves this relationship.")),this.replace(o)}replace(e){T(this.root),this.root.appendChild(e),this.root.scrollTop=0}header(e){let t=s("button",{class:"icon-button",type:"button",title:"Back to overview (Esc)","aria-label":"Close details"});return t.appendChild(W(Ce,14)),t.querySelector("svg")?.setAttribute("stroke","currentColor"),t.querySelector("svg")?.setAttribute("stroke-width","1.6"),t.querySelector("svg")?.setAttribute("stroke-linecap","round"),t.addEventListener("click",()=>this.context.onClose()),s("div",{class:"panel__header"},e,t)}location(e,t){let n=`${e}${t?`:${t}`:""}`,i=s("div",{class:"location"},s("span",{},n)),o=s("button",{class:"text-button",type:"button"},"Copy");o.addEventListener("click",()=>{pe(n).then(d=>{o.textContent=d?"Copied":"Copy failed",window.setTimeout(()=>o.textContent="Copy",1200)})}),i.appendChild(o);let a=this.context.graph.analysis.rootPath;if(a){let d=`${a.replace(/\\/g,"/").replace(/\/$/,"")}/${e}`,h=`vscode://file/${encodeURI(d.startsWith("/")?d.slice(1):d)}${t?`:${t}`:""}`;i.appendChild(s("a",{href:h,title:"Open in VS Code"},"Open in editor"))}return i}nodeList(e){let t=s("ul",{class:"link-list"});for(let n of e){let i=s("button",{type:"button"},s("span",{class:"link-list__dot",style:`--swatch: var(--lt-c-${n.type})`}),s("span",{class:"link-list__label"},n.label),s("span",{class:"link-list__kind"},N[n.type]));i.addEventListener("click",()=>this.context.onSelectNode(n.id)),t.appendChild(s("li",{},i))}return t}logicalCallees(e,t,n=new Set){let i=[];for(let o of this.context.outgoing.get(e)??[]){let a=this.context.nodes.get(o.to);if(!a)continue;if(a.type==="condition"&&a.metadata?.owner===this.ownerOf(e)&&!n.has(a.id)){n.add(a.id),i.push(...this.logicalCallees(a.id,`${a.label}`,n));continue}let d=t&&o.branch?`${t} \u2192 ${o.branch}`:t;i.push({node:a,edge:o,...d?{via:d}:{}})}return i}logicalCallers(e){let t=[];for(let n of this.context.incoming.get(e)??[]){let i=this.context.nodes.get(n.from);if(!i)continue;let o;if(i.type==="condition"){o=n.branch?`${i.label} \u2192 ${n.branch}`:i.label;let a=this.context.nodes.get(D(i.metadata?.owner));a&&(i=a)}t.push({node:i,edge:n,...o?{via:o}:{}})}return t}directRelations(e,t){return(e??[]).flatMap(n=>{let i=this.context.nodes.get(t==="from"?n.from:n.to);return i?[{node:i,edge:n}]:[]})}ownerOf(e){let t=this.context.nodes.get(e);return t?.type==="condition"?D(t.metadata?.owner,e):e}relationList(e){let t=s("ul",{class:"link-list"});for(let{node:n,edge:i,via:o}of e){let a=[i.type==="condition"?"branch":i.type,o?`if ${o}`:i.label].filter(Boolean).join(" \xB7 "),d=s("button",{type:"button",title:`Go to ${n.label}`},s("span",{class:"link-list__dot",style:`--swatch: var(--lt-c-${n.type})`}),s("span",{class:"link-list__label"},n.label),i.source==="inferred"?s("span",{class:"badge badge--inferred"},"inferred"):null,s("span",{class:"link-list__kind"},a));d.addEventListener("click",()=>this.context.onSelectNode(n.id)),t.appendChild(s("li",{},d))}return t}evidenceList(e){let t=s("ul",{class:"evidence"});for(let n of e)t.appendChild(s("li",{},s("div",{class:"evidence__head"},s("span",{class:"badge"},n.kind),`${n.file}:${n.line}`),n.text?s("div",{class:"evidence__text"},n.text):null));return t}metadata(e){let t=e.metadata??{},n=s("dl",{class:"meta-table"});for(let[i,o]of _e){let a=t[i];if(a==null||a===""||a===!1||i==="path"&&e.type!=="route")continue;let d=D(a)||JSON.stringify(a);n.append(s("dt",{},o),s("dd",{},d))}return n.childElementCount>0?n:void 0}};function Me(l){let e=s("span",{class:"type-chip",style:`--chip: var(--lt-c-${l})`});return e.appendChild(W(he[l],13)),e.appendChild(document.createTextNode(N[l])),e}var B=class{constructor(e,t,n,i){g(this,"container",e);g(this,"viewport",t);g(this,"content",n);g(this,"onChange",i);g(this,"transform",{x:0,y:0,k:1});g(this,"animation",0);g(this,"drag");g(this,"suppressClick",!1);e.addEventListener("pointerdown",o=>this.onPointerDown(o)),e.addEventListener("pointermove",o=>this.onPointerMove(o)),e.addEventListener("pointerup",o=>this.onPointerUp(o)),e.addEventListener("pointercancel",o=>this.onPointerUp(o)),e.addEventListener("wheel",o=>this.onWheel(o),{passive:!1}),e.addEventListener("click",o=>{this.suppressClick&&(o.stopPropagation(),o.preventDefault(),this.suppressClick=!1)},!0)}get current(){return{...this.transform}}set(e,t=!1){let n={...e,k:R(e.k,.1,3)};if(cancelAnimationFrame(this.animation),!t||window.matchMedia("(prefers-reduced-motion: reduce)").matches){this.apply(n);return}let i={...this.transform},o=performance.now(),a=260,d=h=>{let f=Math.min(1,(h-o)/a),v=1-Math.pow(1-f,3);this.apply({x:i.x+(n.x-i.x)*v,y:i.y+(n.y-i.y)*v,k:i.k+(n.k-i.k)*v}),f<1&&(this.animation=requestAnimationFrame(d))};this.animation=requestAnimationFrame(d)}fit(e=!1){let{width:t,height:n}=this.size();if(this.content.width===0||this.content.height===0||t===0)return;let i=R(Math.min((t-112)/this.content.width,(n-112)/this.content.height,1.1),.1,3);this.set({k:i,x:(t-this.content.width*i)/2,y:Math.max(56/2,(n-this.content.height*i)/2)},e)}initial(e){let{width:t,height:n}=this.size();if(this.content.width===0||t===0)return;let i=Math.min((t-112)/this.content.width,(n-112)/this.content.height);if(i>=.6||!e){this.fit(!1);return}let o=Math.min(.85,Math.max(.6,i)),a=this.content.width*o,d=a<=t?(t-a)/2:R(t/2-e.x*o,t-a-56,56);this.set({k:o,x:d,y:56/2-Math.max(0,e.y*o-n*.2)},!1)}zoomBy(e,t,n=!0){let{width:i,height:o}=this.size(),a=t??{x:i/2,y:o/2},d=R(this.transform.k*e,.1,3),h=d/this.transform.k;this.set({k:d,x:a.x-(a.x-this.transform.x)*h,y:a.y-(a.y-this.transform.y)*h},n)}centerOn(e,t,n=.8){let{width:i,height:o}=this.size(),a=Math.max(this.transform.k,n);this.set({k:a,x:i/2-e*a,y:o/2-t*a},!0)}isVisible(e,t,n=60){let{width:i,height:o}=this.size(),a=e*this.transform.k+this.transform.x,d=t*this.transform.k+this.transform.y;return a>n&&a<i-n&&d>n&&d<o-n}size(){let e=this.container.getBoundingClientRect();return{width:e.width,height:e.height}}apply(e){this.transform=e,this.viewport.setAttribute("transform",`translate(${e.x},${e.y}) scale(${e.k})`),this.onChange({...e})}onPointerDown(e){e.button===0&&(cancelAnimationFrame(this.animation),this.drag={pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,originX:this.transform.x,originY:this.transform.y,active:!1})}onPointerMove(e){let t=this.drag;if(t?.pointerId!==e.pointerId)return;let n=e.clientX-t.startX,i=e.clientY-t.startY;if(!t.active){if(Math.hypot(n,i)<4)return;t.active=!0,this.container.setPointerCapture(e.pointerId),this.container.classList.add("is-panning")}this.apply({...this.transform,x:t.originX+n,y:t.originY+i})}onPointerUp(e){let t=this.drag;t?.pointerId===e.pointerId&&(t.active&&(this.suppressClick=!0,window.setTimeout(()=>this.suppressClick=!1,0),this.container.hasPointerCapture(e.pointerId)&&this.container.releasePointerCapture(e.pointerId)),this.container.classList.remove("is-panning"),this.drag=void 0)}onWheel(e){e.preventDefault(),cancelAnimationFrame(this.animation);let t=this.container.getBoundingClientRect(),n={x:e.clientX-t.left,y:e.clientY-t.top},i=e.ctrlKey||e.metaKey,o=e.deltaMode!==0||e.deltaX===0&&Math.abs(e.deltaY)>=40&&Number.isInteger(e.deltaY);if(i||o){let a=e.deltaMode===1?.05:i?.01:.0018;this.zoomBy(Math.exp(-e.deltaY*a),n,!1);return}this.apply({...this.transform,x:this.transform.x-e.deltaX,y:this.transform.y-e.deltaY})}};function R(l,e,t){return Math.min(t,Math.max(e,l))}var me=12,H=class{constructor(e,t,n,i,o){g(this,"input",e);g(this,"results",t);g(this,"nodes",n);g(this,"onPreview",i);g(this,"onPick",o);g(this,"matches",[]);g(this,"active",0);e.addEventListener("input",()=>this.update()),e.addEventListener("focus",()=>{e.value.trim()&&this.update()}),e.addEventListener("keydown",a=>this.onKeyDown(a)),e.addEventListener("blur",()=>window.setTimeout(()=>this.close(),120))}focus(){this.input.focus(),this.input.select()}reset(){this.input.value="",this.close(),this.onPreview(null)}update(){let e=this.input.value.trim().toLowerCase();if(!e){this.close(),this.onPreview(null);return}this.matches=this.nodes.map(t=>({node:t,rank:Se(t,e)})).filter(t=>t.rank>0).sort((t,n)=>n.rank-t.rank||t.node.label.localeCompare(n.node.label)),this.active=0,this.onPreview(new Set(this.matches.map(t=>t.node.id))),this.render()}render(){if(T(this.results),this.results.hidden=!1,this.matches.length===0){this.results.appendChild(s("div",{class:"search__empty"},"No matching nodes"));return}this.matches.slice(0,me).forEach((e,t)=>{let n=e.node.file?`${e.node.file}${e.node.line?`:${e.node.line}`:""}`:N[e.node.type],i=s("button",{class:"search__item",type:"button",role:"option","aria-selected":t===this.active?"true":"false"},s("span",{class:"link-list__dot",style:`--swatch: var(--lt-c-${e.node.type})`}),s("span",{class:"search__label"},e.node.label),s("span",{class:"search__file"},n));i.addEventListener("mousedown",o=>{o.preventDefault(),this.pick(t)}),this.results.appendChild(i)})}onKeyDown(e){if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();let t=Math.min(this.matches.length,me);if(t===0)return;this.active=(this.active+(e.key==="ArrowDown"?1:t-1))%t,this.render()}else e.key==="Enter"?(e.preventDefault(),this.pick(this.active)):e.key==="Escape"&&(e.preventDefault(),this.reset(),this.input.blur())}pick(e){let t=this.matches[e];t&&(this.close(),this.onPick(t.node.id))}close(){this.results.hidden=!0,T(this.results)}};function Se(l,e){let t=l.label.toLowerCase();return t===e?100:t.startsWith(e)?80:t.includes(e)?60:l.file?.toLowerCase().includes(e)?40:l.type.includes(e)?30:l.description?.toLowerCase().includes(e)?20:0}var ve="logictrail-theme";function Ae(){let l=ae(),{graph:e,layout:t}=l,n=document.querySelector(".app"),i=document.getElementById("canvas"),o=document.getElementById("graph"),a=document.getElementById("viewport"),d=document.getElementById("panel"),h=document.getElementById("search"),f=document.getElementById("search-results"),v=document.getElementById("zoom-indicator");if(!n||!i||!o||!a||!d||!h||!f)return;let C=new Map(e.nodes.map(r=>[r.id,r])),O=new Map(e.edges.map(r=>[r.id,r])),w=new Map,E=new Map;for(let r of e.edges)(E.get(r.from)??E.set(r.from,[]).get(r.from))?.push(r),(w.get(r.to)??w.set(r.to,[]).get(r.to))?.push(r);let M=new Map(t.nodes.map(r=>[r.id,r])),b=new Map;for(let r of o.querySelectorAll(".lt-node")){let c=r.dataset.id;c&&b.set(c,r)}let _=new Map;for(let r of o.querySelectorAll(".lt-edge")){let c=r.dataset.id;if(!c)continue;_.set(c,r);let p=r.querySelector(".lt-edge__path");if(p){let u=le("path");u.setAttribute("class","lt-edge__hit"),u.setAttribute("d",p.getAttribute("d")??""),r.insertBefore(u,p)}}let y=new B(i,a,t,r=>{v&&(v.textContent=`${Math.round(r.k*100)}%`)}),L=null,S=!1,I=new G(d,{graph:e,nodes:C,edges:O,incoming:w,outgoing:E,onSelectNode:r=>x(r,!0),onClose:()=>F()}),ye=r=>{let c=new Set([r]),p=new Set,u=(m,k,j)=>{let q=[m],ie=new Set([m]);for(;q.length>0;){let se=q.shift();if(se===void 0)break;for(let re of k.get(se)??[]){p.add(re.id);let P=j(re);c.add(P),ie.has(P)||(ie.add(P),q.push(P))}}};return u(r,E,m=>m.to),u(r,w,m=>m.from),{nodes:c,edges:p}},V=()=>{o.classList.remove("has-selection");for(let r of[...b.values(),..._.values()])r.classList.remove("is-trail","is-selected")};function x(r,c){let p=C.get(r);if(!p)return;L={kind:"node",id:r},V();let u=ye(r);o?.classList.add("has-selection");for(let k of u.nodes)b.get(k)?.classList.add("is-trail");for(let k of u.edges)_.get(k)?.classList.add("is-trail");b.get(r)?.classList.add("is-selected"),I.showNode(p),n?.classList.remove("panel-hidden"),J({node:r});let m=M.get(r);c&&m&&!y.isVisible(m.x,m.y)&&y.centerOn(m.x,m.y)}function Q(r,c=!1){let p=O.get(r);if(!p)return;L={kind:"edge",id:r},V(),o?.classList.add("has-selection"),_.get(r)?.classList.add("is-trail","is-selected"),b.get(p.from)?.classList.add("is-trail"),b.get(p.to)?.classList.add("is-trail"),I.showEdge(p),n?.classList.remove("panel-hidden"),J({edge:r});let u=M.get(p.from),m=M.get(p.to);if(c&&u&&m){let k=(u.x+m.x)/2,j=(u.y+m.y)/2;(!y.isVisible(u.x,u.y)||!y.isVisible(m.x,m.y))&&y.centerOn(k,j,.6)}}function F(){L=null,V(),I.showOverview(),J({})}o.addEventListener("click",r=>{S=!0;let c=r.target,p=c.closest(".lt-node");if(p?.dataset.id){x(p.dataset.id,!1);return}let u=c.closest(".lt-edge");if(u?.dataset.id){Q(u.dataset.id);return}L&&F()}),o.addEventListener("keydown",r=>{let c=r.target.closest(".lt-node");c?.dataset.id&&(r.key==="Enter"||r.key===" ")&&(r.preventDefault(),x(c.dataset.id,!0))});for(let[r,c]of b)c.addEventListener("mouseenter",()=>{for(let p of[...w.get(r)??[],...E.get(r)??[]])_.get(p.id)?.classList.add("is-hover")}),c.addEventListener("mouseleave",()=>{for(let p of[...w.get(r)??[],...E.get(r)??[]])_.get(p.id)?.classList.remove("is-hover")});let ee=new H(h,f,e.nodes,r=>{o.classList.toggle("has-search",r!==null);for(let[c,p]of b)p.classList.toggle("is-match",r?.has(c)??!1)},r=>{ee.reset(),x(r,!0);let c=M.get(r);c&&y.centerOn(c.x,c.y)}),$=document.documentElement,Y=Z.get("theme")??de(ve);(Y==="light"||Y==="dark")&&($.dataset.theme=Y);let be=()=>$.dataset.theme==="dark"||!$.dataset.theme&&window.matchMedia("(prefers-color-scheme: dark)").matches,te=()=>{let r=be()?"light":"dark";$.dataset.theme=r,ce(ve,r)},A=(r,c)=>{document.getElementById(r)?.addEventListener("click",()=>{S=!0,c()})};A("zoom-in",()=>y.zoomBy(1.25)),A("zoom-out",()=>y.zoomBy(.8)),A("fit",()=>y.fit(!0)),A("theme",te),A("panel-toggle",()=>{let r=n.classList.toggle("panel-hidden");document.getElementById("panel-toggle")?.setAttribute("aria-pressed",r?"false":"true"),requestAnimationFrame(()=>y.fit(!0))});let ne=r=>{if(L?.kind!=="node"){let u=e.entryPoints[0]??e.nodes[0]?.id;u&&x(u,!0);return}let p=(r==="down"?E.get(L.id):w.get(L.id))?.[0];p&&x(r==="down"?p.to:p.from,!0)};document.addEventListener("keydown",r=>{if(!(r.target.tagName==="INPUT"||r.metaKey||r.ctrlKey||r.altKey))switch(r.key){case"/":r.preventDefault(),ee.focus();break;case"f":case"F":y.fit(!0);break;case"+":case"=":y.zoomBy(1.25);break;case"-":case"_":y.zoomBy(.8);break;case"t":case"T":te();break;case"Escape":F();break;case"ArrowDown":r.preventDefault(),ne("down");break;case"ArrowUp":r.preventDefault(),ne("up");break}});let K=M.get(e.entryPoints[0]??""),oe=()=>y.initial(K?{x:K.x,y:K.y}:void 0);i.addEventListener("pointerdown",()=>S=!0),i.addEventListener("wheel",()=>S=!0,{passive:!0}),new ResizeObserver(()=>{S||oe()}).observe(i),I.showOverview(),oe();let X=Z.get("node"),z=Z.get("edge");X&&C.has(X)?x(X,!0):z&&O.has(z)&&Q(z,!0)}var Z=new URLSearchParams(window.location.hash.slice(1));function J(l){let e=new URLSearchParams(window.location.hash.slice(1));e.delete("node"),e.delete("edge"),l.node&&e.set("node",l.node),l.edge&&e.set("edge",l.edge);let t=e.toString();try{window.history.replaceState(null,"",t?`#${t}`:window.location.pathname+window.location.search)}catch{}}Ae();})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="LogicTrail 0.1.0">
+<meta name="color-scheme" content="light dark">
+<title>How does login work? · LogicTrail</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M4%2015.5C7.5%2015.5%206.5%204.5%2010%204.5S12.5%2012%2016%2012%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%224%22%20cy%3D%2215.5%22%20r%3D%222.4%22%20fill%3D%22%232563eb%22%2F%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%224.5%22%20r%3D%222.4%22%20fill%3D%22%23fff%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%221.8%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2212%22%20r%3D%222.4%22%20fill%3D%22%232563eb%22%2F%3E%3C%2Fsvg%3E">
+<style>
+:root {
+  --lt-bg: #ffffff;
+  --lt-canvas: #fafafa;
+  --lt-dot: #e4e4e7;
+  --lt-node-bg: #ffffff;
+  --lt-node-border: #e4e4e7;
+  --lt-node-border-hover: #a1a1aa;
+  --lt-text: #18181b;
+  --lt-text-muted: #71717a;
+  --lt-edge: #a1a1aa;
+  --lt-edge-strong: #52525b;
+  --lt-label-bg: #ffffff;
+  --lt-accent: #2563eb;
+  --lt-panel: #ffffff;
+  --lt-border: #e4e4e7;
+  --lt-hover: #f4f4f5;
+  --lt-subtle: #f6f6f7;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+  --lt-error-bg: #fef2f2;
+  --lt-error-border: #fecaca;
+  --lt-response-bg: #f0fdf4;
+  --lt-response-border: #bbf7d0;
+  --lt-c-component: #7c3aed;
+  --lt-c-function: #52525b;
+  --lt-c-service: #0d9488;
+  --lt-c-route: #2563eb;
+  --lt-c-database: #c2410c;
+  --lt-c-external: #db2777;
+  --lt-c-library: #0e7490;
+  --lt-c-condition: #a16207;
+  --lt-c-event: #a21caf;
+  --lt-c-error: #dc2626;
+  --lt-c-response: #15803d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --lt-bg: #0b0b0c;
+  --lt-canvas: #0b0b0c;
+  --lt-dot: #1f1f23;
+  --lt-node-bg: #141416;
+  --lt-node-border: #2a2a2e;
+  --lt-node-border-hover: #52525b;
+  --lt-text: #f4f4f5;
+  --lt-text-muted: #a1a1aa;
+  --lt-edge: #4b4b52;
+  --lt-edge-strong: #a1a1aa;
+  --lt-label-bg: #141416;
+  --lt-accent: #60a5fa;
+  --lt-panel: #101012;
+  --lt-border: #232327;
+  --lt-hover: #1c1c20;
+  --lt-subtle: #17171a;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --lt-error-bg: #2a1215;
+  --lt-error-border: #5c2127;
+  --lt-response-bg: #0f2418;
+  --lt-response-border: #1d4d2e;
+  --lt-c-component: #a78bfa;
+  --lt-c-function: #a1a1aa;
+  --lt-c-service: #2dd4bf;
+  --lt-c-route: #60a5fa;
+  --lt-c-database: #fb923c;
+  --lt-c-external: #f472b6;
+  --lt-c-library: #22d3ee;
+  --lt-c-condition: #facc15;
+  --lt-c-event: #e879f9;
+  --lt-c-error: #f87171;
+  --lt-c-response: #4ade80;
+  }
+}
+:root[data-theme="dark"] {
+  --lt-bg: #0b0b0c;
+  --lt-canvas: #0b0b0c;
+  --lt-dot: #1f1f23;
+  --lt-node-bg: #141416;
+  --lt-node-border: #2a2a2e;
+  --lt-node-border-hover: #52525b;
+  --lt-text: #f4f4f5;
+  --lt-text-muted: #a1a1aa;
+  --lt-edge: #4b4b52;
+  --lt-edge-strong: #a1a1aa;
+  --lt-label-bg: #141416;
+  --lt-accent: #60a5fa;
+  --lt-panel: #101012;
+  --lt-border: #232327;
+  --lt-hover: #1c1c20;
+  --lt-subtle: #17171a;
+  --lt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --lt-error-bg: #2a1215;
+  --lt-error-border: #5c2127;
+  --lt-response-bg: #0f2418;
+  --lt-response-border: #1d4d2e;
+  --lt-c-component: #a78bfa;
+  --lt-c-function: #a1a1aa;
+  --lt-c-service: #2dd4bf;
+  --lt-c-route: #60a5fa;
+  --lt-c-database: #fb923c;
+  --lt-c-external: #f472b6;
+  --lt-c-library: #22d3ee;
+  --lt-c-condition: #facc15;
+  --lt-c-event: #e879f9;
+  --lt-c-error: #f87171;
+  --lt-c-response: #4ade80;
+}
+:root {
+  --lt-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --lt-font-mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.lt-node { cursor: pointer; }
+.lt-node__box { fill: var(--lt-node-bg); stroke: var(--lt-node-border); stroke-width: 1; transition: stroke .12s ease; }
+.lt-node:hover .lt-node__box { stroke: var(--lt-node-border-hover); }
+.lt-node__chip { fill: var(--lt-type); fill-opacity: .1; }
+.lt-node__icon { fill: none; stroke: var(--lt-type); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.lt-node__label { font: 600 12.5px var(--lt-font-mono); fill: var(--lt-text); }
+.lt-node__meta { font: 400 11px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-node--component { --lt-type: var(--lt-c-component); }
+.lt-node--function { --lt-type: var(--lt-c-function); }
+.lt-node--service { --lt-type: var(--lt-c-service); }
+.lt-node--route { --lt-type: var(--lt-c-route); }
+.lt-node--database { --lt-type: var(--lt-c-database); }
+.lt-node--external { --lt-type: var(--lt-c-external); }
+.lt-node--library { --lt-type: var(--lt-c-library); }
+.lt-node--condition { --lt-type: var(--lt-c-condition); }
+.lt-node--event { --lt-type: var(--lt-c-event); }
+.lt-node--error { --lt-type: var(--lt-c-error); }
+.lt-node--response { --lt-type: var(--lt-c-response); }
+.lt-node--condition .lt-node__box { stroke: var(--lt-c-condition); stroke-opacity: .55; stroke-dasharray: 4 3; }
+.lt-node--error .lt-node__box { fill: var(--lt-error-bg); stroke: var(--lt-error-border); }
+.lt-node--response .lt-node__box { fill: var(--lt-response-bg); stroke: var(--lt-response-border); }
+.lt-node--entry .lt-node__box { stroke: var(--lt-type); stroke-width: 1.5; }
+.lt-edge__path { fill: none; stroke: var(--lt-edge); stroke-width: 1.4; marker-end: url(#lt-arrow); }
+.lt-edge--reads .lt-edge__path, .lt-edge--writes .lt-edge__path { stroke: var(--lt-c-database); stroke-opacity: .55; marker-end: url(#lt-arrow-database); }
+.lt-edge--requests .lt-edge__path { stroke: var(--lt-c-route); stroke-opacity: .6; marker-end: url(#lt-arrow-route); }
+.lt-edge--emits .lt-edge__path, .lt-edge--triggers .lt-edge__path { stroke: var(--lt-c-event); stroke-opacity: .55; marker-end: url(#lt-arrow-event); }
+.lt-edge--returns .lt-edge__path { stroke-dasharray: 2 3; }
+.lt-edge--inferred .lt-edge__path { stroke-dasharray: 6 4; }
+.lt-edge__label rect { fill: var(--lt-label-bg); stroke: var(--lt-node-border); }
+.lt-edge__label text { font: 500 10.5px var(--lt-font-mono); fill: var(--lt-text-muted); }
+.lt-edge--branch .lt-edge__label text { fill: var(--lt-c-condition); }
+.lt-edge--inferred .lt-edge__label text { font-style: italic; }
+.lt-arrow { fill: var(--lt-edge); }
+.lt-arrow--database { fill: var(--lt-c-database); }
+.lt-arrow--route { fill: var(--lt-c-route); }
+.lt-arrow--event { fill: var(--lt-c-event); }
+.lt-arrow--accent { fill: var(--lt-accent); }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--lt-bg);
+  color: var(--lt-text);
+  font: 14px/1.5 var(--lt-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--lt-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+kbd {
+  font-family: var(--lt-font-mono);
+}
+
+/* ---------------------------------------------------------------- Layout */
+
+.app {
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--lt-border);
+  background: var(--lt-panel);
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  flex: none;
+}
+
+.brand svg {
+  color: var(--lt-accent);
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--lt-border);
+  flex: none;
+}
+
+.query {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.query__text {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.query__meta {
+  font: 11.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search {
+  position: relative;
+  width: 280px;
+  flex: none;
+}
+
+.search__icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lt-text-muted);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  height: 32px;
+  padding: 0 34px 0 32px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+  background: var(--lt-bg);
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.search input::placeholder {
+  color: var(--lt-text-muted);
+}
+
+.search input:focus {
+  border-color: var(--lt-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lt-accent) 18%, transparent);
+}
+
+.search kbd {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+kbd {
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+  border: 1px solid var(--lt-border);
+  border-radius: 4px;
+  color: var(--lt-text-muted);
+  background: var(--lt-subtle);
+}
+
+.search__results {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 340px;
+  overflow: auto;
+  padding: 4px;
+  background: var(--lt-panel);
+  border: 1px solid var(--lt-border);
+  border-radius: 10px;
+  box-shadow: var(--lt-shadow);
+}
+
+.search__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search__item[aria-selected="true"],
+.search__item:hover {
+  background: var(--lt-hover);
+}
+
+.search__label {
+  font: 12.5px var(--lt-font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search__file {
+  margin-left: auto;
+  font: 11px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+
+.search__empty {
+  padding: 8px;
+  font-size: 12.5px;
+  color: var(--lt-text-muted);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--lt-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.icon-button:hover {
+  background: var(--lt-hover);
+  color: var(--lt-text);
+}
+
+.icon-button:focus-visible,
+.search__item:focus-visible,
+.link-list button:focus-visible,
+.text-button:focus-visible {
+  outline: 2px solid var(--lt-accent);
+  outline-offset: 1px;
+}
+
+.icon-button[aria-pressed="true"] {
+  color: var(--lt-text);
+  background: var(--lt-hover);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  min-height: 0;
+}
+
+.app.panel-hidden .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app.panel-hidden .panel {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- Canvas */
+
+.canvas {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  background-color: var(--lt-canvas);
+  background-image: radial-gradient(var(--lt-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.canvas.is-panning {
+  cursor: grabbing;
+}
+
+#graph {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  max-width: min(560px, calc(100% - 140px));
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+  background: var(--lt-panel);
+  border: 1px solid var(--lt-border);
+  border-radius: 10px;
+  box-shadow: var(--lt-shadow);
+}
+
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.legend__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.legend__line {
+  width: 16px;
+  border-top: 1.5px dashed var(--lt-text-muted);
+}
+
+.zoom-indicator {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  padding: 3px 8px;
+  font: 11.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+  background: var(--lt-panel);
+  border: 1px solid var(--lt-border);
+  border-radius: 6px;
+}
+
+/* Graph interaction states */
+
+.lt-node,
+.lt-edge {
+  transition: opacity 0.15s ease;
+}
+
+.has-selection .lt-node:not(.is-trail),
+.has-selection .lt-edge:not(.is-trail) {
+  opacity: 0.14;
+}
+
+.lt-edge.is-trail .lt-edge__path,
+.lt-edge.is-selected .lt-edge__path {
+  stroke: var(--lt-accent);
+  stroke-opacity: 1;
+  stroke-width: 1.8;
+  marker-end: url(#lt-arrow-accent);
+}
+
+.lt-edge.is-hover .lt-edge__path {
+  stroke: var(--lt-edge-strong);
+  stroke-opacity: 1;
+}
+
+.lt-edge {
+  cursor: pointer;
+}
+
+.lt-edge__hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+}
+
+.lt-node.is-selected .lt-node__box,
+.lt-node:focus-visible .lt-node__box {
+  stroke: var(--lt-accent);
+  stroke-width: 2;
+  stroke-dasharray: none;
+  stroke-opacity: 1;
+}
+
+.lt-node:focus {
+  outline: none;
+}
+
+.has-search .lt-node:not(.is-match),
+.has-search .lt-edge {
+  opacity: 0.2;
+}
+
+.has-search .lt-node.is-match .lt-node__box {
+  stroke: var(--lt-accent);
+  stroke-width: 1.5;
+}
+
+/* ----------------------------------------------------------------- Panel */
+
+.panel {
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--lt-border);
+  background: var(--lt-panel);
+}
+
+.panel__section {
+  padding: 20px 20px 28px;
+}
+
+.panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lt-text-muted);
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.panel h2 {
+  margin: 24px 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lt-text-muted);
+}
+
+.question {
+  margin: 6px 0 0;
+  font: 12.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+}
+
+.prose {
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.prose p {
+  margin: 0 0 10px;
+}
+
+.prose ol,
+.prose ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.prose li {
+  margin: 3px 0;
+}
+
+.prose code {
+  font-size: 12px;
+  padding: 1px 4px;
+  border: 1px solid var(--lt-border);
+  border-radius: 4px;
+  background: var(--lt-subtle);
+  word-break: break-word;
+}
+
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--chip);
+  background: color-mix(in srgb, var(--chip) 11%, transparent);
+}
+
+.type-chip svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.node-title {
+  margin: 10px 0 4px;
+  font: 600 15px/1.4 var(--lt-font-mono);
+  word-break: break-word;
+}
+
+.location {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font: 12px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--lt-accent);
+  font: 12px var(--lt-font-sans);
+  cursor: pointer;
+}
+
+.text-button:hover {
+  text-decoration: underline;
+}
+
+.description {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.source-note {
+  display: inline-flex;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--lt-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--lt-text-muted);
+  white-space: nowrap;
+}
+
+.badge--inferred {
+  color: var(--lt-c-condition);
+  border-color: color-mix(in srgb, var(--lt-c-condition) 45%, transparent);
+}
+
+.badge--branch {
+  color: var(--lt-c-condition);
+}
+
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.link-list button:hover {
+  background: var(--lt-hover);
+}
+
+.link-list__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.link-list__label {
+  min-width: 0;
+  font: 12.5px var(--lt-font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-list__kind {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  color: var(--lt-text-muted);
+}
+
+.empty {
+  font-size: 12.5px;
+  color: var(--lt-text-muted);
+}
+
+.code {
+  margin: 0;
+  padding: 8px 0;
+  max-height: 380px;
+  overflow: auto;
+  font: 12px/1.65 var(--lt-font-mono);
+  background: var(--lt-subtle);
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+}
+
+.code__line {
+  display: flex;
+  min-width: max-content;
+  padding-right: 14px;
+  white-space: pre;
+}
+
+.code__line.is-focus {
+  background: color-mix(in srgb, var(--lt-accent) 13%, transparent);
+}
+
+.code__num {
+  flex: none;
+  width: 46px;
+  padding-right: 14px;
+  text-align: right;
+  color: var(--lt-text-muted);
+  opacity: 0.7;
+  user-select: none;
+}
+
+.code__more {
+  padding: 2px 14px 0 60px;
+  color: var(--lt-text-muted);
+}
+
+.tok-k {
+  color: var(--lt-c-component);
+}
+
+.tok-s {
+  color: var(--lt-c-response);
+}
+
+.tok-c {
+  color: var(--lt-text-muted);
+  font-style: italic;
+}
+
+.tok-n {
+  color: var(--lt-c-database);
+}
+
+.evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidence li {
+  padding: 8px 10px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+}
+
+.evidence__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 11.5px var(--lt-font-mono);
+  color: var(--lt-text-muted);
+}
+
+.evidence__text {
+  margin-top: 4px;
+  font: 12px/1.5 var(--lt-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.meta-table {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 5px 14px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.meta-table dt {
+  color: var(--lt-text-muted);
+}
+
+.meta-table dd {
+  margin: 0;
+  font-family: var(--lt-font-mono);
+  word-break: break-word;
+}
+
+.notice {
+  margin-top: 14px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  border: 1px solid color-mix(in srgb, var(--lt-c-condition) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-c-condition) 8%, transparent);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  padding: 8px 10px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+}
+
+.stat__value {
+  font: 600 15px var(--lt-font-mono);
+}
+
+.stat__label {
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+}
+
+.footer-note {
+  margin-top: 20px;
+  font-size: 11.5px;
+  color: var(--lt-text-muted);
+}
+
+.shortcuts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  font-size: 12.5px;
+  color: var(--lt-text-muted);
+}
+
+/* ---------------------------------------------------------------- Mobile */
+
+@media (max-width: 820px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .panel {
+    max-height: 46vh;
+    border-left: 0;
+    border-top: 1px solid var(--lt-border);
+  }
+
+  .topbar {
+    gap: 8px;
+    padding: 0 8px 0 12px;
+  }
+
+  .brand span,
+  .divider,
+  .query,
+  .legend,
+  .search kbd {
+    display: none;
+  }
+
+  .search {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-node,
+  .lt-edge,
+  .icon-button,
+  .search input {
+    transition: none;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 15.5C7.5 15.5 6.5 4.5 10 4.5S12.5 12 16 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="4" cy="15.5" r="2.2" fill="currentColor"/><circle cx="10" cy="4.5" r="2.2" fill="var(--lt-panel, #fff)" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="12" r="2.2" fill="currentColor"/></svg><span>LogicTrail</span></div>
+    <div class="divider"></div>
+    <div class="query">
+      <span class="query__text" title="how does login work?">How does login work?</span>
+      <span class="query__meta">36 nodes · 36 edges · static analysis</span>
+    </div>
+    <div class="search" role="search">
+      <span class="search__icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z M10.6 10.6 14 14"/></svg></span>
+      <input id="search" type="search" placeholder="Search nodes" autocomplete="off" spellcheck="false" aria-label="Search nodes" aria-controls="search-results">
+      <kbd>/</kbd>
+      <div class="search__results" id="search-results" role="listbox" hidden></div>
+    </div>
+    <div class="toolbar">
+      <button class="icon-button" type="button" id="zoom-out" title="Zoom out (−)" aria-label="Zoom out (−)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8h9"/></svg></button>
+      <button class="icon-button" type="button" id="zoom-in" title="Zoom in (+)" aria-label="Zoom in (+)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
+      <button class="icon-button" type="button" id="fit" title="Fit to screen (F)" aria-label="Fit to screen (F)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V3.5a1 1 0 0 1 1-1H6M10 2.5h2.5a1 1 0 0 1 1 1V6M13.5 10v2.5a1 1 0 0 1-1 1H10M6 13.5H3.5a1 1 0 0 1-1-1V10"/></svg></button>
+      <button class="icon-button" type="button" id="theme" title="Toggle theme (T)" aria-label="Toggle theme (T)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z M8 2.5v11 M8 5h3 M8 8h4.5 M8 11h3"/></svg></button>
+      <button class="icon-button" type="button" id="panel-toggle" title="Toggle details panel" aria-label="Toggle details panel" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h10a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5v-9A.5.5 0 0 1 3 3Z M10 3v10"/></svg></button>
+    </div>
+  </header>
+  <main class="workspace">
+    <div class="canvas" id="canvas">
+      <svg id="graph" role="group" aria-label="How does login work?"><defs><marker id="lt-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-database" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--database" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-route" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--route" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-event" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--event" d="M0,1 L9,5 L0,9 z"/></marker><marker id="lt-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="lt-arrow lt-arrow--accent" d="M0,1 L9,5 L0,9 z"/></marker></defs><g id="viewport"><g class="lt-edges"><g class="lt-edge lt-edge--renders" data-id="e1" data-from="client/src/pages/LoginPage.tsx#LoginPage" data-to="client/src/components/LoginForm.tsx#LoginForm"><title>LoginPage renders LoginForm</title><path class="lt-edge__path" d="M1774.7,94 L1786.2,99.8 C1797.7,105.7 1820.7,117.3 1832.2,129 C1843.7,140.7 1843.7,152.3 1843.7,164"/></g><g class="lt-edge lt-edge--navigates" data-id="e2" data-from="client/src/pages/LoginPage.tsx#LoginPage" data-to="nav:/dashboard"><title>LoginPage navigates navigate /dashboard</title><path class="lt-edge__path" d="M1668.2,94 L1656.7,99.8 C1645.2,105.7 1622.2,117.3 1610.7,129 C1599.2,140.7 1599.2,152.3 1599.2,164"/><g class="lt-edge__label" transform="translate(1599.2,129)"><rect x="-35.349999999999994" y="-9" width="70.69999999999999" height="18" rx="4"/><text text-anchor="middle" y="3.5">onSuccess</text></g></g><g class="lt-edge lt-edge--calls" data-id="e3" data-from="client/src/components/LoginForm.tsx#LoginForm" data-to="client/src/components/LoginForm.tsx#LoginForm.handleSubmit"><title>LoginForm calls handleSubmit()</title><path class="lt-edge__path" d="M1843.7,218 L1843.7,223.8 C1843.7,229.7 1843.7,241.3 1843.7,253 C1843.7,264.7 1843.7,276.3 1843.7,288"/><g class="lt-edge__label" transform="translate(1843.7,253)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">onSubmit</text></g></g><g class="lt-edge lt-edge--calls" data-id="e4" data-from="client/src/components/LoginForm.tsx#LoginForm.handleSubmit" data-to="client/src/api/auth.ts#login"><title>handleSubmit() calls login()</title><path class="lt-edge__path" d="M1843.7,342 L1843.7,346.3 C1843.7,350.7 1843.7,359.3 1843.7,368 C1843.7,376.7 1843.7,385.3 1843.7,394"/></g><g class="lt-edge lt-edge--requests" data-id="e5" data-from="client/src/api/auth.ts#login" data-to="route:POST /api/auth/login"><title>login() requests POST /api/auth/login</title><path class="lt-edge__path" d="M1918.7,428.4 L1995.7,436 C2072.8,443.6 2226.8,458.8 2303.9,470.7 C2380.9,482.7 2380.9,491.3 2380.9,500"/></g><g class="lt-edge lt-edge--condition" data-id="e6" data-from="client/src/api/auth.ts#login" data-to="cond:client/src/api/auth.ts#login:14"><title>login() condition !response.ok</title><path class="lt-edge__path" d="M1768.7,436.5 L1738.6,442.8 C1708.4,449 1648.2,461.5 1618,473.3 C1587.9,485 1587.9,496 1587.9,507"/></g><g class="lt-edge lt-edge--calls" data-id="e7" data-from="route:POST /api/auth/login" data-to="server/src/middleware/rateLimit.ts#loginRateLimit"><title>POST /api/auth/login calls loginRateLimit()</title><path class="lt-edge__path" d="M2485.9,537.7 L2570.1,546.3 C2654.3,554.8 2822.7,571.9 2906.9,586.3 C2991.1,600.7 2991.1,612.3 2991.1,624"/><g class="lt-edge__label" transform="translate(2991.1,589)"><rect x="-38.5" y="-9" width="77" height="18" rx="4"/><text text-anchor="middle" y="3.5">middleware</text></g></g><g class="lt-edge lt-edge--calls" data-id="e8" data-from="route:POST /api/auth/login" data-to="server/src/middleware/validate.ts#validateBody"><title>POST /api/auth/login calls validateBody()</title><path class="lt-edge__path" d="M2380.9,554 L2380.9,559.8 C2380.9,565.7 2380.9,577.3 2380.9,589 C2380.9,600.7 2380.9,612.3 2380.9,624"/><g class="lt-edge__label" transform="translate(2380.9,589)"><rect x="-38.5" y="-9" width="77" height="18" rx="4"/><text text-anchor="middle" y="3.5">middleware</text></g></g><g class="lt-edge lt-edge--calls" data-id="e9" data-from="route:POST /api/auth/login" data-to="server/src/controllers/authController.ts#authController.login"><title>POST /api/auth/login calls authController.login()</title><path class="lt-edge__path" d="M2275.9,538.8 L2201.2,547.2 C2126.6,555.5 1977.2,572.3 1902.6,586.5 C1827.9,600.7 1827.9,612.3 1827.9,624"/></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e10" data-from="cond:client/src/api/auth.ts#login:14" data-to="exit:client/src/api/auth.ts:15"><title>!response.ok returns throw Error</title><path class="lt-edge__path" d="M1587.9,547 L1587.9,554 C1587.9,561 1587.9,575 1587.9,588.2 C1587.9,601.3 1587.9,613.7 1587.9,626"/><g class="lt-edge__label" transform="translate(1587.9,589)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--writes" data-id="e11" data-from="server/src/middleware/rateLimit.ts#loginRateLimit" data-to="db:redis:*:incr"><title>loginRateLimit() writes redis.incr</title><path class="lt-edge__path" d="M3058.5,678 L3069.3,682.3 C3080.1,686.7 3101.8,695.3 3112.6,704 C3123.4,712.7 3123.4,721.3 3123.4,730"/></g><g class="lt-edge lt-edge--condition" data-id="e12" data-from="server/src/middleware/rateLimit.ts#loginRateLimit" data-to="cond:server/src/middleware/rateLimit.ts#loginRateLimit:11"><title>loginRateLimit() condition attempts === 1</title><path class="lt-edge__path" d="M2942.9,678 L2935.2,682.3 C2927.4,686.7 2911.9,695.3 2904.2,705.2 C2896.4,715 2896.4,726 2896.4,737"/></g><g class="lt-edge lt-edge--condition" data-id="e13" data-from="server/src/middleware/rateLimit.ts#loginRateLimit" data-to="cond:server/src/middleware/rateLimit.ts#loginRateLimit:14"><title>loginRateLimit() condition attempts &gt; MAX_ATTEMPTS</title><path class="lt-edge__path" d="M2878.1,667.9 L2837.8,673.9 C2797.5,679.9 2717,692 2676.7,703.5 C2636.4,715 2636.4,726 2636.4,737"/></g><g class="lt-edge lt-edge--condition" data-id="e14" data-from="server/src/middleware/validate.ts#validateBody" data-to="cond:server/src/middleware/validate.ts#validateBody:8"><title>validateBody() condition !result.success</title><path class="lt-edge__path" d="M2380.9,678 L2380.9,682.3 C2380.9,686.7 2380.9,695.3 2380.9,705.2 C2380.9,715 2380.9,726 2380.9,737"/></g><g class="lt-edge lt-edge--calls" data-id="e15" data-from="server/src/controllers/authController.ts#authController.login" data-to="server/src/services/userService.ts#findUserByEmail"><title>authController.login() calls findUserByEmail()</title><path class="lt-edge__path" d="M1963.9,675.8 L1989.7,680.5 C2015.4,685.2 2066.9,694.6 2092.7,703.6 C2118.4,712.7 2118.4,721.3 2118.4,730"/></g><g class="lt-edge lt-edge--condition" data-id="e16" data-from="server/src/controllers/authController.ts#authController.login" data-to="cond:server/src/controllers/authController.ts#authController.login:18"><title>authController.login() condition !user</title><path class="lt-edge__path" d="M1744.7,678 L1731.3,682.3 C1718,686.7 1691.2,695.3 1677.9,705.2 C1664.5,715 1664.5,726 1664.5,737"/></g><g class="lt-edge lt-edge--writes lt-edge--branch" data-id="e17" data-from="cond:server/src/middleware/rateLimit.ts#loginRateLimit:11" data-to="db:redis:*:expire"><title>attempts === 1 writes redis.expire</title><path class="lt-edge__path" d="M2896.4,777 L2896.4,784 C2896.4,791 2896.4,805 2896.4,817.8 C2896.4,830.7 2896.4,842.3 2896.4,854"/><g class="lt-edge__label" transform="translate(2896.4,819)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e18" data-from="cond:server/src/middleware/rateLimit.ts#loginRateLimit:14" data-to="exit:server/src/middleware/rateLimit.ts:15"><title>attempts &gt; MAX_ATTEMPTS returns 429 Too Many Requests</title><path class="lt-edge__path" d="M2636.4,777 L2636.4,784 C2636.4,791 2636.4,805 2636.4,818.2 C2636.4,831.3 2636.4,843.7 2636.4,856"/><g class="lt-edge__label" transform="translate(2636.4,819)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e19" data-from="cond:server/src/middleware/validate.ts#validateBody:8" data-to="exit:server/src/middleware/validate.ts:9"><title>!result.success returns 400 Bad Request</title><path class="lt-edge__path" d="M2380.9,777 L2380.9,784 C2380.9,791 2380.9,805 2380.9,818.2 C2380.9,831.3 2380.9,843.7 2380.9,856"/><g class="lt-edge__label" transform="translate(2380.9,819)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--reads" data-id="e20" data-from="server/src/services/userService.ts#findUserByEmail" data-to="db:prisma:user:findUnique"><title>findUserByEmail() reads user.findUnique</title><path class="lt-edge__path" d="M2118.4,784 L2118.4,789.8 C2118.4,795.7 2118.4,807.3 2118.4,819 C2118.4,830.7 2118.4,842.3 2118.4,854"/></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e21" data-from="cond:server/src/controllers/authController.ts#authController.login:18" data-to="server/src/services/userService.ts#recordFailedLogin"><title>!user calls recordFailedLogin()</title><path class="lt-edge__path" d="M1724.5,769.3 L1764.7,777.6 C1805,785.9 1885.4,802.4 1925.7,821.1 C1965.9,839.7 1965.9,860.3 1965.9,881 C1965.9,901.7 1965.9,922.3 1951.4,938.5 C1936.9,954.7 1907.8,966.3 1878.8,978"/><g class="lt-edge__label" transform="translate(1965.9,881)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e22" data-from="cond:server/src/controllers/authController.ts#authController.login:18" data-to="exit:server/src/controllers/authController.ts:20"><title>!user returns 401 Unauthorized</title><path class="lt-edge__path" d="M1705.4,777 L1719.8,784 C1734.1,791 1762.8,805 1777.2,818.2 C1791.5,831.3 1791.5,843.7 1791.5,856"/><g class="lt-edge__label" transform="translate(1791.5,819)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e23" data-from="cond:server/src/controllers/authController.ts#authController.login:18" data-to="server/src/auth/password.ts#verifyPassword"><title>!user calls verifyPassword()</title><path class="lt-edge__path" d="M1623.5,777 L1609.2,784 C1594.8,791 1566.2,805 1551.8,817.8 C1537.5,830.7 1537.5,842.3 1537.5,854"/><g class="lt-edge__label" transform="translate(1537.5,819)"><rect x="-13.3" y="-9" width="26.6" height="18" rx="4"/><text text-anchor="middle" y="3.5">no</text></g></g><g class="lt-edge lt-edge--condition lt-edge--branch" data-id="e24" data-from="cond:server/src/controllers/authController.ts#authController.login:18" data-to="cond:server/src/controllers/authController.ts#authController.login:24"><title>!user condition !valid</title><path class="lt-edge__path" d="M1604.5,761.3 L1470.1,770.9 C1335.8,780.5 1067,799.8 932.7,816.4 C798.3,833 798.3,847 798.3,861"/><g class="lt-edge__label" transform="translate(798.3,819)"><rect x="-13.3" y="-9" width="26.6" height="18" rx="4"/><text text-anchor="middle" y="3.5">no</text></g></g><g class="lt-edge lt-edge--writes" data-id="e25" data-from="server/src/services/userService.ts#recordFailedLogin" data-to="db:prisma:loginAttempt:create"><title>recordFailedLogin() writes loginAttempt.create</title><path class="lt-edge__path" d="M1811.7,1032 L1811.7,1037.8 C1811.7,1043.7 1811.7,1055.3 1811.7,1067 C1811.7,1078.7 1811.7,1090.3 1811.7,1102"/></g><g class="lt-edge lt-edge--calls" data-id="e26" data-from="server/src/auth/password.ts#verifyPassword" data-to="lib:bcrypt:bcrypt.compare"><title>verifyPassword() calls bcrypt.compare</title><path class="lt-edge__path" d="M1537.5,908 L1537.5,913.8 C1537.5,919.7 1537.5,931.3 1525.2,943 C1512.8,954.7 1488.2,966.3 1463.5,978"/></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e27" data-from="cond:server/src/controllers/authController.ts#authController.login:24" data-to="server/src/services/userService.ts#recordFailedLogin"><title>!valid calls recordFailedLogin()</title><path class="lt-edge__path" d="M858.3,887 L951.8,896.3 C1045.2,905.7 1232.1,924.3 1371.7,941 C1511.2,957.6 1603.5,972.1 1695.7,986.7"/><g class="lt-edge__label" transform="translate(1419,943)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--returns lt-edge--branch" data-id="e28" data-from="cond:server/src/controllers/authController.ts#authController.login:24" data-to="exit:server/src/controllers/authController.ts:26"><title>!valid returns 401 Unauthorized</title><path class="lt-edge__path" d="M858.3,891.5 L907.4,900.1 C956.5,908.7 1054.8,925.8 1103.9,940.6 C1153,955.3 1153,967.7 1153,980"/><g class="lt-edge__label" transform="translate(1153,943)"><rect x="-16.45" y="-9" width="32.9" height="18" rx="4"/><text text-anchor="middle" y="3.5">yes</text></g></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e29" data-from="cond:server/src/controllers/authController.ts#authController.login:24" data-to="server/src/auth/session.ts#createSession"><title>!valid calls createSession()</title><path class="lt-edge__path" d="M832,901 L843.8,908 C855.7,915 879.3,929 891.2,941.8 C903,954.7 903,966.3 903,978"/><g class="lt-edge__label" transform="translate(903,943)"><rect x="-13.3" y="-9" width="26.6" height="18" rx="4"/><text text-anchor="middle" y="3.5">no</text></g></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e30" data-from="cond:server/src/controllers/authController.ts#authController.login:24" data-to="server/src/auth/session.ts#setSessionCookie"><title>!valid calls setSessionCookie()</title><path class="lt-edge__path" d="M764.5,901 L752.7,908 C740.8,915 717.2,929 705.3,941.8 C693.5,954.7 693.5,966.3 693.5,978"/><g class="lt-edge__label" transform="translate(693.5,943)"><rect x="-13.3" y="-9" width="26.6" height="18" rx="4"/><text text-anchor="middle" y="3.5">no</text></g></g><g class="lt-edge lt-edge--emits lt-edge--branch" data-id="e31" data-from="cond:server/src/controllers/authController.ts#authController.login:24" data-to="event:event:user.loggedIn"><title>!valid emits user.loggedIn</title><path class="lt-edge__path" d="M738.3,891.2 L687.6,899.8 C636.9,908.5 535.4,925.7 484.7,940.2 C434,954.7 434,966.3 434,978"/><g class="lt-edge__label" transform="translate(434,943)"><rect x="-13.3" y="-9" width="26.6" height="18" rx="4"/><text text-anchor="middle" y="3.5">no</text></g></g><g class="lt-edge lt-edge--calls lt-edge--branch" data-id="e32" data-from="cond:server/src/controllers/authController.ts#authController.login:24" data-to="server/src/services/userService.ts#toPublicUser"><title>!valid calls toPublicUser()</title><path class="lt-edge__path" d="M738.3,886.8 L641.3,896.2 C544.2,905.5 350.1,924.3 253.1,939.5 C156,954.7 156,966.3 156,978"/><g class="lt-edge__label" transform="translate(156,943)"><rect x="-13.3" y="-9" width="26.6" height="18" rx="4"/><text text-anchor="middle" y="3.5">no</text></g></g><g class="lt-edge lt-edge--calls" data-id="e33" data-from="server/src/auth/session.ts#createSession" data-to="lib:crypto:randomBytes"><title>createSession() calls randomBytes</title><path class="lt-edge__path" d="M989,1026 L1016.9,1032.8 C1044.8,1039.7 1100.7,1053.3 1128.6,1066 C1156.5,1078.7 1156.5,1090.3 1156.5,1102"/></g><g class="lt-edge lt-edge--writes" data-id="e34" data-from="server/src/auth/session.ts#createSession" data-to="db:prisma:session:create"><title>createSession() writes session.create</title><path class="lt-edge__path" d="M852.2,1032 L841.2,1037.8 C830.2,1043.7 808.3,1055.3 797.3,1067 C786.3,1078.7 786.3,1090.3 786.3,1102"/></g><g class="lt-edge lt-edge--triggers" data-id="e35" data-from="event:event:user.loggedIn" data-to="server/src/events/handlers.ts#on user.loggedIn"><title>user.loggedIn triggers on user.loggedIn handler</title><path class="lt-edge__path" d="M434,1032 L434,1037.8 C434,1043.7 434,1055.3 434,1067 C434,1078.7 434,1090.3 434,1102"/><g class="lt-edge__label" transform="translate(434,1067)"><rect x="-32.2" y="-9" width="64.4" height="18" rx="4"/><text text-anchor="middle" y="3.5">listener</text></g></g><g class="lt-edge lt-edge--writes" data-id="e36" data-from="server/src/events/handlers.ts#on user.loggedIn" data-to="db:prisma:user:update"><title>on user.loggedIn handler writes user.update</title><path class="lt-edge__path" d="M434,1156 L434,1160.3 C434,1164.7 434,1173.3 434,1182 C434,1190.7 434,1199.3 434,1208"/></g></g><g class="lt-nodes"><g class="lt-node lt-node--component lt-node--entry" data-id="client/src/pages/LoginPage.tsx#LoginPage" transform="translate(1621.9,40)" tabindex="0" role="button" aria-label="LoginPage"><title>LoginPage
+React component rendered for /login.</title><rect class="lt-node__box" width="199" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M5.5 4 2 8l3.5 4M10.5 4 14 8l-3.5 4"/><text class="lt-node__label" x="42" y="24">LoginPage</text><text class="lt-node__meta" x="42" y="40">pages/LoginPage.tsx:5</text></g><g class="lt-node lt-node--component" data-id="client/src/components/LoginForm.tsx#LoginForm" transform="translate(1727.7,164)" tabindex="0" role="button" aria-label="LoginForm"><title>LoginForm
+React component.</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M5.5 4 2 8l3.5 4M10.5 4 14 8l-3.5 4"/><text class="lt-node__label" x="42" y="24">LoginForm</text><text class="lt-node__meta" x="42" y="40">components/LoginForm.tsx:8</text></g><g class="lt-node lt-node--route" data-id="nav:/dashboard" transform="translate(1496.7,164)" tabindex="0" role="button" aria-label="navigate /dashboard"><title>navigate /dashboard
+Client-side navigation to /dashboard.</title><rect class="lt-node__box" width="205" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M2.5 8h10M9.5 4.5 13 8l-3.5 3.5"/><text class="lt-node__label" x="42" y="24">navigate /dashboard</text><text class="lt-node__meta" x="42" y="40">pages/LoginPage.tsx:10</text></g><g class="lt-node lt-node--function" data-id="client/src/components/LoginForm.tsx#LoginForm.handleSubmit" transform="translate(1724.2,288)" tabindex="0" role="button" aria-label="handleSubmit()"><title>handleSubmit()
+async function handleSubmit(event: FormEvent)</title><rect class="lt-node__box" width="239" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">handleSubmit()</text><text class="lt-node__meta" x="42" y="40">components/LoginForm.tsx:13</text></g><g class="lt-node lt-node--function" data-id="client/src/api/auth.ts#login" transform="translate(1768.7,394)" tabindex="0" role="button" aria-label="login()"><title>login()
+Sends the credentials to the API; the server answers with a session cookie.</title><rect class="lt-node__box" width="150" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">login()</text><text class="lt-node__meta" x="42" y="40">api/auth.ts:7</text></g><g class="lt-node lt-node--route" data-id="route:POST /api/auth/login" transform="translate(2275.9,500)" tabindex="0" role="button" aria-label="POST /api/auth/login"><title>POST /api/auth/login
+express route POST /api/auth/login.</title><rect class="lt-node__box" width="210" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M2.5 8h10M9.5 4.5 13 8l-3.5 3.5"/><text class="lt-node__label" x="42" y="24">POST /api/auth/login</text><text class="lt-node__meta" x="42" y="40">routes/auth.ts:10</text></g><g class="lt-node lt-node--condition" data-id="cond:client/src/api/auth.ts#login:14" transform="translate(1510.4,507)" tabindex="0" role="button" aria-label="!response.ok"><title>!response.ok
+login() branches on `!response.ok`.</title><polygon class="lt-node__box" points="12,0 143,0 155,20 143,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">!response.ok</text></g><g class="lt-node lt-node--function" data-id="server/src/middleware/rateLimit.ts#loginRateLimit" transform="translate(2878.1,624)" tabindex="0" role="button" aria-label="loginRateLimit()"><title>loginRateLimit()
+Allows at most five login attempts per IP and minute.</title><rect class="lt-node__box" width="226" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">loginRateLimit()</text><text class="lt-node__meta" x="42" y="40">middleware/rateLimit.ts:8</text></g><g class="lt-node lt-node--function" data-id="server/src/middleware/validate.ts#validateBody" transform="translate(2271.4,624)" tabindex="0" role="button" aria-label="validateBody()"><title>validateBody()
+Validates the request body against a zod schema.</title><rect class="lt-node__box" width="219" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">validateBody()</text><text class="lt-node__meta" x="42" y="40">middleware/validate.ts:5</text></g><g class="lt-node lt-node--function" data-id="server/src/controllers/authController.ts#authController.login" transform="translate(1691.9,624)" tabindex="0" role="button" aria-label="authController.login()"><title>authController.login()
+Authenticates email + password and starts a cookie-based session.</title><rect class="lt-node__box" width="272" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">authController.login()</text><text class="lt-node__meta" x="42" y="40">controllers/authController.ts:14</text></g><g class="lt-node lt-node--error" data-id="exit:client/src/api/auth.ts:15" transform="translate(1509.9,626)" tabindex="0" role="button" aria-label="throw Error"><title>throw Error
+login() throws Error: &quot;Invalid email or password&quot;.</title><rect class="lt-node__box" width="156" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">throw Error</text><text class="lt-node__meta" x="42" y="38">api/auth.ts:15</text></g><g class="lt-node lt-node--database" data-id="db:redis:*:incr" transform="translate(3007.4,730)" tabindex="0" role="button" aria-label="redis.incr"><title>redis.incr
+Writes to redis via redis (incr).</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">redis.incr</text><text class="lt-node__meta" x="42" y="40">middleware/rateLimit.ts:10</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/middleware/rateLimit.ts#loginRateLimit:11" transform="translate(2811.4,737)" tabindex="0" role="button" aria-label="attempts === 1"><title>attempts === 1
+loginRateLimit() branches on `attempts === 1`.</title><polygon class="lt-node__box" points="12,0 158,0 170,20 158,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">attempts === 1</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/middleware/rateLimit.ts#loginRateLimit:14" transform="translate(2516.9,737)" tabindex="0" role="button" aria-label="attempts &gt; MAX_ATTEMPTS"><title>attempts &gt; MAX_ATTEMPTS
+loginRateLimit() branches on `attempts &gt; MAX_ATTEMPTS`.</title><polygon class="lt-node__box" points="12,0 227,0 239,20 227,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">attempts &gt; MAX_ATTEMPTS</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/middleware/validate.ts#validateBody:8" transform="translate(2291.9,737)" tabindex="0" role="button" aria-label="!result.success"><title>!result.success
+validateBody() branches on `!result.success`.</title><polygon class="lt-node__box" points="12,0 166,0 178,20 166,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">!result.success</text></g><g class="lt-node lt-node--service" data-id="server/src/services/userService.ts#findUserByEmail" transform="translate(2005.4,730)" tabindex="0" role="button" aria-label="findUserByEmail()"><title>findUserByEmail()
+Looks up a user by their (case-insensitive) email address.</title><rect class="lt-node__box" width="226" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">findUserByEmail()</text><text class="lt-node__meta" x="42" y="40">services/userService.ts:9</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/controllers/authController.ts#authController.login:18" transform="translate(1604.5,737)" tabindex="0" role="button" aria-label="!user"><title>!user
+authController.login() branches on `!user`.</title><polygon class="lt-node__box" points="12,0 108,0 120,20 108,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">!user</text></g><g class="lt-node lt-node--database" data-id="db:redis:*:expire" transform="translate(2780.4,854)" tabindex="0" role="button" aria-label="redis.expire"><title>redis.expire
+Writes to redis via redis (expire).</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">redis.expire</text><text class="lt-node__meta" x="42" y="40">middleware/rateLimit.ts:12</text></g><g class="lt-node lt-node--error" data-id="exit:server/src/middleware/rateLimit.ts:15" transform="translate(2518.4,856)" tabindex="0" role="button" aria-label="429 Too Many Requests"><title>429 Too Many Requests
+loginRateLimit() responds with HTTP 429.</title><rect class="lt-node__box" width="236" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">429 Too Many Requests</text><text class="lt-node__meta" x="42" y="38">middleware/rateLimit.ts:15</text></g><g class="lt-node lt-node--error" data-id="exit:server/src/middleware/validate.ts:9" transform="translate(2269.4,856)" tabindex="0" role="button" aria-label="400 Bad Request"><title>400 Bad Request
+validateBody() responds with HTTP 400.</title><rect class="lt-node__box" width="223" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">400 Bad Request</text><text class="lt-node__meta" x="42" y="38">middleware/validate.ts:9</text></g><g class="lt-node lt-node--database" data-id="db:prisma:user:findUnique" transform="translate(2002.4,854)" tabindex="0" role="button" aria-label="user.findUnique"><title>user.findUnique
+Reads from user via prisma (findUnique).</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">user.findUnique</text><text class="lt-node__meta" x="42" y="40">services/userService.ts:10</text></g><g class="lt-node lt-node--service" data-id="server/src/services/userService.ts#recordFailedLogin" transform="translate(1695.7,978)" tabindex="0" role="button" aria-label="recordFailedLogin()"><title>recordFailedLogin()
+Stores a failed login attempt so rate limiting and audits can see it.</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">recordFailedLogin()</text><text class="lt-node__meta" x="42" y="40">services/userService.ts:14</text></g><g class="lt-node lt-node--error" data-id="exit:server/src/controllers/authController.ts:20" transform="translate(1653.5,856)" tabindex="0" role="button" aria-label="401 Unauthorized"><title>401 Unauthorized
+authController.login() responds with HTTP 401.</title><rect class="lt-node__box" width="276" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">401 Unauthorized</text><text class="lt-node__meta" x="42" y="38">controllers/authController.ts:20</text></g><g class="lt-node lt-node--function" data-id="server/src/auth/password.ts#verifyPassword" transform="translate(1447.5,854)" tabindex="0" role="button" aria-label="verifyPassword()"><title>verifyPassword()
+Compares a plain-text password with the stored bcrypt hash.</title><rect class="lt-node__box" width="180" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">verifyPassword()</text><text class="lt-node__meta" x="42" y="40">auth/password.ts:6</text></g><g class="lt-node lt-node--condition" data-id="cond:server/src/controllers/authController.ts#authController.login:24" transform="translate(738.3,861)" tabindex="0" role="button" aria-label="!valid"><title>!valid
+authController.login() branches on `!valid`.</title><polygon class="lt-node__box" points="12,0 108,0 120,20 108,40 12,40 0,20"/><rect class="lt-node__chip" x="16" y="9" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(19,12)" d="M8 2 14 8 8 14 2 8Z"/><text class="lt-node__label" x="48" y="24.5">!valid</text></g><g class="lt-node lt-node--database" data-id="db:prisma:loginAttempt:create" transform="translate(1695.7,1102)" tabindex="0" role="button" aria-label="loginAttempt.create"><title>loginAttempt.create
+Writes to loginAttempt via prisma (create).</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">loginAttempt.create</text><text class="lt-node__meta" x="42" y="40">services/userService.ts:15</text></g><g class="lt-node lt-node--library" data-id="lib:bcrypt:bcrypt.compare" transform="translate(1317,978)" tabindex="0" role="button" aria-label="bcrypt.compare"><title>bcrypt.compare
+Password hashing via bcrypt (compare).</title><rect class="lt-node__box" width="179" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M2.5 5 8 2l5.5 3v6L8 14l-5.5-3Z M2.5 5 8 8l5.5-3 M8 8v6"/><text class="lt-node__label" x="42" y="24">bcrypt.compare</text><text class="lt-node__meta" x="42" y="40">auth/password.ts:7</text></g><g class="lt-node lt-node--error" data-id="exit:server/src/controllers/authController.ts:26" transform="translate(1015,980)" tabindex="0" role="button" aria-label="401 Unauthorized"><title>401 Unauthorized
+authController.login() responds with HTTP 401.</title><rect class="lt-node__box" width="276" height="50" rx="14"/><rect class="lt-node__chip" x="10" y="14" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,17)" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01"/><text class="lt-node__label" x="42" y="22">401 Unauthorized</text><text class="lt-node__meta" x="42" y="38">controllers/authController.ts:26</text></g><g class="lt-node lt-node--function" data-id="server/src/auth/session.ts#createSession" transform="translate(817,978)" tabindex="0" role="button" aria-label="createSession()"><title>createSession()
+Creates a session record that expires after two weeks.</title><rect class="lt-node__box" width="172" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">createSession()</text><text class="lt-node__meta" x="42" y="40">auth/session.ts:8</text></g><g class="lt-node lt-node--function" data-id="server/src/auth/session.ts#setSessionCookie" transform="translate(596,978)" tabindex="0" role="button" aria-label="setSessionCookie()"><title>setSessionCookie()
+Writes the session id to an HTTP-only cookie.</title><rect class="lt-node__box" width="195" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">setSessionCookie()</text><text class="lt-node__meta" x="42" y="40">auth/session.ts:20</text></g><g class="lt-node lt-node--event" data-id="event:event:user.loggedIn" transform="translate(298,978)" tabindex="0" role="button" aria-label="user.loggedIn"><title>user.loggedIn
+Event &quot;user.loggedIn&quot;.</title><rect class="lt-node__box" width="272" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8Z"/><text class="lt-node__label" x="42" y="24">user.loggedIn</text><text class="lt-node__meta" x="42" y="40">controllers/authController.ts:31</text></g><g class="lt-node lt-node--service" data-id="server/src/services/userService.ts#toPublicUser" transform="translate(40,978)" tabindex="0" role="button" aria-label="toPublicUser()"><title>toPublicUser()
+export function toPublicUser(user: { id: string; email: string }): PublicUser</title><rect class="lt-node__box" width="232" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3"/><text class="lt-node__label" x="42" y="24">toPublicUser()</text><text class="lt-node__meta" x="42" y="40">services/userService.ts:18</text></g><g class="lt-node lt-node--library" data-id="lib:crypto:randomBytes" transform="translate(1070.5,1102)" tabindex="0" role="button" aria-label="randomBytes"><title>randomBytes
+Crypto via crypto (randomBytes).</title><rect class="lt-node__box" width="172" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M2.5 5 8 2l5.5 3v6L8 14l-5.5-3Z M2.5 5 8 8l5.5-3 M8 8v6"/><text class="lt-node__label" x="42" y="24">randomBytes</text><text class="lt-node__meta" x="42" y="40">auth/session.ts:9</text></g><g class="lt-node lt-node--database" data-id="db:prisma:session:create" transform="translate(696.8,1102)" tabindex="0" role="button" aria-label="session.create"><title>session.create
+Writes to session via prisma (create).</title><rect class="lt-node__box" width="179" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">session.create</text><text class="lt-node__meta" x="42" y="40">auth/session.ts:10</text></g><g class="lt-node lt-node--function" data-id="server/src/events/handlers.ts#on user.loggedIn" transform="translate(314,1102)" tabindex="0" role="button" aria-label="on user.loggedIn handler"><title>on user.loggedIn handler
+async ({ userId }: { userId: string }) =&gt;</title><rect class="lt-node__box" width="240" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5"/><text class="lt-node__label" x="42" y="24">on user.loggedIn handler</text><text class="lt-node__meta" x="42" y="40">events/handlers.ts:5</text></g><g class="lt-node lt-node--database" data-id="db:prisma:user:update" transform="translate(338,1208)" tabindex="0" role="button" aria-label="user.update"><title>user.update
+Writes to user via prisma (update).</title><rect class="lt-node__box" width="192" height="54" rx="8"/><rect class="lt-node__chip" x="10" y="16" width="22" height="22" rx="6"/><path class="lt-node__icon" transform="translate(13,19)" d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/><text class="lt-node__label" x="42" y="24">user.update</text><text class="lt-node__meta" x="42" y="40">events/handlers.ts:6</text></g></g></g></svg>
+      <div class="legend" aria-label="Legend"><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-component)"></span>Component</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-route)"></span>Route</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-function)"></span>Function</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-condition)"></span>Condition</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-error)"></span>Error</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-database)"></span>Database</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-service)"></span>Service</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-library)"></span>Library</span><span class="legend__item"><span class="legend__swatch" style="--swatch: var(--lt-c-event)"></span>Event / queue</span></div>
+      <div class="zoom-indicator" id="zoom-indicator">100%</div>
+    </div>
+    <aside class="panel" id="panel" aria-label="Details"></aside>
+  </main>
+</div>
+<noscript><p style="padding:16px">Enable JavaScript to explore this LogicTrail flow interactively.</p></noscript>
+<script id="logictrail-data" type="application/json">{"graph":{"schemaVersion":1,"query":"how does login work?","title":"How does login work?","entryPoints":["client/src/pages/LoginPage.tsx#LoginPage"],"nodes":[{"id":"client/src/pages/LoginPage.tsx#LoginPage","type":"component","label":"LoginPage","file":"client/src/pages/LoginPage.tsx","line":5,"description":"React component rendered for /login.","descriptionSource":"static","evidence":[{"file":"client/src/pages/LoginPage.tsx","line":5,"kind":"definition","text":"export function LoginPage() {"}],"snippet":{"startLine":5,"lines":["export function LoginPage() {","  const navigate = useNavigate();","","  return (","    \u003cAuthLayout title=\"Sign in to Acme\">","      \u003cLoginForm onSuccess={() => navigate(\"/dashboard\")} />","    \u003c/AuthLayout>","  );","}"],"truncated":false},"metadata":{"symbolKind":"component","qualifiedName":"LoginPage","signature":"export function LoginPage()","async":false,"pages":["/login"],"kind":"symbol"}},{"id":"client/src/components/LoginForm.tsx#LoginForm","type":"component","label":"LoginForm","file":"client/src/components/LoginForm.tsx","line":8,"description":"React component.","descriptionSource":"static","evidence":[{"file":"client/src/components/LoginForm.tsx","line":8,"kind":"definition","text":"export function LoginForm({ onSuccess }: LoginFormProps) {"}],"snippet":{"startLine":8,"lines":["export function LoginForm({ onSuccess }: LoginFormProps) {","  const [email, setEmail] = useState(\"\");","  const [password, setPassword] = useState(\"\");","  const [error, setError] = useState\u003cstring | null>(null);","","  async function handleSubmit(event: FormEvent) {","    event.preventDefault();","    setError(null);","    try {","      const user = await login(email, password);","      onSuccess(user);","    } catch (err) {","      setError((err as Error).message);","    }","  }","","  return (","    \u003cform onSubmit={handleSubmit}>","      \u003cinput value={email} onChange={(e) => setEmail(e.target.value)} placeholder=\"Email\" />","      \u003cinput","        type=\"password\"","        value={password}","        onChange={(e) => setPassword(e.target.value)}","        placeholder=\"Password\"","      />","      {error && \u003cp role=\"alert\">{error}\u003c/p>}","      \u003cbutton type=\"submit\">Sign in\u003c/button>","    \u003c/form>","  );","}"],"truncated":false},"metadata":{"symbolKind":"component","qualifiedName":"LoginForm","signature":"export function LoginForm({ onSuccess }: LoginFormProps)","async":false,"kind":"symbol"}},{"id":"nav:/dashboard","type":"route","label":"navigate /dashboard","description":"Client-side navigation to /dashboard.","descriptionSource":"static","evidence":[{"file":"client/src/pages/LoginPage.tsx","line":10,"kind":"call","text":"\u003cLoginForm onSuccess={() => navigate(\"/dashboard\")} />"}],"metadata":{"navigation":true,"path":"/dashboard","framework":"react-router","kind":"navigation"},"file":"client/src/pages/LoginPage.tsx","line":10,"snippet":{"startLine":9,"lines":["    \u003cAuthLayout title=\"Sign in to Acme\">","      \u003cLoginForm onSuccess={() => navigate(\"/dashboard\")} />","    \u003c/AuthLayout>"],"truncated":false}},{"id":"client/src/components/LoginForm.tsx#LoginForm.handleSubmit","type":"function","label":"handleSubmit()","file":"client/src/components/LoginForm.tsx","line":13,"description":"async function handleSubmit(event: FormEvent)","descriptionSource":"static","evidence":[{"file":"client/src/components/LoginForm.tsx","line":13,"kind":"definition","text":"async function handleSubmit(event: FormEvent) {"}],"snippet":{"startLine":13,"lines":["  async function handleSubmit(event: FormEvent) {","    event.preventDefault();","    setError(null);","    try {","      const user = await login(email, password);","      onSuccess(user);","    } catch (err) {","      setError((err as Error).message);","    }","  }"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"LoginForm.handleSubmit","signature":"async function handleSubmit(event: FormEvent)","async":true,"parent":"LoginForm","kind":"symbol"}},{"id":"client/src/api/auth.ts#login","type":"function","label":"login()","file":"client/src/api/auth.ts","line":7,"description":"Sends the credentials to the API; the server answers with a session cookie.","descriptionSource":"doc","evidence":[{"file":"client/src/api/auth.ts","line":7,"kind":"definition","text":"export async function login(email: string, password: string): Promise\u003cSignedInUser> {"}],"snippet":{"startLine":7,"lines":["export async function login(email: string, password: string): Promise\u003cSignedInUser> {","  const response = await fetch(\"/api/auth/login\", {","    method: \"POST\",","    headers: { \"Content-Type\": \"application/json\" },","    credentials: \"include\",","    body: JSON.stringify({ email, password }),","  });","  if (!response.ok) {","    throw new Error(\"Invalid email or password\");","  }","  const body = await response.json();","  return body.user;","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"login","signature":"export async function login(email: string, password: string): Promise\u003cSignedInUser>","async":true,"kind":"symbol"}},{"id":"route:POST /api/auth/login","type":"route","label":"POST /api/auth/login","file":"server/src/routes/auth.ts","line":10,"description":"express route POST /api/auth/login.","descriptionSource":"static","evidence":[{"file":"server/src/routes/auth.ts","line":10,"kind":"route","text":"router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"}],"snippet":{"startLine":9,"lines":["","router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);","router.post(\"/logout\", requireAuth, authController.logout);","router.get(\"/me\", requireAuth, authController.me);",""],"truncated":false},"metadata":{"method":"POST","path":"/api/auth/login","framework":"express","kind":"route"}},{"id":"cond:client/src/api/auth.ts#login:14","type":"condition","label":"!response.ok","file":"client/src/api/auth.ts","line":14,"description":"login() branches on `!response.ok`.","descriptionSource":"static","evidence":[{"file":"client/src/api/auth.ts","line":14,"kind":"branch","text":"if (!response.ok) {"}],"snippet":{"startLine":14,"lines":["  if (!response.ok) {","    throw new Error(\"Invalid email or password\");","  }","  const body = await response.json();"],"truncated":false},"metadata":{"kind":"branch","owner":"client/src/api/auth.ts#login","test":"!response.ok"}},{"id":"server/src/middleware/rateLimit.ts#loginRateLimit","type":"function","label":"loginRateLimit()","file":"server/src/middleware/rateLimit.ts","line":8,"description":"Allows at most five login attempts per IP and minute.","descriptionSource":"doc","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":8,"kind":"definition","text":"export async function loginRateLimit(req: Request, res: Response, next: NextFunction) {"}],"snippet":{"startLine":8,"lines":["export async function loginRateLimit(req: Request, res: Response, next: NextFunction) {","  const key = `login-attempts:${req.ip}`;","  const attempts = await redis.incr(key);","  if (attempts === 1) {","    await redis.expire(key, WINDOW_SECONDS);","  }","  if (attempts > MAX_ATTEMPTS) {","    return res.status(429).json({ error: \"Too many login attempts\" });","  }","  next();","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"loginRateLimit","signature":"export async function loginRateLimit(req: Request, res: Response, next: NextFunction)","async":true,"kind":"symbol"}},{"id":"server/src/middleware/validate.ts#validateBody","type":"function","label":"validateBody()","file":"server/src/middleware/validate.ts","line":5,"description":"Validates the request body against a zod schema.","descriptionSource":"doc","evidence":[{"file":"server/src/middleware/validate.ts","line":5,"kind":"definition","text":"export function validateBody(schema: ZodType) {"}],"snippet":{"startLine":5,"lines":["export function validateBody(schema: ZodType) {","  return (req: Request, res: Response, next: NextFunction) => {","    const result = schema.safeParse(req.body);","    if (!result.success) {","      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });","    }","    req.body = result.data;","    next();","  };","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"validateBody","signature":"export function validateBody(schema: ZodType)","async":false,"kind":"symbol"}},{"id":"server/src/controllers/authController.ts#authController.login","type":"function","label":"authController.login()","file":"server/src/controllers/authController.ts","line":14,"description":"Authenticates email + password and starts a cookie-based session.","descriptionSource":"doc","evidence":[{"file":"server/src/controllers/authController.ts","line":14,"kind":"definition","text":"async login(req: Request, res: Response) {"}],"snippet":{"startLine":14,"lines":["  async login(req: Request, res: Response) {","    const { email, password } = req.body;","","    const user = await findUserByEmail(email);","    if (!user) {","      await recordFailedLogin(email, req.ip);","      return res.status(401).json({ error: \"Invalid email or password\" });","    }","","    const valid = await verifyPassword(password, user.passwordHash);","    if (!valid) {","      await recordFailedLogin(email, req.ip);","      return res.status(401).json({ error: \"Invalid email or password\" });","    }","","    const session = await createSession(user.id, req.headers[\"user-agent\"]);","    setSessionCookie(res, session.id);","    authEvents.emit(\"user.loggedIn\", { userId: user.id });","","    return res.json({ user: toPublicUser(user) });","  },"],"truncated":false},"metadata":{"symbolKind":"method","qualifiedName":"authController.login","signature":"async login(req: Request, res: Response)","async":true,"kind":"symbol"}},{"id":"exit:client/src/api/auth.ts:15","type":"error","label":"throw Error","file":"client/src/api/auth.ts","line":15,"description":"login() throws Error: \"Invalid email or password\".","descriptionSource":"static","evidence":[{"file":"client/src/api/auth.ts","line":15,"kind":"exit","text":"throw new Error(\"Invalid email or password\");"}],"snippet":{"startLine":14,"lines":["  if (!response.ok) {","    throw new Error(\"Invalid email or password\");","  }"],"truncated":false},"metadata":{"kind":"throw","owner":"client/src/api/auth.ts#login","errorName":"Error","message":"Invalid email or password"}},{"id":"db:redis:*:incr","type":"database","label":"redis.incr","description":"Writes to redis via redis (incr).","descriptionSource":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":10,"kind":"call","text":"const attempts = await redis.incr(key);"}],"metadata":{"system":"redis","operation":"incr","access":"write","kind":"database"},"file":"server/src/middleware/rateLimit.ts","line":10,"snippet":{"startLine":9,"lines":["  const key = `login-attempts:${req.ip}`;","  const attempts = await redis.incr(key);","  if (attempts === 1) {"],"truncated":false}},{"id":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:11","type":"condition","label":"attempts === 1","file":"server/src/middleware/rateLimit.ts","line":11,"description":"loginRateLimit() branches on `attempts === 1`.","descriptionSource":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":11,"kind":"branch","text":"if (attempts === 1) {"}],"snippet":{"startLine":11,"lines":["  if (attempts === 1) {","    await redis.expire(key, WINDOW_SECONDS);","  }","  if (attempts > MAX_ATTEMPTS) {"],"truncated":false},"metadata":{"kind":"branch","owner":"server/src/middleware/rateLimit.ts#loginRateLimit","test":"attempts === 1"}},{"id":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:14","type":"condition","label":"attempts > MAX_ATTEMPTS","file":"server/src/middleware/rateLimit.ts","line":14,"description":"loginRateLimit() branches on `attempts > MAX_ATTEMPTS`.","descriptionSource":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":14,"kind":"branch","text":"if (attempts > MAX_ATTEMPTS) {"}],"snippet":{"startLine":14,"lines":["  if (attempts > MAX_ATTEMPTS) {","    return res.status(429).json({ error: \"Too many login attempts\" });","  }","  next();"],"truncated":false},"metadata":{"kind":"branch","owner":"server/src/middleware/rateLimit.ts#loginRateLimit","test":"attempts > MAX_ATTEMPTS"}},{"id":"cond:server/src/middleware/validate.ts#validateBody:8","type":"condition","label":"!result.success","file":"server/src/middleware/validate.ts","line":8,"description":"validateBody() branches on `!result.success`.","descriptionSource":"static","evidence":[{"file":"server/src/middleware/validate.ts","line":8,"kind":"branch","text":"if (!result.success) {"}],"snippet":{"startLine":8,"lines":["    if (!result.success) {","      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });","    }","    req.body = result.data;"],"truncated":false},"metadata":{"kind":"branch","owner":"server/src/middleware/validate.ts#validateBody","test":"!result.success"}},{"id":"server/src/services/userService.ts#findUserByEmail","type":"service","label":"findUserByEmail()","file":"server/src/services/userService.ts","line":9,"description":"Looks up a user by their (case-insensitive) email address.","descriptionSource":"doc","evidence":[{"file":"server/src/services/userService.ts","line":9,"kind":"definition","text":"export async function findUserByEmail(email: string) {"}],"snippet":{"startLine":9,"lines":["export async function findUserByEmail(email: string) {","  return db.user.findUnique({ where: { email: email.toLowerCase() } });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"findUserByEmail","signature":"export async function findUserByEmail(email: string)","async":true,"kind":"symbol"}},{"id":"cond:server/src/controllers/authController.ts#authController.login:18","type":"condition","label":"!user","file":"server/src/controllers/authController.ts","line":18,"description":"authController.login() branches on `!user`.","descriptionSource":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":18,"kind":"branch","text":"if (!user) {"}],"snippet":{"startLine":18,"lines":["    if (!user) {","      await recordFailedLogin(email, req.ip);","      return res.status(401).json({ error: \"Invalid email or password\" });","    }"],"truncated":false},"metadata":{"kind":"branch","owner":"server/src/controllers/authController.ts#authController.login","test":"!user"}},{"id":"db:redis:*:expire","type":"database","label":"redis.expire","description":"Writes to redis via redis (expire).","descriptionSource":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":12,"kind":"call","text":"await redis.expire(key, WINDOW_SECONDS);"}],"metadata":{"system":"redis","operation":"expire","access":"write","kind":"database"},"file":"server/src/middleware/rateLimit.ts","line":12,"snippet":{"startLine":11,"lines":["  if (attempts === 1) {","    await redis.expire(key, WINDOW_SECONDS);","  }"],"truncated":false}},{"id":"exit:server/src/middleware/rateLimit.ts:15","type":"error","label":"429 Too Many Requests","file":"server/src/middleware/rateLimit.ts","line":15,"description":"loginRateLimit() responds with HTTP 429.","descriptionSource":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":15,"kind":"exit","text":"return res.status(429).json({ error: \"Too many login attempts\" });"}],"snippet":{"startLine":14,"lines":["  if (attempts > MAX_ATTEMPTS) {","    return res.status(429).json({ error: \"Too many login attempts\" });","  }"],"truncated":false},"metadata":{"kind":"response","owner":"server/src/middleware/rateLimit.ts#loginRateLimit","status":429}},{"id":"exit:server/src/middleware/validate.ts:9","type":"error","label":"400 Bad Request","file":"server/src/middleware/validate.ts","line":9,"description":"validateBody() responds with HTTP 400.","descriptionSource":"static","evidence":[{"file":"server/src/middleware/validate.ts","line":9,"kind":"exit","text":"return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });"}],"snippet":{"startLine":8,"lines":["    if (!result.success) {","      return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });","    }"],"truncated":false},"metadata":{"kind":"response","owner":"server/src/middleware/validate.ts#validateBody","status":400}},{"id":"db:prisma:user:findUnique","type":"database","label":"user.findUnique","description":"Reads from user via prisma (findUnique).","descriptionSource":"static","evidence":[{"file":"server/src/services/userService.ts","line":10,"kind":"call","text":"return db.user.findUnique({ where: { email: email.toLowerCase() } });"}],"metadata":{"system":"prisma","model":"user","operation":"findUnique","access":"read","kind":"database"},"file":"server/src/services/userService.ts","line":10,"snippet":{"startLine":9,"lines":["export async function findUserByEmail(email: string) {","  return db.user.findUnique({ where: { email: email.toLowerCase() } });","}"],"truncated":false}},{"id":"server/src/services/userService.ts#recordFailedLogin","type":"service","label":"recordFailedLogin()","file":"server/src/services/userService.ts","line":14,"description":"Stores a failed login attempt so rate limiting and audits can see it.","descriptionSource":"doc","evidence":[{"file":"server/src/services/userService.ts","line":14,"kind":"definition","text":"export async function recordFailedLogin(email: string, ip?: string) {"}],"snippet":{"startLine":14,"lines":["export async function recordFailedLogin(email: string, ip?: string) {","  await db.loginAttempt.create({ data: { email, ip } });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"recordFailedLogin","signature":"export async function recordFailedLogin(email: string, ip?: string)","async":true,"kind":"symbol"}},{"id":"exit:server/src/controllers/authController.ts:20","type":"error","label":"401 Unauthorized","file":"server/src/controllers/authController.ts","line":20,"description":"authController.login() responds with HTTP 401.","descriptionSource":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":20,"kind":"exit","text":"return res.status(401).json({ error: \"Invalid email or password\" });"}],"snippet":{"startLine":19,"lines":["      await recordFailedLogin(email, req.ip);","      return res.status(401).json({ error: \"Invalid email or password\" });","    }"],"truncated":false},"metadata":{"kind":"response","owner":"server/src/controllers/authController.ts#authController.login","status":401}},{"id":"server/src/auth/password.ts#verifyPassword","type":"function","label":"verifyPassword()","file":"server/src/auth/password.ts","line":6,"description":"Compares a plain-text password with the stored bcrypt hash.","descriptionSource":"doc","evidence":[{"file":"server/src/auth/password.ts","line":6,"kind":"definition","text":"export async function verifyPassword(password: string, hash: string): Promise\u003cboolean> {"}],"snippet":{"startLine":6,"lines":["export async function verifyPassword(password: string, hash: string): Promise\u003cboolean> {","  return bcrypt.compare(password, hash);","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"verifyPassword","signature":"export async function verifyPassword(password: string, hash: string): Promise\u003cboolean>","async":true,"kind":"symbol"}},{"id":"cond:server/src/controllers/authController.ts#authController.login:24","type":"condition","label":"!valid","file":"server/src/controllers/authController.ts","line":24,"description":"authController.login() branches on `!valid`.","descriptionSource":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":24,"kind":"branch","text":"if (!valid) {"}],"snippet":{"startLine":24,"lines":["    if (!valid) {","      await recordFailedLogin(email, req.ip);","      return res.status(401).json({ error: \"Invalid email or password\" });","    }"],"truncated":false},"metadata":{"kind":"branch","owner":"server/src/controllers/authController.ts#authController.login","test":"!valid"}},{"id":"db:prisma:loginAttempt:create","type":"database","label":"loginAttempt.create","description":"Writes to loginAttempt via prisma (create).","descriptionSource":"static","evidence":[{"file":"server/src/services/userService.ts","line":15,"kind":"call","text":"await db.loginAttempt.create({ data: { email, ip } });"}],"metadata":{"system":"prisma","model":"loginAttempt","operation":"create","access":"write","kind":"database"},"file":"server/src/services/userService.ts","line":15,"snippet":{"startLine":14,"lines":["export async function recordFailedLogin(email: string, ip?: string) {","  await db.loginAttempt.create({ data: { email, ip } });","}"],"truncated":false}},{"id":"lib:bcrypt:bcrypt.compare","type":"library","label":"bcrypt.compare","description":"Password hashing via bcrypt (compare).","descriptionSource":"static","evidence":[{"file":"server/src/auth/password.ts","line":7,"kind":"call","text":"return bcrypt.compare(password, hash);"}],"metadata":{"package":"bcrypt","operation":"compare","category":"password hashing","kind":"library"},"file":"server/src/auth/password.ts","line":7,"snippet":{"startLine":6,"lines":["export async function verifyPassword(password: string, hash: string): Promise\u003cboolean> {","  return bcrypt.compare(password, hash);","}"],"truncated":false}},{"id":"exit:server/src/controllers/authController.ts:26","type":"error","label":"401 Unauthorized","file":"server/src/controllers/authController.ts","line":26,"description":"authController.login() responds with HTTP 401.","descriptionSource":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":26,"kind":"exit","text":"return res.status(401).json({ error: \"Invalid email or password\" });"}],"snippet":{"startLine":25,"lines":["      await recordFailedLogin(email, req.ip);","      return res.status(401).json({ error: \"Invalid email or password\" });","    }"],"truncated":false},"metadata":{"kind":"response","owner":"server/src/controllers/authController.ts#authController.login","status":401}},{"id":"server/src/auth/session.ts#createSession","type":"function","label":"createSession()","file":"server/src/auth/session.ts","line":8,"description":"Creates a session record that expires after two weeks.","descriptionSource":"doc","evidence":[{"file":"server/src/auth/session.ts","line":8,"kind":"definition","text":"export async function createSession(userId: string, userAgent?: string) {"}],"snippet":{"startLine":8,"lines":["export async function createSession(userId: string, userAgent?: string) {","  const id = randomBytes(32).toString(\"hex\");","  return db.session.create({","    data: { id, userId, userAgent, expiresAt: new Date(Date.now() + SESSION_TTL_MS) },","  });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"createSession","signature":"export async function createSession(userId: string, userAgent?: string)","async":true,"kind":"symbol"}},{"id":"server/src/auth/session.ts#setSessionCookie","type":"function","label":"setSessionCookie()","file":"server/src/auth/session.ts","line":20,"description":"Writes the session id to an HTTP-only cookie.","descriptionSource":"doc","evidence":[{"file":"server/src/auth/session.ts","line":20,"kind":"definition","text":"export function setSessionCookie(res: Response, sessionId: string) {"}],"snippet":{"startLine":20,"lines":["export function setSessionCookie(res: Response, sessionId: string) {","  res.cookie(\"sid\", sessionId, {","    httpOnly: true,","    secure: process.env.NODE_ENV === \"production\",","    sameSite: \"lax\",","    maxAge: SESSION_TTL_MS,","  });","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"setSessionCookie","signature":"export function setSessionCookie(res: Response, sessionId: string)","async":false,"envVars":["NODE_ENV"],"kind":"symbol"}},{"id":"event:event:user.loggedIn","type":"event","label":"user.loggedIn","description":"Event \"user.loggedIn\".","descriptionSource":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":31,"kind":"emit","text":"authEvents.emit(\"user.loggedIn\", { userId: user.id });"}],"metadata":{"channel":"event","event":"user.loggedIn","system":"events","kind":"event"},"file":"server/src/controllers/authController.ts","line":31,"snippet":{"startLine":30,"lines":["    setSessionCookie(res, session.id);","    authEvents.emit(\"user.loggedIn\", { userId: user.id });",""],"truncated":false}},{"id":"server/src/services/userService.ts#toPublicUser","type":"service","label":"toPublicUser()","file":"server/src/services/userService.ts","line":18,"description":"export function toPublicUser(user: { id: string; email: string }): PublicUser","descriptionSource":"static","evidence":[{"file":"server/src/services/userService.ts","line":18,"kind":"definition","text":"export function toPublicUser(user: { id: string; email: string }): PublicUser {"}],"snippet":{"startLine":18,"lines":["export function toPublicUser(user: { id: string; email: string }): PublicUser {","  return { id: user.id, email: user.email };","}"],"truncated":false},"metadata":{"symbolKind":"function","qualifiedName":"toPublicUser","signature":"export function toPublicUser(user: { id: string; email: string }): PublicUser","async":false,"kind":"symbol"}},{"id":"lib:crypto:randomBytes","type":"library","label":"randomBytes","description":"Crypto via crypto (randomBytes).","descriptionSource":"static","evidence":[{"file":"server/src/auth/session.ts","line":9,"kind":"call","text":"const id = randomBytes(32).toString(\"hex\");"}],"metadata":{"package":"crypto","operation":"randomBytes","category":"crypto","kind":"library"},"file":"server/src/auth/session.ts","line":9,"snippet":{"startLine":8,"lines":["export async function createSession(userId: string, userAgent?: string) {","  const id = randomBytes(32).toString(\"hex\");","  return db.session.create({"],"truncated":false}},{"id":"db:prisma:session:create","type":"database","label":"session.create","description":"Writes to session via prisma (create).","descriptionSource":"static","evidence":[{"file":"server/src/auth/session.ts","line":10,"kind":"call","text":"return db.session.create({"}],"metadata":{"system":"prisma","model":"session","operation":"create","access":"write","kind":"database"},"file":"server/src/auth/session.ts","line":10,"snippet":{"startLine":9,"lines":["  const id = randomBytes(32).toString(\"hex\");","  return db.session.create({","    data: { id, userId, userAgent, expiresAt: new Date(Date.now() + SESSION_TTL_MS) },"],"truncated":false}},{"id":"server/src/events/handlers.ts#on user.loggedIn","type":"function","label":"on user.loggedIn handler","file":"server/src/events/handlers.ts","line":5,"description":"async ({ userId }: { userId: string }) =>","descriptionSource":"static","evidence":[{"file":"server/src/events/handlers.ts","line":5,"kind":"definition","text":"authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {"}],"snippet":{"startLine":5,"lines":["authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {","  await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });","});"],"truncated":false},"metadata":{"symbolKind":"handler","qualifiedName":"on user.loggedIn","signature":"async ({ userId }: { userId: string }) =>","async":true,"kind":"symbol"}},{"id":"db:prisma:user:update","type":"database","label":"user.update","description":"Writes to user via prisma (update).","descriptionSource":"static","evidence":[{"file":"server/src/events/handlers.ts","line":6,"kind":"call","text":"await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });"}],"metadata":{"system":"prisma","model":"user","operation":"update","access":"write","kind":"database"},"file":"server/src/events/handlers.ts","line":6,"snippet":{"startLine":5,"lines":["authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {","  await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });","});"],"truncated":false}}],"edges":[{"id":"e1","from":"client/src/pages/LoginPage.tsx#LoginPage","to":"client/src/components/LoginForm.tsx#LoginForm","type":"renders","confidence":1,"source":"static","evidence":[{"file":"client/src/pages/LoginPage.tsx","line":10,"kind":"reference","text":"\u003cLoginForm onSuccess={() => navigate(\"/dashboard\")} />"}]},{"id":"e2","from":"client/src/pages/LoginPage.tsx#LoginPage","to":"nav:/dashboard","type":"navigates","label":"onSuccess","confidence":1,"source":"static","evidence":[{"file":"client/src/pages/LoginPage.tsx","line":10,"kind":"call","text":"\u003cLoginForm onSuccess={() => navigate(\"/dashboard\")} />"}]},{"id":"e3","from":"client/src/components/LoginForm.tsx#LoginForm","to":"client/src/components/LoginForm.tsx#LoginForm.handleSubmit","type":"calls","label":"onSubmit","confidence":1,"source":"static","evidence":[{"file":"client/src/components/LoginForm.tsx","line":25,"kind":"call","text":"\u003cform onSubmit={handleSubmit}>"}]},{"id":"e4","from":"client/src/components/LoginForm.tsx#LoginForm.handleSubmit","to":"client/src/api/auth.ts#login","type":"calls","confidence":1,"source":"static","evidence":[{"file":"client/src/components/LoginForm.tsx","line":17,"kind":"call","text":"const user = await login(email, password);"}]},{"id":"e5","from":"client/src/api/auth.ts#login","to":"route:POST /api/auth/login","type":"requests","confidence":0.95,"source":"static","evidence":[{"file":"client/src/api/auth.ts","line":8,"kind":"call","text":"const response = await fetch(\"/api/auth/login\", {"}]},{"id":"e6","from":"client/src/api/auth.ts#login","to":"cond:client/src/api/auth.ts#login:14","type":"condition","confidence":1,"source":"static","evidence":[{"file":"client/src/api/auth.ts","line":14,"kind":"branch","text":"if (!response.ok) {"}]},{"id":"e7","from":"route:POST /api/auth/login","to":"server/src/middleware/rateLimit.ts#loginRateLimit","type":"calls","label":"middleware","confidence":1,"source":"static","evidence":[{"file":"server/src/routes/auth.ts","line":10,"kind":"route","text":"router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"}]},{"id":"e8","from":"route:POST /api/auth/login","to":"server/src/middleware/validate.ts#validateBody","type":"calls","label":"middleware","confidence":1,"source":"static","evidence":[{"file":"server/src/routes/auth.ts","line":10,"kind":"route","text":"router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"}]},{"id":"e9","from":"route:POST /api/auth/login","to":"server/src/controllers/authController.ts#authController.login","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/routes/auth.ts","line":10,"kind":"route","text":"router.post(\"/login\", loginRateLimit, validateBody(loginSchema), authController.login);"}]},{"id":"e10","from":"cond:client/src/api/auth.ts#login:14","to":"exit:client/src/api/auth.ts:15","type":"returns","branch":"yes","label":"yes","confidence":1,"source":"static","evidence":[{"file":"client/src/api/auth.ts","line":15,"kind":"exit","text":"throw new Error(\"Invalid email or password\");"}]},{"id":"e11","from":"server/src/middleware/rateLimit.ts#loginRateLimit","to":"db:redis:*:incr","type":"writes","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":10,"kind":"call","text":"const attempts = await redis.incr(key);"}]},{"id":"e12","from":"server/src/middleware/rateLimit.ts#loginRateLimit","to":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:11","type":"condition","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":11,"kind":"branch","text":"if (attempts === 1) {"}]},{"id":"e13","from":"server/src/middleware/rateLimit.ts#loginRateLimit","to":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:14","type":"condition","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":14,"kind":"branch","text":"if (attempts > MAX_ATTEMPTS) {"}]},{"id":"e14","from":"server/src/middleware/validate.ts#validateBody","to":"cond:server/src/middleware/validate.ts#validateBody:8","type":"condition","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/validate.ts","line":8,"kind":"branch","text":"if (!result.success) {"}]},{"id":"e15","from":"server/src/controllers/authController.ts#authController.login","to":"server/src/services/userService.ts#findUserByEmail","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":17,"kind":"call","text":"const user = await findUserByEmail(email);"}]},{"id":"e16","from":"server/src/controllers/authController.ts#authController.login","to":"cond:server/src/controllers/authController.ts#authController.login:18","type":"condition","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":18,"kind":"branch","text":"if (!user) {"}]},{"id":"e17","from":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:11","to":"db:redis:*:expire","type":"writes","label":"yes","branch":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":12,"kind":"call","text":"await redis.expire(key, WINDOW_SECONDS);"}]},{"id":"e18","from":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:14","to":"exit:server/src/middleware/rateLimit.ts:15","type":"returns","branch":"yes","label":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/rateLimit.ts","line":15,"kind":"exit","text":"return res.status(429).json({ error: \"Too many login attempts\" });"}]},{"id":"e19","from":"cond:server/src/middleware/validate.ts#validateBody:8","to":"exit:server/src/middleware/validate.ts:9","type":"returns","branch":"yes","label":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/middleware/validate.ts","line":9,"kind":"exit","text":"return res.status(400).json({ error: \"Invalid request\", issues: result.error.issues });"}]},{"id":"e20","from":"server/src/services/userService.ts#findUserByEmail","to":"db:prisma:user:findUnique","type":"reads","confidence":1,"source":"static","evidence":[{"file":"server/src/services/userService.ts","line":10,"kind":"call","text":"return db.user.findUnique({ where: { email: email.toLowerCase() } });"}]},{"id":"e21","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"server/src/services/userService.ts#recordFailedLogin","type":"calls","label":"yes","branch":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":19,"kind":"call","text":"await recordFailedLogin(email, req.ip);"}]},{"id":"e22","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"exit:server/src/controllers/authController.ts:20","type":"returns","branch":"yes","label":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":20,"kind":"exit","text":"return res.status(401).json({ error: \"Invalid email or password\" });"}]},{"id":"e23","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"server/src/auth/password.ts#verifyPassword","type":"calls","label":"no","branch":"no","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":23,"kind":"call","text":"const valid = await verifyPassword(password, user.passwordHash);"}]},{"id":"e24","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"cond:server/src/controllers/authController.ts#authController.login:24","type":"condition","branch":"no","label":"no","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":24,"kind":"branch","text":"if (!valid) {"}]},{"id":"e25","from":"server/src/services/userService.ts#recordFailedLogin","to":"db:prisma:loginAttempt:create","type":"writes","confidence":1,"source":"static","evidence":[{"file":"server/src/services/userService.ts","line":15,"kind":"call","text":"await db.loginAttempt.create({ data: { email, ip } });"}]},{"id":"e26","from":"server/src/auth/password.ts#verifyPassword","to":"lib:bcrypt:bcrypt.compare","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/auth/password.ts","line":7,"kind":"call","text":"return bcrypt.compare(password, hash);"}]},{"id":"e27","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/services/userService.ts#recordFailedLogin","type":"calls","label":"yes","branch":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":25,"kind":"call","text":"await recordFailedLogin(email, req.ip);"}]},{"id":"e28","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"exit:server/src/controllers/authController.ts:26","type":"returns","branch":"yes","label":"yes","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":26,"kind":"exit","text":"return res.status(401).json({ error: \"Invalid email or password\" });"}]},{"id":"e29","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/auth/session.ts#createSession","type":"calls","label":"no","branch":"no","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":29,"kind":"call","text":"const session = await createSession(user.id, req.headers[\"user-agent\"]);"}]},{"id":"e30","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/auth/session.ts#setSessionCookie","type":"calls","label":"no","branch":"no","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":30,"kind":"call","text":"setSessionCookie(res, session.id);"}]},{"id":"e31","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"event:event:user.loggedIn","type":"emits","label":"no","branch":"no","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":31,"kind":"emit","text":"authEvents.emit(\"user.loggedIn\", { userId: user.id });"}]},{"id":"e32","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/services/userService.ts#toPublicUser","type":"calls","label":"no","branch":"no","confidence":1,"source":"static","evidence":[{"file":"server/src/controllers/authController.ts","line":33,"kind":"call","text":"return res.json({ user: toPublicUser(user) });"}]},{"id":"e33","from":"server/src/auth/session.ts#createSession","to":"lib:crypto:randomBytes","type":"calls","confidence":1,"source":"static","evidence":[{"file":"server/src/auth/session.ts","line":9,"kind":"call","text":"const id = randomBytes(32).toString(\"hex\");"}]},{"id":"e34","from":"server/src/auth/session.ts#createSession","to":"db:prisma:session:create","type":"writes","confidence":1,"source":"static","evidence":[{"file":"server/src/auth/session.ts","line":10,"kind":"call","text":"return db.session.create({"}]},{"id":"e35","from":"event:event:user.loggedIn","to":"server/src/events/handlers.ts#on user.loggedIn","type":"triggers","label":"listener","confidence":1,"source":"static","evidence":[{"file":"server/src/events/handlers.ts","line":5,"kind":"listener","text":"authEvents.on(\"user.loggedIn\", async ({ userId }: { userId: string }) => {"}]},{"id":"e36","from":"server/src/events/handlers.ts#on user.loggedIn","to":"db:prisma:user:update","type":"writes","confidence":1,"source":"static","evidence":[{"file":"server/src/events/handlers.ts","line":6,"kind":"call","text":"await db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });"}]}],"explanation":"The flow starts at `LoginPage` (client/src/pages/LoginPage.tsx:5).\n\n1. `LoginPage` renders `LoginForm`; navigates to `/dashboard`.\n2. `LoginForm` calls `handleSubmit()` on onSubmit.\n3. `handleSubmit()` calls `login()`.\n4. `login()` sends `POST /api/auth/login`; checks `!response.ok` (yes → `throw Error`).\n5. `POST /api/auth/login` runs middleware `loginRateLimit()` and `validateBody()`; calls `authController.login()`.\n6. `loginRateLimit()` writes `redis.incr`; checks `attempts === 1` (yes → `redis.expire`); checks `attempts > MAX_ATTEMPTS` (yes → `429 Too Many Requests`).\n7. `validateBody()` checks `!result.success` (yes → `400 Bad Request`).\n8. `authController.login()` calls `findUserByEmail()`; checks `!user` (yes → `recordFailedLogin()`, `401 Unauthorized`; no → `verifyPassword()`, checks `!valid`).\n9. `findUserByEmail()` reads `user.findUnique`.\n10. `recordFailedLogin()` writes `loginAttempt.create`.\n11. `verifyPassword()` calls `bcrypt.compare`.\n12. If `!valid`: yes → `recordFailedLogin()`, `401 Unauthorized`; no → `createSession()`, `setSessionCookie()`, `user.loggedIn`, `toPublicUser()`.\n13. `createSession()` calls `randomBytes`; writes `session.create`.\n14. `user.loggedIn` triggers `on user.loggedIn handler`.\n15. `on user.loggedIn handler` writes `user.update`.\n\nGenerated by static analysis without an LLM: descriptions come from doc comments and code facts.","analysis":{"provider":"static","generatedAt":"2026-10-05T00:00:00.000Z","repository":"acme-shop","stats":{"files":42,"symbols":57,"relationships":95,"candidates":25},"warnings":[]}},"layout":{"width":3280,"height":1302,"nodes":[{"id":"client/src/pages/LoginPage.tsx#LoginPage","x":1721.4,"y":67,"width":199,"height":54},{"id":"client/src/components/LoginForm.tsx#LoginForm","x":1843.7,"y":191,"width":232,"height":54},{"id":"nav:/dashboard","x":1599.2,"y":191,"width":205,"height":54},{"id":"client/src/components/LoginForm.tsx#LoginForm.handleSubmit","x":1843.7,"y":315,"width":239,"height":54},{"id":"client/src/api/auth.ts#login","x":1843.7,"y":421,"width":150,"height":54},{"id":"route:POST /api/auth/login","x":2380.9,"y":527,"width":210,"height":54},{"id":"cond:client/src/api/auth.ts#login:14","x":1587.9,"y":527,"width":155,"height":40},{"id":"server/src/middleware/rateLimit.ts#loginRateLimit","x":2991.1,"y":651,"width":226,"height":54},{"id":"server/src/middleware/validate.ts#validateBody","x":2380.9,"y":651,"width":219,"height":54},{"id":"server/src/controllers/authController.ts#authController.login","x":1827.9,"y":651,"width":272,"height":54},{"id":"exit:client/src/api/auth.ts:15","x":1587.9,"y":651,"width":156,"height":50},{"id":"db:redis:*:incr","x":3123.4,"y":757,"width":232,"height":54},{"id":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:11","x":2896.4,"y":757,"width":170,"height":40},{"id":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:14","x":2636.4,"y":757,"width":239,"height":40},{"id":"cond:server/src/middleware/validate.ts#validateBody:8","x":2380.9,"y":757,"width":178,"height":40},{"id":"server/src/services/userService.ts#findUserByEmail","x":2118.4,"y":757,"width":226,"height":54},{"id":"cond:server/src/controllers/authController.ts#authController.login:18","x":1664.5,"y":757,"width":120,"height":40},{"id":"db:redis:*:expire","x":2896.4,"y":881,"width":232,"height":54},{"id":"exit:server/src/middleware/rateLimit.ts:15","x":2636.4,"y":881,"width":236,"height":50},{"id":"exit:server/src/middleware/validate.ts:9","x":2380.9,"y":881,"width":223,"height":50},{"id":"db:prisma:user:findUnique","x":2118.4,"y":881,"width":232,"height":54},{"id":"server/src/services/userService.ts#recordFailedLogin","x":1811.7,"y":1005,"width":232,"height":54},{"id":"exit:server/src/controllers/authController.ts:20","x":1791.5,"y":881,"width":276,"height":50},{"id":"server/src/auth/password.ts#verifyPassword","x":1537.5,"y":881,"width":180,"height":54},{"id":"cond:server/src/controllers/authController.ts#authController.login:24","x":798.3,"y":881,"width":120,"height":40},{"id":"db:prisma:loginAttempt:create","x":1811.7,"y":1129,"width":232,"height":54},{"id":"lib:bcrypt:bcrypt.compare","x":1406.5,"y":1005,"width":179,"height":54},{"id":"exit:server/src/controllers/authController.ts:26","x":1153,"y":1005,"width":276,"height":50},{"id":"server/src/auth/session.ts#createSession","x":903,"y":1005,"width":172,"height":54},{"id":"server/src/auth/session.ts#setSessionCookie","x":693.5,"y":1005,"width":195,"height":54},{"id":"event:event:user.loggedIn","x":434,"y":1005,"width":272,"height":54},{"id":"server/src/services/userService.ts#toPublicUser","x":156,"y":1005,"width":232,"height":54},{"id":"lib:crypto:randomBytes","x":1156.5,"y":1129,"width":172,"height":54},{"id":"db:prisma:session:create","x":786.3,"y":1129,"width":179,"height":54},{"id":"server/src/events/handlers.ts#on user.loggedIn","x":434,"y":1129,"width":240,"height":54},{"id":"db:prisma:user:update","x":434,"y":1235,"width":192,"height":54}],"edges":[{"id":"e1","from":"client/src/pages/LoginPage.tsx#LoginPage","to":"client/src/components/LoginForm.tsx#LoginForm","points":[{"x":1774.7,"y":94},{"x":1843.7,"y":129},{"x":1843.7,"y":164}],"path":"M1774.7,94 L1786.2,99.8 C1797.7,105.7 1820.7,117.3 1832.2,129 C1843.7,140.7 1843.7,152.3 1843.7,164"},{"id":"e2","from":"client/src/pages/LoginPage.tsx#LoginPage","to":"nav:/dashboard","points":[{"x":1668.2,"y":94},{"x":1599.2,"y":129},{"x":1599.2,"y":164}],"path":"M1668.2,94 L1656.7,99.8 C1645.2,105.7 1622.2,117.3 1610.7,129 C1599.2,140.7 1599.2,152.3 1599.2,164","label":{"x":1599.2,"y":129,"width":70.69999999999999,"height":18,"text":"onSuccess"}},{"id":"e3","from":"client/src/components/LoginForm.tsx#LoginForm","to":"client/src/components/LoginForm.tsx#LoginForm.handleSubmit","points":[{"x":1843.7,"y":218},{"x":1843.7,"y":253},{"x":1843.7,"y":288}],"path":"M1843.7,218 L1843.7,223.8 C1843.7,229.7 1843.7,241.3 1843.7,253 C1843.7,264.7 1843.7,276.3 1843.7,288","label":{"x":1843.7,"y":253,"width":64.4,"height":18,"text":"onSubmit"}},{"id":"e4","from":"client/src/components/LoginForm.tsx#LoginForm.handleSubmit","to":"client/src/api/auth.ts#login","points":[{"x":1843.7,"y":342},{"x":1843.7,"y":368},{"x":1843.7,"y":394}],"path":"M1843.7,342 L1843.7,346.3 C1843.7,350.7 1843.7,359.3 1843.7,368 C1843.7,376.7 1843.7,385.3 1843.7,394"},{"id":"e5","from":"client/src/api/auth.ts#login","to":"route:POST /api/auth/login","points":[{"x":1918.7,"y":428.4},{"x":2380.9,"y":474},{"x":2380.9,"y":500}],"path":"M1918.7,428.4 L1995.7,436 C2072.8,443.6 2226.8,458.8 2303.9,470.7 C2380.9,482.7 2380.9,491.3 2380.9,500"},{"id":"e6","from":"client/src/api/auth.ts#login","to":"cond:client/src/api/auth.ts#login:14","points":[{"x":1768.7,"y":436.5},{"x":1587.9,"y":474},{"x":1587.9,"y":507}],"path":"M1768.7,436.5 L1738.6,442.8 C1708.4,449 1648.2,461.5 1618,473.3 C1587.9,485 1587.9,496 1587.9,507"},{"id":"e7","from":"route:POST /api/auth/login","to":"server/src/middleware/rateLimit.ts#loginRateLimit","points":[{"x":2485.9,"y":537.7},{"x":2991.1,"y":589},{"x":2991.1,"y":624}],"path":"M2485.9,537.7 L2570.1,546.3 C2654.3,554.8 2822.7,571.9 2906.9,586.3 C2991.1,600.7 2991.1,612.3 2991.1,624","label":{"x":2991.1,"y":589,"width":77,"height":18,"text":"middleware"}},{"id":"e8","from":"route:POST /api/auth/login","to":"server/src/middleware/validate.ts#validateBody","points":[{"x":2380.9,"y":554},{"x":2380.9,"y":589},{"x":2380.9,"y":624}],"path":"M2380.9,554 L2380.9,559.8 C2380.9,565.7 2380.9,577.3 2380.9,589 C2380.9,600.7 2380.9,612.3 2380.9,624","label":{"x":2380.9,"y":589,"width":77,"height":18,"text":"middleware"}},{"id":"e9","from":"route:POST /api/auth/login","to":"server/src/controllers/authController.ts#authController.login","points":[{"x":2275.9,"y":538.8},{"x":1827.9,"y":589},{"x":1827.9,"y":624}],"path":"M2275.9,538.8 L2201.2,547.2 C2126.6,555.5 1977.2,572.3 1902.6,586.5 C1827.9,600.7 1827.9,612.3 1827.9,624"},{"id":"e10","from":"cond:client/src/api/auth.ts#login:14","to":"exit:client/src/api/auth.ts:15","points":[{"x":1587.9,"y":547},{"x":1587.9,"y":589},{"x":1587.9,"y":626}],"path":"M1587.9,547 L1587.9,554 C1587.9,561 1587.9,575 1587.9,588.2 C1587.9,601.3 1587.9,613.7 1587.9,626","label":{"x":1587.9,"y":589,"width":32.9,"height":18,"text":"yes"}},{"id":"e11","from":"server/src/middleware/rateLimit.ts#loginRateLimit","to":"db:redis:*:incr","points":[{"x":3058.5,"y":678},{"x":3123.4,"y":704},{"x":3123.4,"y":730}],"path":"M3058.5,678 L3069.3,682.3 C3080.1,686.7 3101.8,695.3 3112.6,704 C3123.4,712.7 3123.4,721.3 3123.4,730"},{"id":"e12","from":"server/src/middleware/rateLimit.ts#loginRateLimit","to":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:11","points":[{"x":2942.9,"y":678},{"x":2896.4,"y":704},{"x":2896.4,"y":737}],"path":"M2942.9,678 L2935.2,682.3 C2927.4,686.7 2911.9,695.3 2904.2,705.2 C2896.4,715 2896.4,726 2896.4,737"},{"id":"e13","from":"server/src/middleware/rateLimit.ts#loginRateLimit","to":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:14","points":[{"x":2878.1,"y":667.9},{"x":2636.4,"y":704},{"x":2636.4,"y":737}],"path":"M2878.1,667.9 L2837.8,673.9 C2797.5,679.9 2717,692 2676.7,703.5 C2636.4,715 2636.4,726 2636.4,737"},{"id":"e14","from":"server/src/middleware/validate.ts#validateBody","to":"cond:server/src/middleware/validate.ts#validateBody:8","points":[{"x":2380.9,"y":678},{"x":2380.9,"y":704},{"x":2380.9,"y":737}],"path":"M2380.9,678 L2380.9,682.3 C2380.9,686.7 2380.9,695.3 2380.9,705.2 C2380.9,715 2380.9,726 2380.9,737"},{"id":"e15","from":"server/src/controllers/authController.ts#authController.login","to":"server/src/services/userService.ts#findUserByEmail","points":[{"x":1963.9,"y":675.8},{"x":2118.4,"y":704},{"x":2118.4,"y":730}],"path":"M1963.9,675.8 L1989.7,680.5 C2015.4,685.2 2066.9,694.6 2092.7,703.6 C2118.4,712.7 2118.4,721.3 2118.4,730"},{"id":"e16","from":"server/src/controllers/authController.ts#authController.login","to":"cond:server/src/controllers/authController.ts#authController.login:18","points":[{"x":1744.7,"y":678},{"x":1664.5,"y":704},{"x":1664.5,"y":737}],"path":"M1744.7,678 L1731.3,682.3 C1718,686.7 1691.2,695.3 1677.9,705.2 C1664.5,715 1664.5,726 1664.5,737"},{"id":"e17","from":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:11","to":"db:redis:*:expire","points":[{"x":2896.4,"y":777},{"x":2896.4,"y":819},{"x":2896.4,"y":854}],"path":"M2896.4,777 L2896.4,784 C2896.4,791 2896.4,805 2896.4,817.8 C2896.4,830.7 2896.4,842.3 2896.4,854","label":{"x":2896.4,"y":819,"width":32.9,"height":18,"text":"yes"}},{"id":"e18","from":"cond:server/src/middleware/rateLimit.ts#loginRateLimit:14","to":"exit:server/src/middleware/rateLimit.ts:15","points":[{"x":2636.4,"y":777},{"x":2636.4,"y":819},{"x":2636.4,"y":856}],"path":"M2636.4,777 L2636.4,784 C2636.4,791 2636.4,805 2636.4,818.2 C2636.4,831.3 2636.4,843.7 2636.4,856","label":{"x":2636.4,"y":819,"width":32.9,"height":18,"text":"yes"}},{"id":"e19","from":"cond:server/src/middleware/validate.ts#validateBody:8","to":"exit:server/src/middleware/validate.ts:9","points":[{"x":2380.9,"y":777},{"x":2380.9,"y":819},{"x":2380.9,"y":856}],"path":"M2380.9,777 L2380.9,784 C2380.9,791 2380.9,805 2380.9,818.2 C2380.9,831.3 2380.9,843.7 2380.9,856","label":{"x":2380.9,"y":819,"width":32.9,"height":18,"text":"yes"}},{"id":"e20","from":"server/src/services/userService.ts#findUserByEmail","to":"db:prisma:user:findUnique","points":[{"x":2118.4,"y":784},{"x":2118.4,"y":819},{"x":2118.4,"y":854}],"path":"M2118.4,784 L2118.4,789.8 C2118.4,795.7 2118.4,807.3 2118.4,819 C2118.4,830.7 2118.4,842.3 2118.4,854"},{"id":"e21","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"server/src/services/userService.ts#recordFailedLogin","points":[{"x":1724.5,"y":769.3},{"x":1965.9,"y":819},{"x":1965.9,"y":881},{"x":1965.9,"y":943},{"x":1878.8,"y":978}],"path":"M1724.5,769.3 L1764.7,777.6 C1805,785.9 1885.4,802.4 1925.7,821.1 C1965.9,839.7 1965.9,860.3 1965.9,881 C1965.9,901.7 1965.9,922.3 1951.4,938.5 C1936.9,954.7 1907.8,966.3 1878.8,978","label":{"x":1965.9,"y":881,"width":32.9,"height":18,"text":"yes"}},{"id":"e22","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"exit:server/src/controllers/authController.ts:20","points":[{"x":1705.4,"y":777},{"x":1791.5,"y":819},{"x":1791.5,"y":856}],"path":"M1705.4,777 L1719.8,784 C1734.1,791 1762.8,805 1777.2,818.2 C1791.5,831.3 1791.5,843.7 1791.5,856","label":{"x":1791.5,"y":819,"width":32.9,"height":18,"text":"yes"}},{"id":"e23","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"server/src/auth/password.ts#verifyPassword","points":[{"x":1623.5,"y":777},{"x":1537.5,"y":819},{"x":1537.5,"y":854}],"path":"M1623.5,777 L1609.2,784 C1594.8,791 1566.2,805 1551.8,817.8 C1537.5,830.7 1537.5,842.3 1537.5,854","label":{"x":1537.5,"y":819,"width":26.6,"height":18,"text":"no"}},{"id":"e24","from":"cond:server/src/controllers/authController.ts#authController.login:18","to":"cond:server/src/controllers/authController.ts#authController.login:24","points":[{"x":1604.5,"y":761.3},{"x":798.3,"y":819},{"x":798.3,"y":861}],"path":"M1604.5,761.3 L1470.1,770.9 C1335.8,780.5 1067,799.8 932.7,816.4 C798.3,833 798.3,847 798.3,861","label":{"x":798.3,"y":819,"width":26.6,"height":18,"text":"no"}},{"id":"e25","from":"server/src/services/userService.ts#recordFailedLogin","to":"db:prisma:loginAttempt:create","points":[{"x":1811.7,"y":1032},{"x":1811.7,"y":1067},{"x":1811.7,"y":1102}],"path":"M1811.7,1032 L1811.7,1037.8 C1811.7,1043.7 1811.7,1055.3 1811.7,1067 C1811.7,1078.7 1811.7,1090.3 1811.7,1102"},{"id":"e26","from":"server/src/auth/password.ts#verifyPassword","to":"lib:bcrypt:bcrypt.compare","points":[{"x":1537.5,"y":908},{"x":1537.5,"y":943},{"x":1463.5,"y":978}],"path":"M1537.5,908 L1537.5,913.8 C1537.5,919.7 1537.5,931.3 1525.2,943 C1512.8,954.7 1488.2,966.3 1463.5,978"},{"id":"e27","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/services/userService.ts#recordFailedLogin","points":[{"x":858.3,"y":887},{"x":1419,"y":943},{"x":1695.7,"y":986.7}],"path":"M858.3,887 L951.8,896.3 C1045.2,905.7 1232.1,924.3 1371.7,941 C1511.2,957.6 1603.5,972.1 1695.7,986.7","label":{"x":1419,"y":943,"width":32.9,"height":18,"text":"yes"}},{"id":"e28","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"exit:server/src/controllers/authController.ts:26","points":[{"x":858.3,"y":891.5},{"x":1153,"y":943},{"x":1153,"y":980}],"path":"M858.3,891.5 L907.4,900.1 C956.5,908.7 1054.8,925.8 1103.9,940.6 C1153,955.3 1153,967.7 1153,980","label":{"x":1153,"y":943,"width":32.9,"height":18,"text":"yes"}},{"id":"e29","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/auth/session.ts#createSession","points":[{"x":832,"y":901},{"x":903,"y":943},{"x":903,"y":978}],"path":"M832,901 L843.8,908 C855.7,915 879.3,929 891.2,941.8 C903,954.7 903,966.3 903,978","label":{"x":903,"y":943,"width":26.6,"height":18,"text":"no"}},{"id":"e30","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/auth/session.ts#setSessionCookie","points":[{"x":764.5,"y":901},{"x":693.5,"y":943},{"x":693.5,"y":978}],"path":"M764.5,901 L752.7,908 C740.8,915 717.2,929 705.3,941.8 C693.5,954.7 693.5,966.3 693.5,978","label":{"x":693.5,"y":943,"width":26.6,"height":18,"text":"no"}},{"id":"e31","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"event:event:user.loggedIn","points":[{"x":738.3,"y":891.2},{"x":434,"y":943},{"x":434,"y":978}],"path":"M738.3,891.2 L687.6,899.8 C636.9,908.5 535.4,925.7 484.7,940.2 C434,954.7 434,966.3 434,978","label":{"x":434,"y":943,"width":26.6,"height":18,"text":"no"}},{"id":"e32","from":"cond:server/src/controllers/authController.ts#authController.login:24","to":"server/src/services/userService.ts#toPublicUser","points":[{"x":738.3,"y":886.8},{"x":156,"y":943},{"x":156,"y":978}],"path":"M738.3,886.8 L641.3,896.2 C544.2,905.5 350.1,924.3 253.1,939.5 C156,954.7 156,966.3 156,978","label":{"x":156,"y":943,"width":26.6,"height":18,"text":"no"}},{"id":"e33","from":"server/src/auth/session.ts#createSession","to":"lib:crypto:randomBytes","points":[{"x":989,"y":1026},{"x":1156.5,"y":1067},{"x":1156.5,"y":1102}],"path":"M989,1026 L1016.9,1032.8 C1044.8,1039.7 1100.7,1053.3 1128.6,1066 C1156.5,1078.7 1156.5,1090.3 1156.5,1102"},{"id":"e34","from":"server/src/auth/session.ts#createSession","to":"db:prisma:session:create","points":[{"x":852.2,"y":1032},{"x":786.3,"y":1067},{"x":786.3,"y":1102}],"path":"M852.2,1032 L841.2,1037.8 C830.2,1043.7 808.3,1055.3 797.3,1067 C786.3,1078.7 786.3,1090.3 786.3,1102"},{"id":"e35","from":"event:event:user.loggedIn","to":"server/src/events/handlers.ts#on user.loggedIn","points":[{"x":434,"y":1032},{"x":434,"y":1067},{"x":434,"y":1102}],"path":"M434,1032 L434,1037.8 C434,1043.7 434,1055.3 434,1067 C434,1078.7 434,1090.3 434,1102","label":{"x":434,"y":1067,"width":64.4,"height":18,"text":"listener"}},{"id":"e36","from":"server/src/events/handlers.ts#on user.loggedIn","to":"db:prisma:user:update","points":[{"x":434,"y":1156},{"x":434,"y":1182},{"x":434,"y":1208}],"path":"M434,1156 L434,1160.3 C434,1164.7 434,1173.3 434,1182 C434,1190.7 434,1199.3 434,1208"}]},"version":"0.1.0"}</script>
+<script>"use strict";(()=>{var we=Object.defineProperty;var Ee=(l,e,t)=>e in l?we(l,e,{enumerable:!0,configurable:!0,writable:!0,value:t}):l[e]=t;var g=(l,e,t)=>Ee(l,typeof e!="symbol"?e+"":e,t);function ae(){let l=document.getElementById("logictrail-data");if(!l?.textContent)throw new Error("LogicTrail data block is missing.");return JSON.parse(l.textContent)}function s(l,e={},...t){let n=document.createElement(l);for(let[i,o]of Object.entries(e))o===void 0||o===!1||(i==="class"?n.className=String(o):n.setAttribute(i,o===!0?"":String(o)));return Le(n,t),n}function Le(l,e){for(let t of e)t==null||t===!1||l.appendChild(typeof t=="string"||typeof t=="number"?document.createTextNode(String(t)):t)}var U="http://www.w3.org/2000/svg";function W(l,e=14,t="0 0 16 16"){let n=document.createElementNS(U,"svg");n.setAttribute("width",String(e)),n.setAttribute("height",String(e)),n.setAttribute("viewBox",t),n.setAttribute("aria-hidden","true");let i=document.createElementNS(U,"path");return i.setAttribute("d",l),n.appendChild(i),n}function le(l){return document.createElementNS(U,l)}function T(l){for(;l.firstChild;)l.removeChild(l.firstChild)}function de(l){try{return window.localStorage.getItem(l)}catch{return null}}function ce(l,e){try{window.localStorage.setItem(l,e)}catch{}}async function pe(l){try{return await navigator.clipboard.writeText(l),!0}catch{return!1}}var he={component:"M5.5 4 2 8l3.5 4M10.5 4 14 8l-3.5 4",function:"M10.5 2.5c-1.7 0-2.4.9-2.7 2.6L6.6 11c-.3 1.7-1 2.5-2.6 2.5M5 7h5.5",service:"M8 2 14 5 8 8 2 5Z M2 8.2l6 3 6-3 M2 11l6 3 6-3",route:"M2.5 8h10M9.5 4.5 13 8l-3.5 3.5",database:"M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2Z M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4 M3 8c0 1.1 2.2 2 5 2s5-.9 5-2",external:"M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M2 8h12 M8 2c1.7 1.8 2.5 3.8 2.5 6S9.7 12.2 8 14 M8 2C6.3 3.8 5.5 5.8 5.5 8s.8 4.2 2.5 6",library:"M2.5 5 8 2l5.5 3v6L8 14l-5.5-3Z M2.5 5 8 8l5.5-3 M8 8v6",condition:"M8 2 14 8 8 14 2 8Z",event:"M9 1.5 3.5 9H8l-1 5.5L12.5 7H8Z",error:"M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Z M8 5v3.5 M8 11h.01",response:"M13 4.5 6.5 11 3 7.5"},N={component:"Component",function:"Function",service:"Service",route:"Route",database:"Database",external:"External service",library:"Library",condition:"Condition",event:"Event / queue",error:"Error",response:"Response"};var xe=/(\/\/.*$|\/\*.*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|\b(import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|do|switch|case|break|continue|await|async|new|class|extends|implements|throw|try|catch|finally|typeof|instanceof|interface|type|enum|this|super|null|undefined|true|false|void|private|public|protected|readonly|static)\b|(\b\d+(?:\.\d+)?\b)/g;function ke(l){let e=[],t=0;for(let n of l.matchAll(xe)){let i=n.index;i>t&&e.push(document.createTextNode(l.slice(t,i)));let o=n[1]?"tok-c":n[2]?"tok-s":n[3]?"tok-k":"tok-n";e.push(s("span",{class:o},n[0])),t=i+n[0].length}return t<l.length&&e.push(document.createTextNode(l.slice(t))),e}function fe(l,e){let t=s("pre",{class:"code"});return l.lines.forEach((n,i)=>{let o=l.startLine+i,a=s("div",{class:o===e?"code__line is-focus":"code__line"});a.appendChild(s("span",{class:"code__num"},o));let d=s("span");for(let h of ke(n))d.appendChild(h);a.appendChild(d),t.appendChild(a)}),l.truncated&&t.appendChild(s("div",{class:"code__more"},"\u2026")),t}function ge(l){let e=document.createDocumentFragment(),t=l.replace(/\r\n/g,`
+`).split(`
+`),n=[],i,o=()=>{n.length>0&&e.appendChild(s("p",{},...ue(n.join(" ")))),n=[]},a=()=>{if(!i)return;let d=s(i.ordered?"ol":"ul");for(let h of i.items)d.appendChild(s("li",{},...ue(h)));e.appendChild(d),i=void 0};for(let d of t){let h=d.trim(),f=/^\d+[.)]\s+(.*)$/.exec(h),v=/^[-*•]\s+(.*)$/.exec(h);if(f||v){o();let C=!!f;i&&i.ordered!==C&&a(),i??(i={ordered:C,items:[]}),i.items.push((f?.[1]??v?.[1]??"").trim());continue}if(h===""){o(),a();continue}if(i&&/^\s{2,}/.test(d)&&i.items.length>0){i.items[i.items.length-1]+=` ${h}`;continue}a(),n.push(h.replace(/^#+\s*/,""))}return o(),a(),e}function ue(l){let e=[],t=/(`[^`]+`|\*\*[^*]+\*\*)/g,n=0;for(let i of l.matchAll(t)){let o=i.index;o>n&&e.push(l.slice(n,o));let a=i[0];e.push(a.startsWith("`")?s("code",{},a.slice(1,-1)):s("strong",{},a.slice(2,-2))),n=o+a.length}return n<l.length&&e.push(l.slice(n)),e}function D(l,e=""){return typeof l=="string"?l:typeof l=="number"||typeof l=="boolean"?String(l):Array.isArray(l)?l.map(t=>D(t)).join(", "):e}var Ce="M4 4l8 8M12 4l-8 8",_e=[["method","Method"],["path","Path"],["framework","Framework"],["system","System"],["model","Model"],["operation","Operation"],["access","Access"],["service","Service"],["package","Package"],["category","Category"],["channel","Channel"],["event","Event"],["url","URL"],["status","Status"],["errorName","Error"],["message","Message"],["test","Condition"],["signature","Signature"],["async","Async"],["pages","Pages"],["envVars","Environment"],["directives","Directives"]],G=class{constructor(e,t){g(this,"root",e);g(this,"context",t)}showOverview(){let{graph:e}=this.context,t=s("section",{class:"panel__section"});t.append(s("p",{class:"eyebrow"},"Flow"),s("h1",{},e.title)),e.title.trim().toLowerCase()!==e.query.trim().toLowerCase()&&t.appendChild(s("p",{class:"question"},`\u201C${e.query}\u201D`));for(let f of e.analysis.warnings)t.appendChild(s("div",{class:"notice"},f));t.appendChild(s("h2",{},"Explanation"));let n=s("div",{class:"prose"});n.appendChild(ge(e.explanation)),t.appendChild(n),e.entryPoints.length>0&&(t.appendChild(s("h2",{},"Entry points")),t.appendChild(this.nodeList(e.entryPoints.flatMap(f=>this.context.nodes.get(f)??[])))),t.appendChild(s("h2",{},"Analysis"));let i=e.edges.filter(f=>f.source==="inferred").length,o=s("div",{class:"stats"}),a=(f,v)=>s("div",{class:"stat"},s("div",{class:"stat__value"},f),s("div",{class:"stat__label"},v));o.append(a(e.nodes.length,"nodes in flow"),a(e.edges.length,i>0?`edges (${i} inferred)`:"edges"),a(e.analysis.stats.files,"files indexed"),a(e.analysis.stats.symbols,"symbols")),t.appendChild(o);let d=e.analysis.provider==="static"?"Static analysis only (no LLM)":`Semantic layer: ${e.analysis.model??e.analysis.provider}`;t.appendChild(s("p",{class:"footer-note"},`${d} \xB7 ${e.analysis.repository} \xB7 generated ${new Date(e.analysis.generatedAt).toLocaleString()}`)),t.appendChild(s("h2",{},"Shortcuts"));let h=s("div",{class:"shortcuts"});for(let[f,v]of[["/","Search nodes"],["F","Fit to screen"],["+ / \u2212","Zoom"],["\u2191 / \u2193","Previous / next step"],["T","Toggle theme"],["Esc","Clear selection"]])h.append(s("kbd",{},f),s("span",{},v));t.appendChild(h),this.replace(t)}showNode(e){let{incoming:t,outgoing:n,graph:i}=this.context,o=s("section",{class:"panel__section"});if(o.appendChild(this.header(Me(e.type))),o.appendChild(s("div",{class:"node-title"},e.label)),e.file&&o.appendChild(this.location(e.file,e.line)),e.description){o.appendChild(s("p",{class:"description"},e.description));let v=e.descriptionSource==="llm"?`Description by ${i.analysis.model??"the LLM"}`:e.descriptionSource==="doc"?"From the doc comment":"Generated from code facts";o.appendChild(s("span",{class:"source-note"},v))}let a=s("div",{class:"badges"});i.entryPoints.includes(e.id)&&a.appendChild(s("span",{class:"badge"},"Entry point")),e.metadata?.async===!0&&a.appendChild(s("span",{class:"badge"},"async")),a.childElementCount>0&&o.appendChild(a);let d=e.type==="condition"?this.directRelations(t.get(e.id),"from"):this.logicalCallers(e.id),h=e.type==="condition"?this.directRelations(n.get(e.id),"to"):this.logicalCallees(e.id);o.appendChild(s("h2",{},`Called by \xB7 ${d.length}`)),o.appendChild(d.length>0?this.relationList(d):s("p",{class:"empty"},"Nothing in this flow.")),o.appendChild(s("h2",{},`Calls \xB7 ${h.length}`)),o.appendChild(h.length>0?this.relationList(h):s("p",{class:"empty"},"Nothing in this flow.")),e.snippet&&(o.appendChild(s("h2",{},"Source")),o.appendChild(fe(e.snippet,e.line))),e.evidence&&e.evidence.length>0&&(o.appendChild(s("h2",{},"Evidence")),o.appendChild(this.evidenceList(e.evidence)));let f=this.metadata(e);f&&(o.appendChild(s("h2",{},"Details")),o.appendChild(f)),this.replace(o)}showEdge(e){let{nodes:t}=this.context,n=t.get(e.from),i=t.get(e.to),o=s("section",{class:"panel__section"}),a=s("span",{class:"type-chip",style:"--chip: var(--lt-accent)"},`${e.type} relationship`);o.appendChild(this.header(a)),o.appendChild(s("div",{class:"node-title"},`${n?.label??e.from} \u2192 ${i?.label??e.to}`));let d=s("div",{class:"badges"});e.source==="inferred"?d.appendChild(s("span",{class:"badge badge--inferred"},`Inferred \xB7 ${Math.round(e.confidence*100)}% confidence`)):d.appendChild(s("span",{class:"badge"},e.confidence<1?`Static \xB7 ${Math.round(e.confidence*100)}% match`:"Proven by source")),e.branch&&d.appendChild(s("span",{class:"badge badge--branch"},`branch: ${e.branch}`)),e.label&&e.label!==e.branch&&d.appendChild(s("span",{class:"badge"},e.label)),o.appendChild(d),e.reason&&(o.appendChild(s("h2",{},"Why it is inferred")),o.appendChild(s("p",{class:"description"},e.reason))),o.appendChild(s("h2",{},"Endpoints")),o.appendChild(this.nodeList([n,i].filter(h=>h!==void 0))),o.appendChild(s("h2",{},"Evidence")),o.appendChild(e.evidence&&e.evidence.length>0?this.evidenceList(e.evidence):s("p",{class:"empty"},"No call site proves this relationship.")),this.replace(o)}replace(e){T(this.root),this.root.appendChild(e),this.root.scrollTop=0}header(e){let t=s("button",{class:"icon-button",type:"button",title:"Back to overview (Esc)","aria-label":"Close details"});return t.appendChild(W(Ce,14)),t.querySelector("svg")?.setAttribute("stroke","currentColor"),t.querySelector("svg")?.setAttribute("stroke-width","1.6"),t.querySelector("svg")?.setAttribute("stroke-linecap","round"),t.addEventListener("click",()=>this.context.onClose()),s("div",{class:"panel__header"},e,t)}location(e,t){let n=`${e}${t?`:${t}`:""}`,i=s("div",{class:"location"},s("span",{},n)),o=s("button",{class:"text-button",type:"button"},"Copy");o.addEventListener("click",()=>{pe(n).then(d=>{o.textContent=d?"Copied":"Copy failed",window.setTimeout(()=>o.textContent="Copy",1200)})}),i.appendChild(o);let a=this.context.graph.analysis.rootPath;if(a){let d=`${a.replace(/\\/g,"/").replace(/\/$/,"")}/${e}`,h=`vscode://file/${encodeURI(d.startsWith("/")?d.slice(1):d)}${t?`:${t}`:""}`;i.appendChild(s("a",{href:h,title:"Open in VS Code"},"Open in editor"))}return i}nodeList(e){let t=s("ul",{class:"link-list"});for(let n of e){let i=s("button",{type:"button"},s("span",{class:"link-list__dot",style:`--swatch: var(--lt-c-${n.type})`}),s("span",{class:"link-list__label"},n.label),s("span",{class:"link-list__kind"},N[n.type]));i.addEventListener("click",()=>this.context.onSelectNode(n.id)),t.appendChild(s("li",{},i))}return t}logicalCallees(e,t,n=new Set){let i=[];for(let o of this.context.outgoing.get(e)??[]){let a=this.context.nodes.get(o.to);if(!a)continue;if(a.type==="condition"&&a.metadata?.owner===this.ownerOf(e)&&!n.has(a.id)){n.add(a.id),i.push(...this.logicalCallees(a.id,`${a.label}`,n));continue}let d=t&&o.branch?`${t} \u2192 ${o.branch}`:t;i.push({node:a,edge:o,...d?{via:d}:{}})}return i}logicalCallers(e){let t=[];for(let n of this.context.incoming.get(e)??[]){let i=this.context.nodes.get(n.from);if(!i)continue;let o;if(i.type==="condition"){o=n.branch?`${i.label} \u2192 ${n.branch}`:i.label;let a=this.context.nodes.get(D(i.metadata?.owner));a&&(i=a)}t.push({node:i,edge:n,...o?{via:o}:{}})}return t}directRelations(e,t){return(e??[]).flatMap(n=>{let i=this.context.nodes.get(t==="from"?n.from:n.to);return i?[{node:i,edge:n}]:[]})}ownerOf(e){let t=this.context.nodes.get(e);return t?.type==="condition"?D(t.metadata?.owner,e):e}relationList(e){let t=s("ul",{class:"link-list"});for(let{node:n,edge:i,via:o}of e){let a=[i.type==="condition"?"branch":i.type,o?`if ${o}`:i.label].filter(Boolean).join(" \xB7 "),d=s("button",{type:"button",title:`Go to ${n.label}`},s("span",{class:"link-list__dot",style:`--swatch: var(--lt-c-${n.type})`}),s("span",{class:"link-list__label"},n.label),i.source==="inferred"?s("span",{class:"badge badge--inferred"},"inferred"):null,s("span",{class:"link-list__kind"},a));d.addEventListener("click",()=>this.context.onSelectNode(n.id)),t.appendChild(s("li",{},d))}return t}evidenceList(e){let t=s("ul",{class:"evidence"});for(let n of e)t.appendChild(s("li",{},s("div",{class:"evidence__head"},s("span",{class:"badge"},n.kind),`${n.file}:${n.line}`),n.text?s("div",{class:"evidence__text"},n.text):null));return t}metadata(e){let t=e.metadata??{},n=s("dl",{class:"meta-table"});for(let[i,o]of _e){let a=t[i];if(a==null||a===""||a===!1||i==="path"&&e.type!=="route")continue;let d=D(a)||JSON.stringify(a);n.append(s("dt",{},o),s("dd",{},d))}return n.childElementCount>0?n:void 0}};function Me(l){let e=s("span",{class:"type-chip",style:`--chip: var(--lt-c-${l})`});return e.appendChild(W(he[l],13)),e.appendChild(document.createTextNode(N[l])),e}var B=class{constructor(e,t,n,i){g(this,"container",e);g(this,"viewport",t);g(this,"content",n);g(this,"onChange",i);g(this,"transform",{x:0,y:0,k:1});g(this,"animation",0);g(this,"drag");g(this,"suppressClick",!1);e.addEventListener("pointerdown",o=>this.onPointerDown(o)),e.addEventListener("pointermove",o=>this.onPointerMove(o)),e.addEventListener("pointerup",o=>this.onPointerUp(o)),e.addEventListener("pointercancel",o=>this.onPointerUp(o)),e.addEventListener("wheel",o=>this.onWheel(o),{passive:!1}),e.addEventListener("click",o=>{this.suppressClick&&(o.stopPropagation(),o.preventDefault(),this.suppressClick=!1)},!0)}get current(){return{...this.transform}}set(e,t=!1){let n={...e,k:R(e.k,.1,3)};if(cancelAnimationFrame(this.animation),!t||window.matchMedia("(prefers-reduced-motion: reduce)").matches){this.apply(n);return}let i={...this.transform},o=performance.now(),a=260,d=h=>{let f=Math.min(1,(h-o)/a),v=1-Math.pow(1-f,3);this.apply({x:i.x+(n.x-i.x)*v,y:i.y+(n.y-i.y)*v,k:i.k+(n.k-i.k)*v}),f<1&&(this.animation=requestAnimationFrame(d))};this.animation=requestAnimationFrame(d)}fit(e=!1){let{width:t,height:n}=this.size();if(this.content.width===0||this.content.height===0||t===0)return;let i=R(Math.min((t-112)/this.content.width,(n-112)/this.content.height,1.1),.1,3);this.set({k:i,x:(t-this.content.width*i)/2,y:Math.max(56/2,(n-this.content.height*i)/2)},e)}initial(e){let{width:t,height:n}=this.size();if(this.content.width===0||t===0)return;let i=Math.min((t-112)/this.content.width,(n-112)/this.content.height);if(i>=.6||!e){this.fit(!1);return}let o=Math.min(.85,Math.max(.6,i)),a=this.content.width*o,d=a<=t?(t-a)/2:R(t/2-e.x*o,t-a-56,56);this.set({k:o,x:d,y:56/2-Math.max(0,e.y*o-n*.2)},!1)}zoomBy(e,t,n=!0){let{width:i,height:o}=this.size(),a=t??{x:i/2,y:o/2},d=R(this.transform.k*e,.1,3),h=d/this.transform.k;this.set({k:d,x:a.x-(a.x-this.transform.x)*h,y:a.y-(a.y-this.transform.y)*h},n)}centerOn(e,t,n=.8){let{width:i,height:o}=this.size(),a=Math.max(this.transform.k,n);this.set({k:a,x:i/2-e*a,y:o/2-t*a},!0)}isVisible(e,t,n=60){let{width:i,height:o}=this.size(),a=e*this.transform.k+this.transform.x,d=t*this.transform.k+this.transform.y;return a>n&&a<i-n&&d>n&&d<o-n}size(){let e=this.container.getBoundingClientRect();return{width:e.width,height:e.height}}apply(e){this.transform=e,this.viewport.setAttribute("transform",`translate(${e.x},${e.y}) scale(${e.k})`),this.onChange({...e})}onPointerDown(e){e.button===0&&(cancelAnimationFrame(this.animation),this.drag={pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,originX:this.transform.x,originY:this.transform.y,active:!1})}onPointerMove(e){let t=this.drag;if(t?.pointerId!==e.pointerId)return;let n=e.clientX-t.startX,i=e.clientY-t.startY;if(!t.active){if(Math.hypot(n,i)<4)return;t.active=!0,this.container.setPointerCapture(e.pointerId),this.container.classList.add("is-panning")}this.apply({...this.transform,x:t.originX+n,y:t.originY+i})}onPointerUp(e){let t=this.drag;t?.pointerId===e.pointerId&&(t.active&&(this.suppressClick=!0,window.setTimeout(()=>this.suppressClick=!1,0),this.container.hasPointerCapture(e.pointerId)&&this.container.releasePointerCapture(e.pointerId)),this.container.classList.remove("is-panning"),this.drag=void 0)}onWheel(e){e.preventDefault(),cancelAnimationFrame(this.animation);let t=this.container.getBoundingClientRect(),n={x:e.clientX-t.left,y:e.clientY-t.top},i=e.ctrlKey||e.metaKey,o=e.deltaMode!==0||e.deltaX===0&&Math.abs(e.deltaY)>=40&&Number.isInteger(e.deltaY);if(i||o){let a=e.deltaMode===1?.05:i?.01:.0018;this.zoomBy(Math.exp(-e.deltaY*a),n,!1);return}this.apply({...this.transform,x:this.transform.x-e.deltaX,y:this.transform.y-e.deltaY})}};function R(l,e,t){return Math.min(t,Math.max(e,l))}var me=12,H=class{constructor(e,t,n,i,o){g(this,"input",e);g(this,"results",t);g(this,"nodes",n);g(this,"onPreview",i);g(this,"onPick",o);g(this,"matches",[]);g(this,"active",0);e.addEventListener("input",()=>this.update()),e.addEventListener("focus",()=>{e.value.trim()&&this.update()}),e.addEventListener("keydown",a=>this.onKeyDown(a)),e.addEventListener("blur",()=>window.setTimeout(()=>this.close(),120))}focus(){this.input.focus(),this.input.select()}reset(){this.input.value="",this.close(),this.onPreview(null)}update(){let e=this.input.value.trim().toLowerCase();if(!e){this.close(),this.onPreview(null);return}this.matches=this.nodes.map(t=>({node:t,rank:Se(t,e)})).filter(t=>t.rank>0).sort((t,n)=>n.rank-t.rank||t.node.label.localeCompare(n.node.label)),this.active=0,this.onPreview(new Set(this.matches.map(t=>t.node.id))),this.render()}render(){if(T(this.results),this.results.hidden=!1,this.matches.length===0){this.results.appendChild(s("div",{class:"search__empty"},"No matching nodes"));return}this.matches.slice(0,me).forEach((e,t)=>{let n=e.node.file?`${e.node.file}${e.node.line?`:${e.node.line}`:""}`:N[e.node.type],i=s("button",{class:"search__item",type:"button",role:"option","aria-selected":t===this.active?"true":"false"},s("span",{class:"link-list__dot",style:`--swatch: var(--lt-c-${e.node.type})`}),s("span",{class:"search__label"},e.node.label),s("span",{class:"search__file"},n));i.addEventListener("mousedown",o=>{o.preventDefault(),this.pick(t)}),this.results.appendChild(i)})}onKeyDown(e){if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();let t=Math.min(this.matches.length,me);if(t===0)return;this.active=(this.active+(e.key==="ArrowDown"?1:t-1))%t,this.render()}else e.key==="Enter"?(e.preventDefault(),this.pick(this.active)):e.key==="Escape"&&(e.preventDefault(),this.reset(),this.input.blur())}pick(e){let t=this.matches[e];t&&(this.close(),this.onPick(t.node.id))}close(){this.results.hidden=!0,T(this.results)}};function Se(l,e){let t=l.label.toLowerCase();return t===e?100:t.startsWith(e)?80:t.includes(e)?60:l.file?.toLowerCase().includes(e)?40:l.type.includes(e)?30:l.description?.toLowerCase().includes(e)?20:0}var ve="logictrail-theme";function Ae(){let l=ae(),{graph:e,layout:t}=l,n=document.querySelector(".app"),i=document.getElementById("canvas"),o=document.getElementById("graph"),a=document.getElementById("viewport"),d=document.getElementById("panel"),h=document.getElementById("search"),f=document.getElementById("search-results"),v=document.getElementById("zoom-indicator");if(!n||!i||!o||!a||!d||!h||!f)return;let C=new Map(e.nodes.map(r=>[r.id,r])),O=new Map(e.edges.map(r=>[r.id,r])),w=new Map,E=new Map;for(let r of e.edges)(E.get(r.from)??E.set(r.from,[]).get(r.from))?.push(r),(w.get(r.to)??w.set(r.to,[]).get(r.to))?.push(r);let M=new Map(t.nodes.map(r=>[r.id,r])),b=new Map;for(let r of o.querySelectorAll(".lt-node")){let c=r.dataset.id;c&&b.set(c,r)}let _=new Map;for(let r of o.querySelectorAll(".lt-edge")){let c=r.dataset.id;if(!c)continue;_.set(c,r);let p=r.querySelector(".lt-edge__path");if(p){let u=le("path");u.setAttribute("class","lt-edge__hit"),u.setAttribute("d",p.getAttribute("d")??""),r.insertBefore(u,p)}}let y=new B(i,a,t,r=>{v&&(v.textContent=`${Math.round(r.k*100)}%`)}),L=null,S=!1,I=new G(d,{graph:e,nodes:C,edges:O,incoming:w,outgoing:E,onSelectNode:r=>x(r,!0),onClose:()=>F()}),ye=r=>{let c=new Set([r]),p=new Set,u=(m,k,j)=>{let q=[m],ie=new Set([m]);for(;q.length>0;){let se=q.shift();if(se===void 0)break;for(let re of k.get(se)??[]){p.add(re.id);let P=j(re);c.add(P),ie.has(P)||(ie.add(P),q.push(P))}}};return u(r,E,m=>m.to),u(r,w,m=>m.from),{nodes:c,edges:p}},V=()=>{o.classList.remove("has-selection");for(let r of[...b.values(),..._.values()])r.classList.remove("is-trail","is-selected")};function x(r,c){let p=C.get(r);if(!p)return;L={kind:"node",id:r},V();let u=ye(r);o?.classList.add("has-selection");for(let k of u.nodes)b.get(k)?.classList.add("is-trail");for(let k of u.edges)_.get(k)?.classList.add("is-trail");b.get(r)?.classList.add("is-selected"),I.showNode(p),n?.classList.remove("panel-hidden"),J({node:r});let m=M.get(r);c&&m&&!y.isVisible(m.x,m.y)&&y.centerOn(m.x,m.y)}function Q(r,c=!1){let p=O.get(r);if(!p)return;L={kind:"edge",id:r},V(),o?.classList.add("has-selection"),_.get(r)?.classList.add("is-trail","is-selected"),b.get(p.from)?.classList.add("is-trail"),b.get(p.to)?.classList.add("is-trail"),I.showEdge(p),n?.classList.remove("panel-hidden"),J({edge:r});let u=M.get(p.from),m=M.get(p.to);if(c&&u&&m){let k=(u.x+m.x)/2,j=(u.y+m.y)/2;(!y.isVisible(u.x,u.y)||!y.isVisible(m.x,m.y))&&y.centerOn(k,j,.6)}}function F(){L=null,V(),I.showOverview(),J({})}o.addEventListener("click",r=>{S=!0;let c=r.target,p=c.closest(".lt-node");if(p?.dataset.id){x(p.dataset.id,!1);return}let u=c.closest(".lt-edge");if(u?.dataset.id){Q(u.dataset.id);return}L&&F()}),o.addEventListener("keydown",r=>{let c=r.target.closest(".lt-node");c?.dataset.id&&(r.key==="Enter"||r.key===" ")&&(r.preventDefault(),x(c.dataset.id,!0))});for(let[r,c]of b)c.addEventListener("mouseenter",()=>{for(let p of[...w.get(r)??[],...E.get(r)??[]])_.get(p.id)?.classList.add("is-hover")}),c.addEventListener("mouseleave",()=>{for(let p of[...w.get(r)??[],...E.get(r)??[]])_.get(p.id)?.classList.remove("is-hover")});let ee=new H(h,f,e.nodes,r=>{o.classList.toggle("has-search",r!==null);for(let[c,p]of b)p.classList.toggle("is-match",r?.has(c)??!1)},r=>{ee.reset(),x(r,!0);let c=M.get(r);c&&y.centerOn(c.x,c.y)}),$=document.documentElement,Y=Z.get("theme")??de(ve);(Y==="light"||Y==="dark")&&($.dataset.theme=Y);let be=()=>$.dataset.theme==="dark"||!$.dataset.theme&&window.matchMedia("(prefers-color-scheme: dark)").matches,te=()=>{let r=be()?"light":"dark";$.dataset.theme=r,ce(ve,r)},A=(r,c)=>{document.getElementById(r)?.addEventListener("click",()=>{S=!0,c()})};A("zoom-in",()=>y.zoomBy(1.25)),A("zoom-out",()=>y.zoomBy(.8)),A("fit",()=>y.fit(!0)),A("theme",te),A("panel-toggle",()=>{let r=n.classList.toggle("panel-hidden");document.getElementById("panel-toggle")?.setAttribute("aria-pressed",r?"false":"true"),requestAnimationFrame(()=>y.fit(!0))});let ne=r=>{if(L?.kind!=="node"){let u=e.entryPoints[0]??e.nodes[0]?.id;u&&x(u,!0);return}let p=(r==="down"?E.get(L.id):w.get(L.id))?.[0];p&&x(r==="down"?p.to:p.from,!0)};document.addEventListener("keydown",r=>{if(!(r.target.tagName==="INPUT"||r.metaKey||r.ctrlKey||r.altKey))switch(r.key){case"/":r.preventDefault(),ee.focus();break;case"f":case"F":y.fit(!0);break;case"+":case"=":y.zoomBy(1.25);break;case"-":case"_":y.zoomBy(.8);break;case"t":case"T":te();break;case"Escape":F();break;case"ArrowDown":r.preventDefault(),ne("down");break;case"ArrowUp":r.preventDefault(),ne("up");break}});let K=M.get(e.entryPoints[0]??""),oe=()=>y.initial(K?{x:K.x,y:K.y}:void 0);i.addEventListener("pointerdown",()=>S=!0),i.addEventListener("wheel",()=>S=!0,{passive:!0}),new ResizeObserver(()=>{S||oe()}).observe(i),I.showOverview(),oe();let X=Z.get("node"),z=Z.get("edge");X&&C.has(X)?x(X,!0):z&&O.has(z)&&Q(z,!0)}var Z=new URLSearchParams(window.location.hash.slice(1));function J(l){let e=new URLSearchParams(window.location.hash.slice(1));e.delete("node"),e.delete("edge"),l.node&&e.set("node",l.node),l.edge&&e.set("edge",l.edge);let t=e.toString();try{window.history.replaceState(null,"",t?`#${t}`:window.location.pathname+window.location.search)}catch{}}Ae();})();
+</script>
+</body>
+</html>

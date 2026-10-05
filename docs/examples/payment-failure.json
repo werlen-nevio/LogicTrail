@@ -1,0 +1,839 @@
+{
+  "schemaVersion": 1,
+  "query": "what happens when a payment fails?",
+  "title": "What happens when a payment fails?",
+  "entryPoints": [
+    "ext:Stripe:paymentIntents.create"
+  ],
+  "nodes": [
+    {
+      "id": "ext:Stripe:paymentIntents.create",
+      "type": "external",
+      "label": "Stripe: paymentIntents.create",
+      "description": "Calls Stripe: paymentIntents.create.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 9,
+          "kind": "call",
+          "text": "return stripe.paymentIntents.create({"
+        }
+      ],
+      "metadata": {
+        "service": "Stripe",
+        "operation": "paymentIntents.create",
+        "package": "stripe",
+        "kind": "external"
+      },
+      "file": "server/src/payments/stripe.ts",
+      "line": 9,
+      "snippet": {
+        "startLine": 8,
+        "lines": [
+          "export async function createPaymentIntent(order: { id: string; total: number }) {",
+          "  return stripe.paymentIntents.create({",
+          "    amount: order.total,"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "route:POST /api/webhooks/stripe",
+      "type": "route",
+      "label": "POST /api/webhooks/stripe",
+      "file": "server/src/routes/webhooks.ts",
+      "line": 6,
+      "description": "express route POST /api/webhooks/stripe.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/webhooks.ts",
+          "line": 6,
+          "kind": "route",
+          "text": "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"
+        }
+      ],
+      "snippet": {
+        "startLine": 5,
+        "lines": [
+          "",
+          "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);",
+          "",
+          "export default router;",
+          ""
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "method": "POST",
+        "path": "/api/webhooks/stripe",
+        "framework": "express",
+        "kind": "route"
+      }
+    },
+    {
+      "id": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "type": "function",
+      "label": "handleStripeWebhook()",
+      "file": "server/src/payments/stripe.ts",
+      "line": 17,
+      "description": "Verifies the Stripe signature and applies payment results to orders.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 17,
+          "kind": "definition",
+          "text": "export async function handleStripeWebhook(req: Request, res: Response) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 17,
+        "lines": [
+          "export async function handleStripeWebhook(req: Request, res: Response) {",
+          "  let event: Stripe.Event;",
+          "  try {",
+          "    event = stripe.webhooks.constructEvent(",
+          "      req.body,",
+          "      req.headers[\"stripe-signature\"] as string,",
+          "      process.env.STRIPE_WEBHOOK_SECRET ?? \"\",",
+          "    );",
+          "  } catch {",
+          "    return res.status(400).send(\"Invalid signature\");",
+          "  }",
+          "",
+          "  switch (event.type) {",
+          "    case \"payment_intent.succeeded\": {",
+          "      const intent = event.data.object as Stripe.PaymentIntent;",
+          "      await markOrderPaid(intent.metadata.orderId);",
+          "      break;",
+          "    }",
+          "    case \"payment_intent.payment_failed\": {",
+          "      const intent = event.data.object as Stripe.PaymentIntent;",
+          "      await markOrderFailed(",
+          "        intent.metadata.orderId,",
+          "        intent.last_payment_error?.message ?? \"unknown\",",
+          "      );",
+          "      break;",
+          "    }",
+          "  }",
+          "",
+          "  return res.json({ received: true });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "handleStripeWebhook",
+        "signature": "export async function handleStripeWebhook(req: Request, res: Response)",
+        "async": true,
+        "envVars": [
+          "STRIPE_WEBHOOK_SECRET"
+        ],
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "catch:server/src/payments/stripe.ts#handleStripeWebhook:25",
+      "type": "condition",
+      "label": "catch",
+      "file": "server/src/payments/stripe.ts",
+      "line": 25,
+      "description": "Error handling in handleStripeWebhook(): runs when the code above throws.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 25,
+          "kind": "branch",
+          "text": "} catch {"
+        }
+      ],
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "  } catch {",
+          "    return res.status(400).send(\"Invalid signature\");",
+          "  }",
+          ""
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "catch",
+        "owner": "server/src/payments/stripe.ts#handleStripeWebhook"
+      }
+    },
+    {
+      "id": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "type": "condition",
+      "label": "switch (event.type)",
+      "file": "server/src/payments/stripe.ts",
+      "line": 29,
+      "description": "handleStripeWebhook() branches on `switch (event.type)`.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 29,
+          "kind": "branch",
+          "text": "switch (event.type) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 29,
+        "lines": [
+          "  switch (event.type) {",
+          "    case \"payment_intent.succeeded\": {",
+          "      const intent = event.data.object as Stripe.PaymentIntent;",
+          "      await markOrderPaid(intent.metadata.orderId);"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "branch",
+        "owner": "server/src/payments/stripe.ts#handleStripeWebhook",
+        "test": "switch (event.type)"
+      }
+    },
+    {
+      "id": "exit:server/src/payments/stripe.ts:26",
+      "type": "error",
+      "label": "400 Bad Request",
+      "file": "server/src/payments/stripe.ts",
+      "line": 26,
+      "description": "handleStripeWebhook() responds with HTTP 400.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 26,
+          "kind": "exit",
+          "text": "return res.status(400).send(\"Invalid signature\");"
+        }
+      ],
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "  } catch {",
+          "    return res.status(400).send(\"Invalid signature\");",
+          "  }"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "kind": "response",
+        "owner": "server/src/payments/stripe.ts#handleStripeWebhook",
+        "status": 400
+      }
+    },
+    {
+      "id": "server/src/services/orderService.ts#markOrderFailed",
+      "type": "service",
+      "label": "markOrderFailed()",
+      "file": "server/src/services/orderService.ts",
+      "line": 30,
+      "description": "Marks an order as failed, releases its stock and notifies listeners.",
+      "descriptionSource": "doc",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 30,
+          "kind": "definition",
+          "text": "export async function markOrderFailed(orderId: string, reason: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 30,
+        "lines": [
+          "export async function markOrderFailed(orderId: string, reason: string) {",
+          "  await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });",
+          "  await releaseInventory(orderId);",
+          "  orderEvents.emit(\"order.paymentFailed\", { orderId, reason });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "markOrderFailed",
+        "signature": "export async function markOrderFailed(orderId: string, reason: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:order:update",
+      "type": "database",
+      "label": "order.update",
+      "description": "Writes to order via prisma (update).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 31,
+          "kind": "call",
+          "text": "await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "order",
+        "operation": "update",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 31,
+      "snippet": {
+        "startLine": 30,
+        "lines": [
+          "export async function markOrderFailed(orderId: string, reason: string) {",
+          "  await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });",
+          "  await releaseInventory(orderId);"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/services/inventory.ts#releaseInventory",
+      "type": "service",
+      "label": "releaseInventory()",
+      "file": "server/src/services/inventory.ts",
+      "line": 23,
+      "description": "export async function releaseInventory(orderId: string)",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 23,
+          "kind": "definition",
+          "text": "export async function releaseInventory(orderId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 23,
+        "lines": [
+          "export async function releaseInventory(orderId: string) {",
+          "  const lines = await db.cartItem.findMany({ where: { orderId } });",
+          "  for (const line of lines) {",
+          "    await db.product.update({",
+          "      where: { id: line.productId },",
+          "      data: { stock: { increment: line.quantity } },",
+          "    });",
+          "  }",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "releaseInventory",
+        "signature": "export async function releaseInventory(orderId: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "event:event:order.paymentFailed",
+      "type": "event",
+      "label": "order.paymentFailed",
+      "description": "Event \"order.paymentFailed\".",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 33,
+          "kind": "emit",
+          "text": "orderEvents.emit(\"order.paymentFailed\", { orderId, reason });"
+        }
+      ],
+      "metadata": {
+        "channel": "event",
+        "event": "order.paymentFailed",
+        "system": "events",
+        "kind": "event"
+      },
+      "file": "server/src/services/orderService.ts",
+      "line": 33,
+      "snippet": {
+        "startLine": 32,
+        "lines": [
+          "  await releaseInventory(orderId);",
+          "  orderEvents.emit(\"order.paymentFailed\", { orderId, reason });",
+          "}"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "db:prisma:cartItem:findMany",
+      "type": "database",
+      "label": "cartItem.findMany",
+      "description": "Reads from cartItem via prisma (findMany).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 24,
+          "kind": "call",
+          "text": "const lines = await db.cartItem.findMany({ where: { orderId } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "cartItem",
+        "operation": "findMany",
+        "access": "read",
+        "kind": "database"
+      },
+      "file": "server/src/services/inventory.ts",
+      "line": 24,
+      "snippet": {
+        "startLine": 23,
+        "lines": [
+          "export async function releaseInventory(orderId: string) {",
+          "  const lines = await db.cartItem.findMany({ where: { orderId } });",
+          "  for (const line of lines) {"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "db:prisma:product:update",
+      "type": "database",
+      "label": "product.update",
+      "description": "Writes to product via prisma (update).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 26,
+          "kind": "call",
+          "text": "await db.product.update({"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "product",
+        "operation": "update",
+        "access": "write",
+        "kind": "database"
+      },
+      "file": "server/src/services/inventory.ts",
+      "line": 26,
+      "snippet": {
+        "startLine": 25,
+        "lines": [
+          "  for (const line of lines) {",
+          "    await db.product.update({",
+          "      where: { id: line.productId },"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "server/src/events/handlers.ts#notifyPaymentFailed",
+      "type": "function",
+      "label": "notifyPaymentFailed()",
+      "file": "server/src/events/handlers.ts",
+      "line": 11,
+      "description": "async function notifyPaymentFailed({ orderId }: { orderId: string })",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 11,
+          "kind": "definition",
+          "text": "async function notifyPaymentFailed({ orderId }: { orderId: string }) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 11,
+        "lines": [
+          "async function notifyPaymentFailed({ orderId }: { orderId: string }) {",
+          "  await sendPaymentFailedEmail(orderId);",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "notifyPaymentFailed",
+        "signature": "async function notifyPaymentFailed({ orderId }: { orderId: string })",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "type": "function",
+      "label": "sendPaymentFailedEmail()",
+      "file": "server/src/email/send.ts",
+      "line": 18,
+      "description": "export async function sendPaymentFailedEmail(orderId: string)",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 18,
+          "kind": "definition",
+          "text": "export async function sendPaymentFailedEmail(orderId: string) {"
+        }
+      ],
+      "snippet": {
+        "startLine": 18,
+        "lines": [
+          "export async function sendPaymentFailedEmail(orderId: string) {",
+          "  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });",
+          "  if (!order) return;",
+          "  await resend.emails.send({",
+          "    from: \"Acme <orders@acme.test>\",",
+          "    to: order.user.email,",
+          "    subject: \"Your payment failed\",",
+          "    html: `<p>Please update your payment method.</p>`,",
+          "  });",
+          "}"
+        ],
+        "truncated": false
+      },
+      "metadata": {
+        "symbolKind": "function",
+        "qualifiedName": "sendPaymentFailedEmail",
+        "signature": "export async function sendPaymentFailedEmail(orderId: string)",
+        "async": true,
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "db:prisma:order:findUnique",
+      "type": "database",
+      "label": "order.findUnique",
+      "description": "Reads from order via prisma (findUnique).",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 19,
+          "kind": "call",
+          "text": "const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"
+        }
+      ],
+      "metadata": {
+        "system": "prisma",
+        "model": "order",
+        "operation": "findUnique",
+        "access": "read",
+        "kind": "database"
+      },
+      "file": "server/src/email/send.ts",
+      "line": 19,
+      "snippet": {
+        "startLine": 18,
+        "lines": [
+          "export async function sendPaymentFailedEmail(orderId: string) {",
+          "  const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });",
+          "  if (!order) return;"
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "ext:Resend:emails.send",
+      "type": "external",
+      "label": "Resend: emails.send",
+      "description": "Calls Resend: emails.send.",
+      "descriptionSource": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 21,
+          "kind": "call",
+          "text": "await resend.emails.send({"
+        }
+      ],
+      "metadata": {
+        "service": "Resend",
+        "operation": "emails.send",
+        "package": "resend",
+        "kind": "external"
+      },
+      "file": "server/src/email/send.ts",
+      "line": 21,
+      "snippet": {
+        "startLine": 20,
+        "lines": [
+          "  if (!order) return;",
+          "  await resend.emails.send({",
+          "    from: \"Acme <orders@acme.test>\","
+        ],
+        "truncated": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "ext:Stripe:paymentIntents.create",
+      "to": "route:POST /api/webhooks/stripe",
+      "type": "triggers",
+      "label": "webhook",
+      "confidence": 0.6,
+      "source": "inferred",
+      "reason": "Stripe delivers webhook events to POST /api/webhooks/stripe, whose handler processes Stripe webhooks.",
+      "evidence": [
+        {
+          "file": "server/src/routes/webhooks.ts",
+          "line": 6,
+          "kind": "route",
+          "text": "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"
+        }
+      ]
+    },
+    {
+      "id": "e2",
+      "from": "route:POST /api/webhooks/stripe",
+      "to": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/routes/webhooks.ts",
+          "line": 6,
+          "kind": "route",
+          "text": "router.post(\"/stripe\", express.raw({ type: \"application/json\" }), handleStripeWebhook);"
+        }
+      ]
+    },
+    {
+      "id": "e3",
+      "from": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "to": "catch:server/src/payments/stripe.ts#handleStripeWebhook:25",
+      "type": "condition",
+      "label": "on error",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 25,
+          "kind": "branch",
+          "text": "} catch {"
+        }
+      ]
+    },
+    {
+      "id": "e4",
+      "from": "server/src/payments/stripe.ts#handleStripeWebhook",
+      "to": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "type": "condition",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 29,
+          "kind": "branch",
+          "text": "switch (event.type) {"
+        }
+      ]
+    },
+    {
+      "id": "e5",
+      "from": "catch:server/src/payments/stripe.ts#handleStripeWebhook:25",
+      "to": "exit:server/src/payments/stripe.ts:26",
+      "type": "returns",
+      "branch": "error",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 26,
+          "kind": "exit",
+          "text": "return res.status(400).send(\"Invalid signature\");"
+        }
+      ]
+    },
+    {
+      "id": "e6",
+      "from": "cond:server/src/payments/stripe.ts#handleStripeWebhook:29",
+      "to": "server/src/services/orderService.ts#markOrderFailed",
+      "type": "calls",
+      "label": "payment_intent.payment_failed",
+      "branch": "payment_intent.payment_failed",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/payments/stripe.ts",
+          "line": 37,
+          "kind": "call",
+          "text": "await markOrderFailed("
+        }
+      ]
+    },
+    {
+      "id": "e7",
+      "from": "server/src/services/orderService.ts#markOrderFailed",
+      "to": "db:prisma:order:update",
+      "type": "writes",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 31,
+          "kind": "call",
+          "text": "await db.order.update({ where: { id: orderId }, data: { status: \"payment_failed\" } });"
+        }
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "server/src/services/orderService.ts#markOrderFailed",
+      "to": "server/src/services/inventory.ts#releaseInventory",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 32,
+          "kind": "call",
+          "text": "await releaseInventory(orderId);"
+        }
+      ]
+    },
+    {
+      "id": "e9",
+      "from": "server/src/services/orderService.ts#markOrderFailed",
+      "to": "event:event:order.paymentFailed",
+      "type": "emits",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/orderService.ts",
+          "line": 33,
+          "kind": "emit",
+          "text": "orderEvents.emit(\"order.paymentFailed\", { orderId, reason });"
+        }
+      ]
+    },
+    {
+      "id": "e10",
+      "from": "server/src/services/inventory.ts#releaseInventory",
+      "to": "db:prisma:cartItem:findMany",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 24,
+          "kind": "call",
+          "text": "const lines = await db.cartItem.findMany({ where: { orderId } });"
+        }
+      ]
+    },
+    {
+      "id": "e11",
+      "from": "server/src/services/inventory.ts#releaseInventory",
+      "to": "db:prisma:product:update",
+      "type": "writes",
+      "label": "for each",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/services/inventory.ts",
+          "line": 26,
+          "kind": "call",
+          "text": "await db.product.update({"
+        }
+      ]
+    },
+    {
+      "id": "e12",
+      "from": "event:event:order.paymentFailed",
+      "to": "server/src/events/handlers.ts#notifyPaymentFailed",
+      "type": "triggers",
+      "label": "listener",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 9,
+          "kind": "listener",
+          "text": "orderEvents.on(\"order.paymentFailed\", notifyPaymentFailed);"
+        }
+      ]
+    },
+    {
+      "id": "e13",
+      "from": "server/src/events/handlers.ts#notifyPaymentFailed",
+      "to": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/events/handlers.ts",
+          "line": 12,
+          "kind": "call",
+          "text": "await sendPaymentFailedEmail(orderId);"
+        }
+      ]
+    },
+    {
+      "id": "e14",
+      "from": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "to": "db:prisma:order:findUnique",
+      "type": "reads",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 19,
+          "kind": "call",
+          "text": "const order = await db.order.findUnique({ where: { id: orderId }, include: { user: true } });"
+        }
+      ]
+    },
+    {
+      "id": "e15",
+      "from": "server/src/email/send.ts#sendPaymentFailedEmail",
+      "to": "ext:Resend:emails.send",
+      "type": "calls",
+      "confidence": 1,
+      "source": "static",
+      "evidence": [
+        {
+          "file": "server/src/email/send.ts",
+          "line": 21,
+          "kind": "call",
+          "text": "await resend.emails.send({"
+        }
+      ]
+    }
+  ],
+  "explanation": "The flow starts at `Stripe: paymentIntents.create` (server/src/payments/stripe.ts:9).\n\n1. `Stripe: paymentIntents.create` leads to `POST /api/webhooks/stripe` (inferred).\n2. `POST /api/webhooks/stripe` calls `handleStripeWebhook()`.\n3. `handleStripeWebhook()` on error: `400 Bad Request`; checks `switch (event.type)` (payment_intent.payment_failed → `markOrderFailed()`).\n4. `markOrderFailed()` writes `order.update`; calls `releaseInventory()`; emits `order.paymentFailed`.\n5. `releaseInventory()` reads `cartItem.findMany`; writes `product.update`.\n6. `order.paymentFailed` triggers `notifyPaymentFailed()`.\n7. `notifyPaymentFailed()` calls `sendPaymentFailedEmail()`.\n8. `sendPaymentFailedEmail()` reads `order.findUnique`; calls `Resend: emails.send`.\n\nGenerated by static analysis without an LLM: descriptions come from doc comments and code facts. Steps marked (inferred) are likely but not proven by a call site.",
+  "analysis": {
+    "provider": "static",
+    "generatedAt": "2026-10-05T00:00:00.000Z",
+    "repository": "acme-shop",
+    "stats": {
+      "files": 42,
+      "symbols": 57,
+      "relationships": 95,
+      "candidates": 13
+    },
+    "warnings": []
+  }
+}
