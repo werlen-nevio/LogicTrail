@@ -25,7 +25,7 @@
   },
   "type": "module",
   "bin": {
-    "logictrail": "./dist/cli/main.js"
+    "logictrail": "dist/cli/main.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
