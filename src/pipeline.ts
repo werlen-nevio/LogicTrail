@@ -21,7 +21,7 @@ import { RetrievalIndex } from "./query/retrieve.js";
 import { queryTerms } from "./query/terms.js";
 import { silentReporter, type Reporter } from "./reporter.js";
 import { SourceReader } from "./source.js";
-import { editDistance } from "./util/text.js";
+import { asText, editDistance } from "./util/text.js";
 
 export interface FlowTarget {
   /** Repository-relative or absolute file path. */
@@ -384,18 +384,37 @@ export function seedsForTarget(graph: CodeGraph, target: FlowTarget, root: strin
       : matching.some((node) => node.metadata.servesDefault !== false)
         ? matching.filter((node) => node.metadata.servesDefault !== false)
         : matching;
-    if (routes.length === 0) {
-      const available = closestRoutes(
-        nodes.filter((node) => node.kind === "route" && !node.metadata.navigation),
-        method,
-        routePath,
-      ).slice(0, 8);
+    // A page (Next.js app/pages router, React Router) serves GET requests to its path; the flow
+    // starts at its component. Server routes win when both match.
+    const pagePaths = (node: CodeNode): string[] =>
+      node.kind === "symbol" && Array.isArray(node.metadata.pages)
+        ? node.metadata.pages.map(String)
+        : [];
+    const servesPages = !method || method === "GET";
+    const pages =
+      routes.length === 0 && servesPages
+        ? nodes.filter((node) => pagePaths(node).some((page) => normalizeRoute(page) === routePath))
+        : [];
+    if (routes.length === 0 && pages.length === 0) {
+      const candidates: RouteCandidate[] = nodes
+        .filter((node) => node.kind === "route" && !node.metadata.navigation)
+        .map((node) => ({
+          label: node.label,
+          path: String(node.metadata.path),
+          method: asText(node.metadata.method),
+        }));
+      for (const node of nodes) {
+        for (const page of pagePaths(node)) {
+          candidates.push({ label: `GET ${page} (page ${node.label})`, path: page, method: "GET" });
+        }
+      }
+      const available = closestRoutes(candidates, method, routePath).slice(0, 8);
       throw new NoFlowFoundError(
-        `No route matches "${target.route}".`,
-        available.map((node) => `Available: ${node.label}`),
+        `No route or page matches "${target.route}".`,
+        available.map((candidate) => `Available: ${candidate.label}`),
       );
     }
-    for (const node of routes) seeds.add(node.id);
+    for (const node of [...routes, ...pages]) seeds.add(node.id);
   }
   return [...seeds];
 }
@@ -405,20 +424,25 @@ export function seedsForTarget(graph: CodeGraph, target: FlowTarget, root: strin
  * prefix shows up first: routes with the requested method, then the most shared path segments
  * (a segment one or two typos away counts for half), then the smallest edit distance.
  */
+interface RouteCandidate {
+  label: string;
+  path: string;
+  method: string;
+}
+
 function closestRoutes(
-  routes: readonly CodeNode[],
+  routes: readonly RouteCandidate[],
   method: string | undefined,
   routePath: string,
-): CodeNode[] {
+): RouteCandidate[] {
   const wanted = routePath.split("/").filter(Boolean);
-  const ranked = routes.map((node) => {
-    const nodePath = normalizeRoute(String(node.metadata.path));
-    const nodeMethod = node.metadata.method;
+  const ranked = routes.map((route) => {
+    const candidatePath = normalizeRoute(route.path);
     return {
-      node,
-      method: !method || nodeMethod === method || nodeMethod === "ANY" ? 1 : 0,
-      shared: sharedSegments(wanted, nodePath.split("/").filter(Boolean)),
-      distance: editDistance(routePath, nodePath),
+      route,
+      method: !method || route.method === method || route.method === "ANY" ? 1 : 0,
+      shared: sharedSegments(wanted, candidatePath.split("/").filter(Boolean)),
+      distance: editDistance(routePath, candidatePath),
     };
   });
   ranked.sort(
@@ -426,9 +450,9 @@ function closestRoutes(
       b.method - a.method ||
       b.shared - a.shared ||
       a.distance - b.distance ||
-      a.node.label.localeCompare(b.node.label),
+      a.route.label.localeCompare(b.route.label),
   );
-  return ranked.map((entry) => entry.node);
+  return ranked.map((entry) => entry.route);
 }
 
 function sharedSegments(wanted: readonly string[], segments: readonly string[]): number {

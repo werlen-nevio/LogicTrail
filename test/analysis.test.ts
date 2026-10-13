@@ -505,6 +505,52 @@ describe("NestJS modules, versions and enhancers", () => {
   });
 });
 
+describe("--route on pages", () => {
+  const graph = buildCodeGraph(
+    new Workspace(
+      [
+        facts(`export default function SearchPage() { return <main />; }`, "app/search/page.tsx"),
+        facts(
+          `export default function ProductPage() { return <main />; }`,
+          "app/product/[handle]/page.tsx",
+        ),
+        facts(
+          `export async function POST(request) { return Response.json({}); }`,
+          "app/api/revalidate/route.ts",
+        ),
+        facts(
+          `export async function GET() { return Response.json([]); }`,
+          "app/search/api/route.ts",
+        ),
+      ],
+      "/repo",
+    ),
+  );
+  const seeds = (route: string) =>
+    seedsForTarget(graph, { route }, "/repo").map((id) => graph.nodes.get(id)?.label);
+
+  it("starts at the page component for GET or a bare path", () => {
+    expect(seeds("GET /search")).toEqual(["SearchPage"]);
+    expect(seeds("/search")).toEqual(["SearchPage"]);
+    expect(seeds("GET /product/:handle")).toEqual(["ProductPage"]);
+    expect(seeds("/product/[handle]")).toEqual(["ProductPage"]);
+    expect(seeds("GET /search/api")).toEqual(["GET /search/api"]);
+  });
+
+  it("only matches pages for GET and lists them when nothing matches", () => {
+    expect(() => seeds("POST /search")).toThrow(NoFlowFoundError);
+    const suggestions = (): string[] => {
+      try {
+        seeds("GET /serch");
+      } catch (error) {
+        if (error instanceof NoFlowFoundError) return error.suggestions;
+      }
+      return [];
+    };
+    expect(suggestions()[0]).toBe("Available: GET /search (page SearchPage)");
+  });
+});
+
 describe("Express middleware created by a package", () => {
   it("is a step before the handler", () => {
     const graph = buildCodeGraph(

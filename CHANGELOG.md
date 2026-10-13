@@ -50,6 +50,11 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- `--route` matches pages (Next.js App and Pages Router, React Router) as well as server routes:
+  `--route "GET /search"`, `--route "/product/[handle]"` or `--route "GET /product/:handle"` start
+  the flow at the page component. A path without a method or with `GET` matches a page when no
+  server route serves it. When nothing matches, the closest pages are listed with the routes, as in
+  `Available: GET /search (page SearchPage)`.
 - Imports of packages that live in the repository (monorepo workspaces such as
   `@calcom/features/bookings/lib/service/RegularBookingService`) resolve to their sources instead
   of being treated as npm packages. LogicTrail finds them from the `package.json` files around the
