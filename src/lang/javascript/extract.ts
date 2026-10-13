@@ -496,7 +496,9 @@ class FileExtractor {
         return;
       }
     }
-    this.facts.bindings.push({ name: "default", line, init: summarizeInit(this.sf, expression) });
+    const init = summarizeInit(this.sf, expression);
+    this.facts.bindings.push({ name: "default", line, init });
+    this.topInits.set("default", init);
     this.facts.exports.push({ kind: "local", exported: "default", local: "default", line });
     this.walk(expression, undefined);
   }
@@ -1245,7 +1247,7 @@ class FileExtractor {
       const pathArg = call.arguments[0];
       if (!pathArg || !ts.isStringLiteralLike(pathArg)) return false;
       routePath = pathArg.text;
-      routerPath = getPath(callee.expression);
+      routerPath = this.routerPath(callee.expression);
     }
     if (!routerPath || !(routePath.startsWith("/") || routePath === "*")) return false;
 
@@ -1363,8 +1365,10 @@ class FileExtractor {
     callee: ts.PropertyAccessExpression,
     scope: SymbolFact | undefined,
   ): boolean {
-    const routerPath = getPath(callee.expression);
+    const routerPath = this.routerPath(callee.expression);
     if (!routerPath || !this.isRouter(routerPath, scope, undefined)) return false;
+    // Earlier links of `Router().use(a).use(b)`, in source order.
+    if (!getPath(callee.expression)) this.walk(callee.expression, scope);
     const args = [...call.arguments];
     let prefix = "";
     const first = args[0];
@@ -1388,6 +1392,44 @@ class FileExtractor {
       line: lineOf(this.sf, call),
     });
     return true;
+  }
+
+  /**
+   * The router a registration is called on: a name (`router.use(...)`), or for a router created
+   * and configured in one expression, the name that expression is bound to — `api` in
+   * `const api = Router().use(a).use(b)` and `default` in `export default Router().use("/api", api)`.
+   */
+  private routerPath(receiver: ts.Expression): string[] | undefined {
+    const named = getPath(receiver);
+    if (named) return named;
+    // The chain has to start where the router is created: `Router()`, `express.Router()`, `new Hono()`.
+    let base = unwrapExpression(receiver);
+    while (ts.isCallExpression(base)) {
+      const callee = unwrapExpression(base.expression);
+      if (!ts.isPropertyAccessExpression(callee)) break;
+      const inner = unwrapExpression(callee.expression);
+      if (!ts.isCallExpression(inner) && !ts.isNewExpression(inner)) break;
+      base = inner;
+    }
+    if (!(ts.isCallExpression(base) || ts.isNewExpression(base)) || !getPath(base.expression))
+      return undefined;
+    let chain: ts.Node = receiver;
+    for (let parent = chain.parent; parent; parent = chain.parent) {
+      const continues =
+        ((ts.isPropertyAccessExpression(parent) || ts.isCallExpression(parent)) &&
+          parent.expression === chain) ||
+        ts.isParenthesizedExpression(parent) ||
+        ts.isAsExpression(parent) ||
+        ts.isSatisfiesExpression(parent) ||
+        ts.isNonNullExpression(parent);
+      if (!continues) break;
+      chain = parent;
+    }
+    const holder = chain.parent;
+    if (holder && ts.isVariableDeclaration(holder) && ts.isIdentifier(holder.name))
+      return [holder.name.text];
+    if (holder && ts.isExportAssignment(holder) && !holder.isExportEquals) return ["default"];
+    return undefined;
   }
 
   /** Fastify `fastify.register(plugin, { prefix: "/api" })`. */

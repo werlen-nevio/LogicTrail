@@ -50,6 +50,11 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- Express routers created and configured in one expression keep their mount prefixes:
+  `const api = Router().use(tags).use(auth)` and `export default Router().use("/api", api)` are
+  recorded under `api` and the default export, every `.use()` in the chain counts, and the routes
+  behind them get `/api`. In the RealWorld example app, `--route "POST /api/users/login"` now finds
+  the route, which was listed as `POST /users/login`.
 - `--route` matches pages (Next.js App and Pages Router, React Router) as well as server routes:
   `--route "GET /search"`, `--route "/product/[handle]"` or `--route "GET /product/:handle"` start
   the flow at the page component. A path without a method or with `GET` matches a page when no

@@ -551,6 +551,60 @@ describe("--route on pages", () => {
   });
 });
 
+describe("Express routers created and mounted in one expression", () => {
+  it("records each link of the chain under the name it is bound to", () => {
+    const workspace = new Workspace(
+      [
+        facts(
+          `
+          import { Router } from "express";
+          const router = Router();
+          router.post("/users/login", (req, res) => res.json({}));
+          export default router;
+        `,
+          "src/routes/auth.controller.ts",
+        ),
+        facts(
+          `
+          import express from "express";
+          export default express.Router().get("/tags", (req, res) => res.json([]));
+        `,
+          "src/routes/tag.controller.ts",
+        ),
+        facts(
+          `
+          import { Router } from "express";
+          import tagsController from "./tag.controller";
+          import authController from "./auth.controller";
+          const api = Router()
+            .use(tagsController)
+            .use(authController);
+          export default Router().use("/api", api);
+        `,
+          "src/routes/routes.ts",
+        ),
+        facts(
+          `
+          import express from "express";
+          import routes from "./routes/routes";
+          const app = express();
+          app.use(routes);
+        `,
+          "src/main.ts",
+        ),
+      ],
+      "/repo",
+    );
+    expect(composeRoutes(workspace).map(routeLabel)).toEqual([
+      "POST /api/users/login",
+      "GET /api/tags",
+    ]);
+    expect(
+      seedsForTarget(buildCodeGraph(workspace), { route: "POST /api/users/login" }, "/repo"),
+    ).toEqual(["route:POST /api/users/login"]);
+  });
+});
+
 describe("Express middleware created by a package", () => {
   it("is a step before the handler", () => {
     const graph = buildCodeGraph(
