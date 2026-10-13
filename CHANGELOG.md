@@ -8,6 +8,8 @@ Claude Code plugin share one version number.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-13
+
 ### Added
 
 - "Open in editor" in the HTML viewer can open Cursor, VS Code Insiders, VSCodium or IntelliJ
@@ -188,5 +190,6 @@ Initial release.
 - `logictrail.config.ts` configuration, a per-file analysis cache and a library API (`analyze`,
   `writeOutputs`).
 
-[Unreleased]: https://github.com/werlen-nevio/LogicTrail/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/werlen-nevio/LogicTrail/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/werlen-nevio/LogicTrail/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/werlen-nevio/LogicTrail/releases/tag/v0.2.0
