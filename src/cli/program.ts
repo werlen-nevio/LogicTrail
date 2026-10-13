@@ -81,7 +81,10 @@ export function createProgram(): Command {
     .option("--max-depth <n>", "How many hops to follow from the relevant code", parsePositiveInt)
     .option("--max-nodes <n>", "Maximum number of nodes in the flow", parsePositiveInt)
     .option("--file <path>", "Explain the flow starting in a file")
-    .option("--function <name>", "Explain the flow starting at a function, method or component")
+    .option(
+      "--function <name>",
+      "Explain the flow starting at a function, method or component (file.ts#name picks one file)",
+    )
     .option("--route <route>", 'Explain the flow behind an HTTP route, e.g. "POST /api/orders"')
     .option("--root <dir>", "Repository root", ".")
     .option("--out-dir <dir>", "Where to write results (default: .logictrail)")

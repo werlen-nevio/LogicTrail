@@ -551,6 +551,73 @@ describe("--route on pages", () => {
   });
 });
 
+describe("--function", () => {
+  const graph = buildCodeGraph(
+    new Workspace(
+      [
+        facts(
+          `
+          async function handler(input) { return input; }
+          export default handler;
+        `,
+          "src/bookings/handleCancelBooking.ts",
+        ),
+        facts(`export default async function handler(req) { return req; }`, "src/api/signup.ts"),
+        facts(`export default function () { return 1; }`, "src/lib/slugify/index.ts"),
+        facts(
+          `
+          import cancel from "../bookings/handleCancelBooking";
+          export { default as signupHandler } from "./signup";
+          export async function POST(req) { return cancel(req); }
+        `,
+          "src/api/cancel.ts",
+        ),
+      ],
+      "/repo",
+    ),
+  );
+  const seeds = (fn: string) =>
+    seedsForTarget(graph, { function: fn }, "/repo").map((id) => {
+      const node = graph.nodes.get(id);
+      return `${node?.file}#${node?.name}`;
+    });
+  const failure = (fn: string): NoFlowFoundError | undefined => {
+    try {
+      seeds(fn);
+    } catch (error) {
+      if (error instanceof NoFlowFoundError) return error;
+    }
+    return undefined;
+  };
+
+  it("stops and lists the matches when a name is defined in several files", () => {
+    const error = failure("handler");
+    expect(error?.message).toBe('"handler" matches functions in 2 files.');
+    expect(error?.suggestions).toEqual([
+      "handler() (src/api/signup.ts:1)",
+      "handler() (src/bookings/handleCancelBooking.ts:2)",
+      "Pick one with --function <file>#<name>, e.g. --function src/api/signup.ts#handler",
+    ]);
+  });
+
+  it("accepts file#name", () => {
+    expect(seeds("src/bookings/handleCancelBooking.ts#handler")).toEqual([
+      "src/bookings/handleCancelBooking.ts#handler",
+    ]);
+    expect(seeds("./src/api/signup.ts#handler()")).toEqual(["src/api/signup.ts#handler"]);
+    expect(failure("src/api/signup.ts#cancel")?.message).toBe(
+      'No function named "cancel" was found in src/api/signup.ts.',
+    );
+  });
+
+  it("finds a default export by its file name and the names it is imported under", () => {
+    expect(seeds("handleCancelBooking")).toEqual(["src/bookings/handleCancelBooking.ts#handler"]);
+    expect(seeds("cancel")).toEqual(["src/bookings/handleCancelBooking.ts#handler"]);
+    expect(seeds("signupHandler")).toEqual(["src/api/signup.ts#handler"]);
+    expect(seeds("slugify")).toEqual(["src/lib/slugify/index.ts#Slugify"]);
+  });
+});
+
 describe("Express routers created and mounted in one expression", () => {
   it("records each link of the chain under the name it is bound to", () => {
     const workspace = new Workspace(

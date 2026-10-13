@@ -127,6 +127,7 @@ export class RetrievalIndex {
       case "symbol": {
         const symbol = node.symbol;
         add(node.name, 3);
+        for (const alias of (node.metadata.aliases as string[] | undefined) ?? []) add(alias, 2.5);
         if (symbol?.owner) add(symbol.owner, 1.5);
         if (symbol?.parent) add(symbol.parent, 1.5);
         if (node.file) add(pathWords(node.file), 1.2);

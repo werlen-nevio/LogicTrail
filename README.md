@@ -278,6 +278,7 @@ logictrail "what happens when a payment fails?"
 logictrail "create customer flow"
 
 logictrail --function createSession            # start at a function, method or component
+logictrail --function src/auth.ts#login        # when the name is defined in several files
 logictrail --route "POST /api/orders"          # start at an HTTP route, including its callers
 logictrail --route "GET /product/:handle"      # or at the page component that serves a path
 logictrail --file src/auth/login.ts            # start at the entry points of a file
@@ -298,7 +299,7 @@ Try them on the bundled sample: `npx logictrail "how does checkout work?" --root
 | `--max-depth <n>`     | Hops to follow from the relevant code (default: 12)                           |
 | `--max-nodes <n>`     | Upper bound on nodes in the flow (default: 60)                                |
 | `--file <path>`       | Explain the flow starting in a file                                           |
-| `--function <name>`   | Explain the flow starting at a function, method or component                  |
+| `--function <name>`   | Explain the flow starting at a function, method or component (`file#name`)    |
 | `--route <route>`     | Explain the flow behind a route or page, e.g. `"POST /api/orders"`            |
 | `--root <dir>`        | Repository root (default: current directory)                                  |
 | `--out-dir <dir>`     | Output directory (default: `.logictrail`)                                     |

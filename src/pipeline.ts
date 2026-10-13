@@ -305,7 +305,14 @@ function flowRequest(root: string, options: AnalyzeOptions, config: ResolvedConf
 }
 
 export function questionForTarget(target: FlowTarget | undefined): string {
-  if (target?.function) return `What happens when ${target.function}() runs?`;
+  if (target?.function) {
+    const separator = target.function.lastIndexOf("#");
+    if (separator > 0) {
+      const name = target.function.slice(separator + 1).replace(/\(\)$/, "");
+      return `What happens when ${name}() in ${target.function.slice(0, separator)} runs?`;
+    }
+    return `What happens when ${target.function.replace(/\(\)$/, "")}() runs?`;
+  }
   if (target?.route) return `What happens when ${target.route} is called?`;
   if (target?.file) return `How does the code in ${target.file} work?`;
   return "How does this application work?";
@@ -317,35 +324,61 @@ export function seedsForTarget(graph: CodeGraph, target: FlowTarget, root: strin
   const seeds = new Set<string>();
 
   if (target.function) {
-    const wanted = target.function.replace(/\(\)$/, "").trim();
-    const matches = (node: CodeNode, exact: boolean): boolean => {
-      if (node.kind !== "symbol" || !node.symbol) return false;
-      const names = [node.name, node.symbol.qualifiedName, node.label.replace(/\(\)$/, "")];
-      return exact
-        ? names.includes(wanted)
-        : names.some((name) => name.toLowerCase() === wanted.toLowerCase());
-    };
-    let found = nodes.filter((node) => matches(node, true));
-    if (found.length === 0) found = nodes.filter((node) => matches(node, false));
+    // `path/to/file.ts#name` picks the function in one file.
+    const separator = target.function.lastIndexOf("#");
+    const inFile = separator > 0 ? repoFile(root, target.function.slice(0, separator)) : undefined;
+    const wanted = target.function
+      .slice(separator + 1)
+      .replace(/\(\)$/, "")
+      .trim();
+    const candidates = nodes.filter(
+      (node) => node.kind === "symbol" && node.symbol && (!inFile || node.file === inFile),
+    );
+    // A default export also answers to its file name and the names it is imported under.
+    const namesOf = (node: CodeNode): string[] => [
+      node.name,
+      node.symbol?.qualifiedName ?? "",
+      node.label.replace(/\(\)$/, ""),
+      ...((node.metadata.aliases as string[] | undefined) ?? []),
+    ];
+    let found = candidates.filter((node) => namesOf(node).includes(wanted));
     if (found.length === 0) {
-      const similar = nodes
-        .filter(
-          (node) =>
-            node.kind === "symbol" && node.name.toLowerCase().includes(wanted.toLowerCase()),
+      const lower = wanted.toLowerCase();
+      found = candidates.filter((node) =>
+        namesOf(node).some((name) => name.toLowerCase() === lower),
+      );
+    }
+    const located = (node: CodeNode): string => `${node.label} (${node.file}:${node.line})`;
+    if (found.length === 0) {
+      const similar = candidates
+        .filter((node) =>
+          namesOf(node).some((name) => name.toLowerCase().includes(wanted.toLowerCase())),
         )
         .slice(0, 5)
-        .map((node) => `${node.label} (${node.file}:${node.line})`);
+        .map((node) => `Did you mean ${located(node)}?`);
       throw new NoFlowFoundError(
-        `No function named "${wanted}" was found.`,
-        similar.length > 0 ? similar.map((s) => `Did you mean ${s}?`) : [],
+        `No function named "${wanted}" was found${inFile ? ` in ${inFile}` : ""}.`,
+        similar,
       );
+    }
+    const files = [...new Set(found.map((node) => node.file))];
+    if (files.length > 1) {
+      const sorted = [...found].sort(
+        (a, b) => (a.file ?? "").localeCompare(b.file ?? "") || (a.line ?? 0) - (b.line ?? 0),
+      );
+      const listed = sorted.slice(0, 12).map(located);
+      if (sorted.length > listed.length) listed.push(`… and ${sorted.length - listed.length} more`);
+      const first = sorted[0];
+      throw new NoFlowFoundError(`"${wanted}" matches functions in ${files.length} files.`, [
+        ...listed,
+        `Pick one with --function <file>#<name>, e.g. --function ${first?.file ?? ""}#${first?.name ?? wanted}`,
+      ]);
     }
     for (const node of found) seeds.add(node.id);
   }
 
   if (target.file) {
-    const relative = path.isAbsolute(target.file) ? path.relative(root, target.file) : target.file;
-    const file = relative.split(path.sep).join("/").replace(/^\.\//, "");
+    const file = repoFile(root, target.file);
     const inFile = nodes.filter(
       (node) =>
         node.file === file &&
@@ -417,6 +450,12 @@ export function seedsForTarget(graph: CodeGraph, target: FlowTarget, root: strin
     for (const node of [...routes, ...pages]) seeds.add(node.id);
   }
   return [...seeds];
+}
+
+/** A repository-relative path with forward slashes, from an absolute or relative one. */
+function repoFile(root: string, file: string): string {
+  const relative = path.isAbsolute(file) ? path.relative(root, file) : file;
+  return relative.split(path.sep).join("/").replace(/^\.\//, "");
 }
 
 /**

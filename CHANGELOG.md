@@ -50,6 +50,12 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- `--function` with a name defined in several files (`handler`) stops and lists the matches with
+  their file and line instead of merging unrelated functions into one flow. `--function
+path/to/file.ts#name` picks one. A default export is also found by its file name and by the names
+  it is imported or re-exported under: in cal.com, `--function handleCancelBooking` finds
+  `async function handler`, the default export of `handleCancelBooking.ts`. Questions match those
+  names too.
 - Express routers created and configured in one expression keep their mount prefixes:
   `const api = Router().use(tags).use(auth)` and `export default Router().use("/api", api)` are
   recorded under `api` and the default export, every `.use()` in the chain counts, and the routes

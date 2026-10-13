@@ -91,6 +91,20 @@ export class CodeGraph {
   }
 }
 
+const CONVENTION_FILE_NAMES = new Set([
+  "page",
+  "layout",
+  "route",
+  "template",
+  "loading",
+  "error",
+  "default",
+  "middleware",
+  "handler",
+  "main",
+  "app",
+]);
+
 export function symbolNodeId(file: string, symbolId: string): string {
   return `${file}#${symbolId}`;
 }
@@ -125,6 +139,7 @@ class CodeGraphBuilder {
     this.addRoutes();
     this.addListeners(files);
     this.addPages(files);
+    this.addDefaultExportAliases(files);
     for (const file of files) {
       for (const symbol of file.symbols) {
         if (symbol.kind === "class") continue;
@@ -320,6 +335,42 @@ class CodeGraphBuilder {
         if (!pages.includes(page.path)) pages.push(page.path);
         node.metadata.pages = pages;
         this.graph.frameworks.add(frameworkLabel(page.framework));
+      }
+    }
+  }
+
+  /**
+   * A default export is known by other names than its own: its file name and the names it is
+   * imported or re-exported under (`async function handler` in handleCancelBooking.ts, imported
+   * as `handleCancelBooking`). They are kept in `metadata.aliases`.
+   */
+  private addDefaultExportAliases(files: readonly FileFacts[]): void {
+    const defaultTarget = (file: string): CodeNode | undefined => {
+      const id = this.symbolTarget(this.workspace.resolveExport(file, "default"));
+      return id ? this.graph.nodes.get(id) : undefined;
+    };
+    const imported = (from: string, source: string): CodeNode | undefined => {
+      const resolution = this.workspace.resolveModule(from, source);
+      return resolution.kind === "file" ? defaultTarget(resolution.path) : undefined;
+    };
+    const addAlias = (node: CodeNode | undefined, alias: string): void => {
+      if (!node || alias === node.name || alias === "default" || !/^[\w$]+$/.test(alias)) return;
+      const aliases = (node.metadata.aliases as string[] | undefined) ?? [];
+      if (!aliases.includes(alias)) aliases.push(alias);
+      node.metadata.aliases = aliases;
+    };
+    for (const file of files) {
+      const stem = path.posix.basename(file.path).replace(/\.[^.]+$/, "");
+      const fileName = stem === "index" ? path.posix.basename(path.posix.dirname(file.path)) : stem;
+      // Framework file names (`page.tsx`, `route.ts`) say nothing about the function.
+      if (!CONVENTION_FILE_NAMES.has(fileName)) addAlias(defaultTarget(file.path), fileName);
+      for (const fact of file.imports) {
+        if (fact.imported === "default" && !fact.typeOnly)
+          addAlias(imported(file.path, fact.source), fact.local);
+      }
+      for (const fact of file.exports) {
+        if (fact.kind === "reexport" && fact.imported === "default")
+          addAlias(imported(file.path, fact.source), fact.exported);
       }
     }
   }
