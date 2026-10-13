@@ -102,20 +102,27 @@ export function chooseSeeds(
 }
 
 const TEST_FILE =
-  /(^|\/)(__tests__|__mocks__|__fixtures__|tests?|testing|test-utils|e2e|playwright|cypress|fixtures|mocks?)\/|\.(test|spec|e2e)([-.][\w-]+)?\.[^/]+$/i;
+  /(^|\/)(__tests__|__mocks__|__fixtures__|tests?|testing|test-utils|e2e|playwright|cypress|fixtures|mocks?)\/|\.(test|spec|e2e|integration-test|unit-test)([-.][\w-]+)?\.[^/]+$/i;
+
+const SEED_FILE =
+  /(^|\/)(seeds?|seeders?)\/|(^|\/)seed(s|ers?|ing)?([-._][\w.-]*)?\.[cm]?[jt]sx?$/i;
 
 /**
- * Tests, mocks and fixtures: `*.test.*`, `*.spec.*`, `*.e2e-spec.*`, `*.test-suite.*`, and files
- * under `__tests__/`, `__mocks__/`, `test/`, `e2e/`, `playwright/`, `fixtures/` and the like.
+ * Tests, mocks, fixtures and database seed scripts: `*.test.*`, `*.spec.*`, `*.e2e-spec.*`,
+ * `*.test-suite.*`, `*.integration-test.*`, `seed.ts`, `seed-*.ts`, and files under `__tests__/`,
+ * `__mocks__/`, `test/`, `e2e/`, `playwright/`, `fixtures/`, `seeds/` and the like.
  */
 export function isTestFile(file: string | undefined): boolean {
-  return file !== undefined && TEST_FILE.test(file);
+  return file !== undefined && (TEST_FILE.test(file) || SEED_FILE.test(file));
 }
 
 const TEST_WORDS =
-  /\b(tests?|testing|tested|specs?|e2e|end-to-end|mocks?|mocked|mocking|fixtures?|playwright|cypress|jest|vitest)\b/i;
+  /\b(tests?|testing|tested|specs?|e2e|end-to-end|mocks?|mocked|mocking|fixtures?|playwright|cypress|jest|vitest|seeds?|seeded|seeding|seeders?)\b/i;
 
-/** Whether a question is about tests ("how are bookings tested?"), so test code is fair game. */
+/**
+ * Whether a question is about tests or seed data ("how are bookings tested?", "how is the database
+ * seeded?"), so that code is fair game.
+ */
 export function mentionsTests(question: string): boolean {
   return TEST_WORDS.test(question);
 }

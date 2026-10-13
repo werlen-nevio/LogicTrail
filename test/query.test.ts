@@ -87,7 +87,7 @@ describe("seeds", () => {
     expect(seeds("how is a coupon applied?", "avoid")).toEqual(["applyCouponFixture()"]);
   });
 
-  it("recognize test files and questions about tests", () => {
+  it("recognize test and seed files and questions about them", () => {
     for (const file of [
       "src/signup.test.ts",
       "src/signup.spec.tsx",
@@ -98,14 +98,28 @@ describe("seeds", () => {
       "apps/web/playwright/fixtures/regularBookings.ts",
       "apps/web/e2e/login.ts",
       "packages/testing/src/lib/bookingScenario/expects.ts",
+      "packages/features/busyTimes/services/getBusyTimes.integration-test.ts",
+      "prisma/seed.ts",
+      "scripts/seed-performance-testing.ts",
+      "packages/prisma/seed-insights.ts",
+      "src/db/seeds/users.ts",
+      "database/seeders/UserSeeder.js",
     ]) {
       expect(isTestFile(file), file).toBe(true);
     }
-    for (const file of ["src/contest.ts", "src/latest/booking.ts", "src/testimonials.tsx"]) {
+    for (const file of [
+      "src/contest.ts",
+      "src/latest/booking.ts",
+      "src/testimonials.tsx",
+      "src/seedling.ts",
+      "src/lib/seedRandom.ts",
+      "src/features/ab-test.ts",
+    ]) {
       expect(isTestFile(file), file).toBe(false);
     }
     expect(mentionsTests("how is signup tested?")).toBe(true);
     expect(mentionsTests("what do the e2e specs cover?")).toBe(true);
+    expect(mentionsTests("how is the database seeded?")).toBe(true);
     expect(mentionsTests("how does signup work?")).toBe(false);
   });
 });

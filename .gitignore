@@ -12,3 +12,4 @@ _site/
 .impeccable/review/
 brag-output*/
 .claude/worktrees/
+tmp/
