@@ -32,6 +32,9 @@ Claude Code plugin share one version number.
 - A response whose status isn't a number literal, like
   `NextResponse.json({ message }, { status: e.statusCode })` or `res.status(code).json()`, is
   labelled `Response (status: e.statusCode)` instead of `200 OK`.
+- When `--route` matches nothing, the routes it suggests are the closest ones instead of the first
+  eight found: routes with the same method first, then those sharing the most path segments, then
+  the smallest edit distance. `GET /users/:id` suggests `GET /api/users/:id` first.
 
 ## [0.2.0] - 2026-10-05
 

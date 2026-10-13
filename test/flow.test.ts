@@ -232,6 +232,27 @@ describe("targets", () => {
     );
   });
 
+  it("suggests the closest routes when --route matches nothing", async () => {
+    const suggestions = async (route: string) => {
+      const error = await analyze({
+        root: SERVER_FRAMEWORKS,
+        target: { route },
+        config,
+        provider: new StaticProvider(),
+      }).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(NoFlowFoundError);
+      return (error as NoFlowFoundError).suggestions.slice(0, 2);
+    };
+    expect(await suggestions("GET /users/:id")).toEqual([
+      "Available: GET /api/users/:id",
+      "Available: GET /shop/orders/:id",
+    ]);
+    expect(await suggestions("POST /api/acounts")).toEqual([
+      "Available: POST /api/accounts",
+      "Available: POST /api/auth/login",
+    ]);
+  });
+
   it("starts from a file", async () => {
     const result = await analyze({
       root: ACME_SHOP,

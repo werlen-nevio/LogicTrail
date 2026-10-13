@@ -21,6 +21,7 @@ import { RetrievalIndex } from "./query/retrieve.js";
 import { queryTerms } from "./query/terms.js";
 import { silentReporter, type Reporter } from "./reporter.js";
 import { SourceReader } from "./source.js";
+import { editDistance } from "./util/text.js";
 
 export interface FlowTarget {
   /** Repository-relative or absolute file path. */
@@ -371,18 +372,72 @@ export function seedsForTarget(graph: CodeGraph, target: FlowTarget, root: strin
         (!method || node.metadata.method === method || node.metadata.method === "ANY"),
     );
     if (routes.length === 0) {
-      const available = nodes
-        .filter((node) => node.kind === "route" && !node.metadata.navigation)
-        .slice(0, 8)
-        .map((node) => node.label);
+      const available = closestRoutes(
+        nodes.filter((node) => node.kind === "route" && !node.metadata.navigation),
+        method,
+        routePath,
+      ).slice(0, 8);
       throw new NoFlowFoundError(
         `No route matches "${target.route}".`,
-        available.map((label) => `Available: ${label}`),
+        available.map((node) => `Available: ${node.label}`),
       );
     }
     for (const node of routes) seeds.add(node.id);
   }
   return [...seeds];
+}
+
+/**
+ * Orders routes by how close they are to a route that matched nothing, so a typo or a missing
+ * prefix shows up first: routes with the requested method, then the most shared path segments
+ * (a segment one or two typos away counts for half), then the smallest edit distance.
+ */
+function closestRoutes(
+  routes: readonly CodeNode[],
+  method: string | undefined,
+  routePath: string,
+): CodeNode[] {
+  const wanted = routePath.split("/").filter(Boolean);
+  const ranked = routes.map((node) => {
+    const nodePath = normalizeRoute(String(node.metadata.path));
+    const nodeMethod = node.metadata.method;
+    return {
+      node,
+      method: !method || nodeMethod === method || nodeMethod === "ANY" ? 1 : 0,
+      shared: sharedSegments(wanted, nodePath.split("/").filter(Boolean)),
+      distance: editDistance(routePath, nodePath),
+    };
+  });
+  ranked.sort(
+    (a, b) =>
+      b.method - a.method ||
+      b.shared - a.shared ||
+      a.distance - b.distance ||
+      a.node.label.localeCompare(b.node.label),
+  );
+  return ranked.map((entry) => entry.node);
+}
+
+function sharedSegments(wanted: readonly string[], segments: readonly string[]): number {
+  const unused = [...segments];
+  let score = 0;
+  for (const segment of wanted) {
+    let best = -1;
+    let bestScore = 0;
+    unused.forEach((candidate, index) => {
+      const value =
+        candidate === segment
+          ? 1
+          : editDistance(candidate, segment) <= Math.min(2, Math.floor(segment.length / 3))
+            ? 0.5
+            : 0;
+      if (value > bestScore) [best, bestScore] = [index, value];
+    });
+    if (best === -1) continue;
+    score += bestScore;
+    unused.splice(best, 1);
+  }
+  return score;
 }
 
 function normalizeRoute(route: string): string {
