@@ -54,6 +54,8 @@ export interface ScoredNode {
   directScore: number;
   /** Query terms that matched this node. */
   matched: string[];
+  /** The question's own words (not synonyms) that matched this node. */
+  direct: string[];
 }
 
 type TermWeights = Map<string, number>;
@@ -89,7 +91,7 @@ export class RetrievalIndex {
       let score = 0;
       let directScore = 0;
       const matched: string[] = [];
-      let directMatches = 0;
+      const direct: string[] = [];
       for (const term of terms) {
         const weight = weights.get(term.term);
         if (!weight) continue;
@@ -97,13 +99,13 @@ export class RetrievalIndex {
         score += contribution;
         matched.push(term.term);
         if (term.source === "query") {
-          directMatches++;
+          direct.push(term.term);
           directScore += contribution;
         }
       }
       if (score <= 0) continue;
-      if (directMatches > 1) score *= 1 + 0.25 * (directMatches - 1);
-      results.push({ id, score, directScore, matched });
+      if (direct.length > 1) score *= 1 + 0.25 * (direct.length - 1);
+      results.push({ id, score, directScore, matched, direct });
     }
     return results.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
   }

@@ -241,7 +241,10 @@ async function prepareFlow(options: AnalyzeOptions, usesLlm: boolean) {
     for (const seed of seeds)
       scores.set(seed, Math.max(scores.get(seed) ?? 0, scored[0]?.score ?? 1));
   } else {
-    seeds = chooseSeeds(scored, usesLlm ? { limit: 30, ratio: 0.2 } : { limit: 12, ratio: 0.45 });
+    seeds = chooseSeeds(codeGraph, scored, {
+      ...(usesLlm ? { limit: 30, ratio: 0.2, perFile: 5 } : { limit: 12, ratio: 0.45 }),
+      maxDepth: config.maxDepth,
+    });
   }
   if (seeds.length === 0) {
     throw new NoFlowFoundError(`Could not find code related to "${question}".`, [

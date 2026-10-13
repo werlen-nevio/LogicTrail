@@ -173,7 +173,9 @@ flowchart LR
    requests are matched to server routes.
 3. **Retrieve.** Your question becomes search terms ("logs in" → `login`, plus synonyms), and the
    best-matching symbols seed a bounded sub-graph: callers up to an entry point, callees down to
-   the side effects.
+   the side effects. Matches that cover more of the question win, near-identical versioned code
+   counts once, and tests rank last. The sub-graph grows best first, so when the budget runs out
+   the path through the matching code is kept and distant leaves are not.
 4. **Select.** Claude receives only that sub-graph with excerpts of the most relevant code, never
    the whole repository. It chooses the nodes that answer the question, describes them, writes
    the explanation and may propose relationships static analysis missed. Without an API key, a

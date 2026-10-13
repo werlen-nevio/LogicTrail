@@ -50,6 +50,23 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- Broad questions keep the core of a flow instead of spreading the node budget over many starting
+  points:
+  - A match is weighed by how much of the question it covers, so "what happens when an article is
+    created?" no longer pulls in `createUser`.
+  - Near-identical versioned symbols (`SlotsController_2024_04_15`, `SlotsController_2024_09_04`)
+    count as one starting point.
+  - A symbol that another starting point already reaches isn't a starting point of its own.
+  - One file gives at most three starting points.
+  - Tests, mocks and fixtures rank below the code they exercise.
+  - The flow grows best first: priority falls with each step away from a starting point and rises
+    with a node's own relevance, so trimming drops distant leaves before the path through the
+    matching code.
+
+  In cal.com, "how are available slots calculated?" now gives 37 nodes around
+  `AvailableSlotsService.getAvailableSlots`, where it gave 102, 88 of them API v2 controllers and
+  mappers.
+
 - `--name` keeps the case of the name it's given (`--name fn-addItem` writes `fn-addItem.*`, not
   `fn-additem.*`) and only replaces characters that aren't safe in file names.
 - An HTTP request whose URL can't be resolved to a string is labelled with the expression it was
