@@ -16,7 +16,13 @@ import {
   type LLMProvider,
 } from "./llm/types.js";
 import { validateSelection } from "./llm/validate.js";
-import { chooseSeeds, extractCandidates, type CandidateGraph } from "./query/candidates.js";
+import {
+  chooseSeeds,
+  extractCandidates,
+  isTestFile,
+  mentionsTests,
+  type CandidateGraph,
+} from "./query/candidates.js";
 import { RetrievalIndex } from "./query/retrieve.js";
 import { queryTerms } from "./query/terms.js";
 import { silentReporter, type Reporter } from "./reporter.js";
@@ -247,6 +253,7 @@ async function prepareFlow(options: AnalyzeOptions, usesLlm: boolean) {
     seeds = chooseSeeds(codeGraph, scored, {
       ...(usesLlm ? { limit: 30, ratio: 0.2, perFile: 5 } : { limit: 12, ratio: 0.45 }),
       maxDepth: config.maxDepth,
+      tests: mentionsTests(question) ? "include" : "avoid",
     });
   }
   if (seeds.length === 0) {
@@ -261,12 +268,16 @@ async function prepareFlow(options: AnalyzeOptions, usesLlm: boolean) {
     scored.filter((node) => node.directScore > 0).map((node) => node.id),
   );
   for (const seed of seeds) directMatches.add(seed);
+  // Tests, mocks and fixtures stay out of the flow unless it is about them.
+  const testFile = (id: string): boolean => isTestFile(codeGraph.nodes.get(id)?.file);
+  const includeTests = mentionsTests(question) || seeds.some(testFile);
   const candidates = extractCandidates(
     codeGraph,
     scores,
     seeds,
     {
       maxDepth: config.maxDepth,
+      ...(includeTests ? {} : { exclude: testFile }),
       maxCandidates: usesLlm ? Math.max(150, config.maxNodes * 2) : config.maxNodes,
       upDepth: 3,
     },

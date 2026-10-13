@@ -50,6 +50,12 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- Tests, mocks and fixtures stay out of a flow unless the question is about them ("how is signup
+  tested?") or the `--file`, `--function` or `--route` target is test code. They are no longer
+  followed as callers or callees, and they are starting points only when nothing else matches. In
+  cal.com, "how does signup work?" no longer gives Claude `signup-view.test.tsx`,
+  `__tests__/p2002.test-suite.ts` or `__tests__/mocks/signup.factories.ts` as steps. Test files now
+  also include `*.e2e-spec.*`, `*.test-suite.*`, `__fixtures__/` and `test-utils/`.
 - `--max-nodes` limits the whole flow, not only the functions chosen for it. Condition, error and
   response nodes and the steps that connect the selection used to come on top: in cal.com, "what
   happens when a booking is created?" gave 158 nodes and `--route "POST /v2/bookings"` 167. When a

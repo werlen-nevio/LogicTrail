@@ -4,6 +4,8 @@ import type { ScoredNode } from "./retrieve.js";
 export interface CandidateOptions {
   /** Maximum hops downstream of a seed. */
   maxDepth: number;
+  /** Nodes never added (tests and mocks, unless the question is about them). Seeds always are. */
+  exclude?: (id: string) => boolean;
   /** Hard cap on the candidate set size. */
   maxCandidates: number;
   /** Maximum hops upstream of a seed when looking for entry points. */
@@ -36,6 +38,11 @@ export interface SeedOptions {
   maxDepth: number;
   /** Seeds taken from one file at most. */
   perFile?: number;
+  /**
+   * How to treat tests, mocks and fixtures: "avoid" takes them only when nothing else matches
+   * (the default), "include" ranks them like other code (the question is about tests).
+   */
+  tests?: "avoid" | "include";
 }
 
 /**
@@ -51,15 +58,17 @@ export function chooseSeeds(
   options: SeedOptions,
 ): string[] {
   const coverage = Math.max(0, ...scored.slice(0, 50).map((node) => node.direct.length));
-  const ranked = scored
+  const avoidTests = options.tests !== "include";
+  // Tests, mocks and fixtures exercise a flow; they are rarely where it starts.
+  const inTest = (id: string): boolean => isTestFile(graph.nodes.get(id)?.file);
+  const pool = avoidTests ? scored.filter((node) => !inTest(node.id)) : scored;
+  const ranked = (pool.length > 0 ? pool : scored)
     .slice(0, options.limit * 6)
     .map((node) => {
       const covered = coverage > 0 ? (node.score * node.direct.length) / coverage : node.score;
-      const file = graph.nodes.get(node.id)?.file ?? "";
       return {
         id: node.id,
-        // Tests, mocks and fixtures exercise a flow; they rarely are where it starts.
-        score: TEST_FILE.test(file) ? covered * 0.3 : covered,
+        score: avoidTests && inTest(node.id) ? covered * 0.3 : covered,
         calls: graph.out(node.id).length,
       };
     })
@@ -93,7 +102,23 @@ export function chooseSeeds(
 }
 
 const TEST_FILE =
-  /(^|\/)(__tests__|__mocks__|tests?|testing|e2e|playwright|cypress|fixtures|mocks?)\/|\.(test|spec|e2e)\.[^/]+$/i;
+  /(^|\/)(__tests__|__mocks__|__fixtures__|tests?|testing|test-utils|e2e|playwright|cypress|fixtures|mocks?)\/|\.(test|spec|e2e)([-.][\w-]+)?\.[^/]+$/i;
+
+/**
+ * Tests, mocks and fixtures: `*.test.*`, `*.spec.*`, `*.e2e-spec.*`, `*.test-suite.*`, and files
+ * under `__tests__/`, `__mocks__/`, `test/`, `e2e/`, `playwright/`, `fixtures/` and the like.
+ */
+export function isTestFile(file: string | undefined): boolean {
+  return file !== undefined && TEST_FILE.test(file);
+}
+
+const TEST_WORDS =
+  /\b(tests?|testing|tested|specs?|e2e|end-to-end|mocks?|mocked|mocking|fixtures?|playwright|cypress|jest|vitest)\b/i;
+
+/** Whether a question is about tests ("how are bookings tested?"), so test code is fair game. */
+export function mentionsTests(question: string): boolean {
+  return TEST_WORDS.test(question);
+}
 
 /** "SlotsController_2024_04_15.getAvailableSlots()" -> "SlotsController.getAvailableSlots()". */
 function withoutVersion(label: string): string {
@@ -172,7 +197,9 @@ export function extractCandidates(
   const pending: Pending[] = [];
   let order = 0;
   const push = (entry: Omit<Pending, "order">): void => {
-    if (!nodes.has(entry.id)) pending.push({ ...entry, order: order++ });
+    if (nodes.has(entry.id)) return;
+    if (entry.role !== "seed" && options.exclude?.(entry.id)) return;
+    pending.push({ ...entry, order: order++ });
   };
   const best = Math.max(1, ...seeds.map(score));
   for (const seed of seeds) {
