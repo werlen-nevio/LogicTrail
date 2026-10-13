@@ -1,7 +1,7 @@
 {
   "name": "logictrail",
   "displayName": "LogicTrail",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Ask your codebase how it works. /logictrail:explain traces the execution path behind a question and walks you through it step by step, with the file and line behind every step; /logictrail:update re-runs saved flows and explains what changed.",
   "author": {
     "name": "LogicTrail contributors",

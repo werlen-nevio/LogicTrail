@@ -1,6 +1,6 @@
 {
   "name": "logictrail",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Ask your codebase how it works. LogicTrail turns a question into an evidence-backed, interactive execution flow.",
   "keywords": [
     "cli",
