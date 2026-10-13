@@ -50,6 +50,14 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- `--max-nodes` limits the whole flow, not only the functions chosen for it. Condition, error and
+  response nodes and the steps that connect the selection used to come on top: in cal.com, "what
+  happens when a booking is created?" gave 158 nodes and `--route "POST /v2/bookings"` 167. When a
+  flow is over the limit, LogicTrail trims the steps furthest from the entry point first. At each
+  distance, a function's branches are collapsed into the function (its calls stay, starting at the
+  function) before functions are left out, and the least relevant go first. Entry points are always
+  kept. A warning names what was collapsed and left out, and a collapsed function says so in its
+  description and in `metadata.hiddenBranchNodes`.
 - `--function` with a name defined in several files (`handler`) stops and lists the matches with
   their file and line instead of merging unrelated functions into one flow. `--function
 path/to/file.ts#name` picks one. A default export is also found by its file name and by the names

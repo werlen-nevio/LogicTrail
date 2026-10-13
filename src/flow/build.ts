@@ -39,6 +39,8 @@ export interface BuildFlowOptions {
   selection: FlowSelectionInput;
   source: SourceReader;
   analysis: LogicTrailGraph["analysis"];
+  /** Upper bound on nodes in the final graph; the furthest steps are trimmed to meet it. */
+  maxNodes?: number;
 }
 
 interface Attach {
@@ -63,6 +65,8 @@ class FlowBuilder {
   private readonly edges: LogicEdge[] = [];
   private readonly edgeIndex = new Map<string, LogicEdge>();
   private included = new Set<string>();
+  /** Condition, catch and exit nodes -> the code node whose body they belong to. */
+  private readonly structuralOwner = new Map<string, string>();
 
   constructor(private readonly options: BuildFlowOptions) {}
 
@@ -84,6 +88,7 @@ class FlowBuilder {
     }
     for (const edge of selection.inferredEdges) this.addInferredEdge(edge);
     this.pruneEmptyConditions();
+    this.enforceBudget();
     this.attachCallSiteEvidence();
 
     const entryPoints = this.entryPoints();
@@ -253,6 +258,7 @@ class FlowBuilder {
       },
     };
     this.nodes.set(id, node);
+    this.structuralOwner.set(id, ownerId);
     return node;
   }
 
@@ -289,6 +295,7 @@ class FlowBuilder {
       },
     };
     this.nodes.set(id, node);
+    this.structuralOwner.set(id, ownerId);
     return node;
   }
 
@@ -484,6 +491,160 @@ class FlowBuilder {
   }
 
   /**
+   * Keeps the flow within --max-nodes by trimming the steps furthest from the entry points. At
+   * each distance a function's branches (its condition, error and response nodes) are collapsed
+   * into the function before functions themselves are left out, and less relevant ones go first.
+   * Entry points are always kept.
+   */
+  private enforceBudget(): void {
+    const max = this.options.maxNodes;
+    if (max === undefined || this.nodes.size <= max) return;
+    const before = this.nodes.size;
+    const entries = new Set(this.entryPoints());
+    const ownerOf = (id: string): string => this.structuralOwner.get(id) ?? id;
+
+    // Calls between code nodes, with branch nodes standing in for their function.
+    const calls = new Map<string, Set<string>>();
+    for (const edge of this.edges) {
+      if (this.structuralOwner.has(edge.to)) continue;
+      const from = ownerOf(edge.from);
+      (calls.get(from) ?? calls.set(from, new Set()).get(from))?.add(edge.to);
+    }
+    const depth = new Map<string, number>();
+    const queue = [...entries];
+    for (const id of queue) depth.set(id, 0);
+    for (let index = 0; index < queue.length; index++) {
+      const id = queue[index] ?? "";
+      for (const next of calls.get(id) ?? []) {
+        if (depth.has(next)) continue;
+        depth.set(next, (depth.get(id) ?? 0) + 1);
+        queue.push(next);
+      }
+    }
+    const unreached = Math.max(0, ...depth.values()) + 1;
+    const distance = (id: string): number => depth.get(id) ?? unreached;
+    const selected = this.options.selection.nodes;
+    const rank = new Map(selected.map((id, index) => [id, index]));
+    const rankOf = (id: string): number => rank.get(id) ?? selected.length;
+
+    const collapsed = new Map<string, number>();
+    const dropped: string[] = [];
+    while (this.nodes.size > max) {
+      const owned = new Map<string, number>();
+      const callers = new Set<string>();
+      for (const id of this.nodes.keys()) {
+        const owner = this.structuralOwner.get(id);
+        if (owner) owned.set(owner, (owned.get(owner) ?? 0) + 1);
+      }
+      for (const edge of this.edges) {
+        if (!this.structuralOwner.has(edge.to)) callers.add(ownerOf(edge.from));
+      }
+      const units: { id: string; branches: boolean; priority: number; cost: number }[] = [
+        ...[...owned].map(([id, cost]) => ({
+          id,
+          branches: true,
+          priority: distance(id) + 1,
+          cost,
+        })),
+        ...[...this.nodes.keys()]
+          .filter((id) => !this.structuralOwner.has(id) && !entries.has(id) && !callers.has(id))
+          .map((id) => ({
+            id,
+            branches: false,
+            priority: distance(id),
+            cost: 1 + (owned.get(id) ?? 0),
+          })),
+      ];
+      units.sort(
+        (a, b) =>
+          b.priority - a.priority ||
+          Number(b.branches) - Number(a.branches) ||
+          rankOf(b.id) - rankOf(a.id) ||
+          a.id.localeCompare(b.id),
+      );
+      // Close to the budget, take the most relevant unit that doesn't cut more than needed.
+      const excess = this.nodes.size - max;
+      const unit =
+        units.find((candidate) => candidate.cost <= excess) ??
+        units.reduce<(typeof units)[number] | undefined>(
+          (best, candidate) => (!best || candidate.cost < best.cost ? candidate : best),
+          undefined,
+        );
+      if (!unit) break;
+      if (unit.branches) {
+        collapsed.set(unit.id, (collapsed.get(unit.id) ?? 0) + this.collapseBranches(unit.id));
+      } else {
+        dropped.push(this.nodes.get(unit.id)?.label ?? unit.id);
+        this.removeNodes((id) => id === unit.id || this.structuralOwner.get(id) === unit.id);
+      }
+    }
+    this.pruneEmptyConditions();
+
+    for (const [owner, hidden] of collapsed) {
+      const node = this.nodes.get(owner);
+      if (!node) continue;
+      node.metadata = { ...node.metadata, hiddenBranchNodes: hidden };
+      node.description =
+        `${node.description ?? ""} (${hidden} branch ${hidden === 1 ? "step" : "steps"} hidden to stay within --max-nodes.)`.trim();
+    }
+    const kept = [...collapsed.keys()].filter((id) => this.nodes.has(id));
+    const hidden = kept.reduce((sum, id) => sum + (collapsed.get(id) ?? 0), 0);
+    const parts: string[] = [];
+    if (kept.length > 0) {
+      parts.push(
+        `collapsed the branches of ${plural(kept.length, "function")} (${plural(hidden, "condition, error or response node")}): ${listed(kept.map((id) => this.nodes.get(id)?.label ?? id))}`,
+      );
+    }
+    if (dropped.length > 0) {
+      parts.push(
+        `left out ${plural(dropped.length, "step")} furthest from the entry point: ${listed(dropped)}`,
+      );
+    }
+    if (parts.length > 0) {
+      this.options.analysis.warnings.push(
+        `The flow had ${before} nodes, more than --max-nodes ${max}, so LogicTrail ${parts.join("; and ")}. Raise --max-nodes to see more.`,
+      );
+    }
+  }
+
+  /** Removes a function's branch nodes; calls made inside them start at the function. */
+  private collapseBranches(owner: string): number {
+    const hidden = new Set(
+      [...this.nodes.keys()].filter((id) => this.structuralOwner.get(id) === owner),
+    );
+    const edges = [...this.edges];
+    this.edges.length = 0;
+    this.edgeIndex.clear();
+    for (const edge of edges) {
+      if (hidden.has(edge.to)) continue;
+      if (!hidden.has(edge.from)) {
+        this.addEdge(edge);
+        continue;
+      }
+      this.addEdge({
+        from: owner,
+        to: edge.to,
+        type: edge.type,
+        confidence: edge.confidence,
+        source: edge.source,
+        ...(edge.reason ? { reason: edge.reason } : {}),
+        ...(edge.evidence ? { evidence: edge.evidence } : {}),
+      });
+    }
+    for (const id of hidden) this.nodes.delete(id);
+    return hidden.size;
+  }
+
+  private removeNodes(remove: (id: string) => boolean): void {
+    const removed = new Set([...this.nodes.keys()].filter(remove));
+    for (const id of removed) this.nodes.delete(id);
+    const edges = this.edges.filter((edge) => !removed.has(edge.from) && !removed.has(edge.to));
+    this.edges.length = 0;
+    this.edgeIndex.clear();
+    for (const edge of edges) this.addEdge(edge);
+  }
+
+  /**
    * Nodes without a definition of their own (database, external, events) get
    * their call sites as evidence: the ones inside this flow, or else the call
    * sites anywhere in the repository.
@@ -551,6 +712,19 @@ class FlowBuilder {
     for (const node of this.nodes.values()) if (!seen.has(node.id)) ordered.push(node);
     return ordered;
   }
+}
+
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+/** "a, b, c and 4 more" */
+function listed(names: readonly string[], limit = 3): string {
+  const shown = names.slice(0, limit);
+  const rest = names.length - shown.length;
+  if (rest > 0) return `${shown.join(", ")} and ${rest} more`;
+  if (shown.length <= 1) return shown.join("");
+  return `${shown.slice(0, -1).join(", ")} and ${shown.at(-1) ?? ""}`;
 }
 
 function armLabel(label: string): string {

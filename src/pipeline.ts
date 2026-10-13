@@ -165,6 +165,7 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
     warnings.push("The analysis suggests this flow is only partially present in the repository.");
   }
 
+  const warningsBeforeBuild = warnings.length;
   const graph = buildFlowGraph({
     query: question,
     request: flowRequest(root, options, config),
@@ -179,6 +180,7 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
       ...(selection.explanation ? { explanation: selection.explanation } : {}),
     },
     source,
+    maxNodes: config.maxNodes,
     analysis: {
       provider: activeProvider.id,
       ...(activeProvider.model ? { model: activeProvider.model } : {}),
@@ -193,6 +195,7 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
       warnings,
     },
   });
+  for (const warning of graph.analysis.warnings.slice(warningsBeforeBuild)) reporter.warn(warning);
   reporter.success(`${formatCount(graph.nodes.length)} nodes`);
   reporter.success(`${formatCount(graph.edges.length)} edges`);
 
