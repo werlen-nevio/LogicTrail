@@ -12,7 +12,15 @@ import type { Value, Workspace } from "./workspace.js";
 import { asText } from "../util/text.js";
 
 export type CodeNodeKind =
-  "symbol" | "route" | "database" | "external" | "library" | "event" | "navigation";
+  | "symbol"
+  | "route"
+  | "database"
+  | "external"
+  | "library"
+  | "event"
+  | "navigation"
+  /** A call into the repository's own class whose target could not be found. */
+  | "unresolved";
 
 export interface CodeNode {
   id: string;
@@ -456,9 +464,53 @@ class CodeGraphBuilder {
       { file, symbol, call, value, workspace: this.workspace },
       this.adapters,
     );
-    if (!classified) return undefined;
+    if (!classified) {
+      return value.kind === "unknown"
+        ? this.unresolvedMemberEdge(file, symbol, call, base)
+        : undefined;
+    }
     this.graph.frameworks.add(classified.adapter);
     return this.classificationEdge(classified.classification, base);
+  }
+
+  /**
+   * A method called through `this` on a class in the repository that is defined neither on the
+   * class nor along its `extends` chain (e.g. the base comes from a mixin or an unindexed file),
+   * or is a property whose value cannot be followed. The call is real, so it stays in the flow as
+   * an unresolved step instead of being dropped. Receivers held in locals are left out: their
+   * class is only approximated (`new Repo(db).find()` is summarized as a `Repo`).
+   */
+  private unresolvedMemberEdge(
+    file: string,
+    symbol: SymbolFact,
+    call: Extract<Step, { kind: "call" }>["call"],
+    base: { from: string; file: string; line: number; text: string; label?: string },
+  ): CodeEdge | undefined {
+    const member = call.path.at(-1);
+    if (call.path[0] !== "this" || call.path.length < 2 || !member) return undefined;
+    const receiver = this.workspace.resolvePath(file, symbol, call.path.slice(0, -1));
+    let cls: SymbolFact;
+    if (receiver.kind === "instance") cls = receiver.cls;
+    else if (receiver.kind === "symbol" && receiver.symbol.kind === "class") cls = receiver.symbol;
+    else return undefined;
+    const qualified = `${cls.qualifiedName}.${member}`;
+    const id = this.ensureNode({
+      id: `unresolved:${receiver.file}#${qualified}`,
+      kind: "unresolved",
+      type: "function",
+      label: `${qualified}()`,
+      name: member,
+      file: receiver.file,
+      line: cls.line,
+      metadata: {
+        unresolved: true,
+        owner: cls.name,
+        member,
+        ...(cls.classInfo?.properties[member] ? { property: true } : {}),
+        ...(cls.classInfo?.extends ? { extends: cls.classInfo.extends.join(".") } : {}),
+      },
+    });
+    return { ...base, to: id, kind: "calls", confidence: 0.5 };
   }
 
   private classificationEdge(

@@ -138,6 +138,13 @@ export function staticDescription(
       return metadata.channel === "queue"
         ? { text: `Background job queue "${asText(metadata.event)}".`, source: "static" }
         : { text: `Event "${asText(metadata.event)}".`, source: "static" };
+    case "unresolved":
+      return {
+        text: metadata.property
+          ? `Property of ${asText(metadata.owner)} whose value static analysis cannot follow.`
+          : `Called on ${asText(metadata.owner)}, but not found on it${metadata.extends ? ` or its base ${asText(metadata.extends)}` : ""} by static analysis.`,
+        source: "static",
+      };
   }
 }
 

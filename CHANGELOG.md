@@ -50,6 +50,18 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- Imports of packages that live in the repository (monorepo workspaces such as
+  `@calcom/features/bookings/lib/service/RegularBookingService`) resolve to their sources instead
+  of being treated as npm packages. LogicTrail finds them from the `package.json` files around the
+  indexed sources and follows `exports`, `main` and `types`, mapping built entries (`dist/…`) back
+  to `src/`. Methods inherited from a base class in another package are linked: in cal.com,
+  `this.regularBookingService.createBooking(…)` now reaches `RegularBookingService.createBooking`
+  through `extends BaseRegularBookingService`, and the code graph has 14,676 edges where it had
+  9,056.
+- A method called through `this` on one of the repository's classes that is not found on the class
+  or its `extends` chain (a mixin base, a base outside the indexed files, a property whose value
+  can't be followed) is an unresolved step with confidence 0.5 instead of being dropped.
+
 - Broad questions keep the core of a flow instead of spreading the node budget over many starting
   points:
   - A match is weighed by how much of the question it covers, so "what happens when an article is

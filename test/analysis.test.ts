@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterAll, describe, expect, it } from "vitest";
 import { normalizeUrl } from "../src/analysis/adapters/http.js";
 import { parseSql } from "../src/analysis/adapters/data.js";
 import {
@@ -73,6 +76,153 @@ describe("module resolution", () => {
       name: "drizzle-orm",
       subpath: "pg-core",
     });
+  });
+});
+
+describe("monorepo workspace packages", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "logictrail-monorepo-"));
+  const write = (file: string, content: unknown): void => {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), JSON.stringify(content));
+  };
+  write("package.json", { name: "root", private: true, workspaces: ["apps/*", "packages/*"] });
+  write("apps/api/package.json", { name: "@acme/api" });
+  write("packages/features/package.json", { name: "@acme/features", main: "index.ts" });
+  write("packages/libraries/package.json", {
+    name: "@acme/libraries",
+    exports: {
+      ".": { types: "./dist/index.d.ts", default: "./dist/index.js" },
+      "./bookings": "./bookings.ts",
+      "./utils/*": { import: "./dist/utils/*.js" },
+    },
+  });
+  afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const files = [
+    "apps/api/src/booking.service.ts",
+    "packages/features/index.ts",
+    "packages/features/bookings/RegularBookingService.ts",
+    "packages/libraries/bookings.ts",
+    "packages/libraries/src/index.ts",
+    "packages/libraries/src/utils/dates.ts",
+  ];
+
+  it("resolves workspace packages to their sources", () => {
+    const resolver = new JavaScriptModuleResolver({ root, files: new Set(files) });
+    const from = "apps/api/src/booking.service.ts";
+    expect(resolver.resolve(from, "@acme/features")).toEqual({
+      kind: "file",
+      path: "packages/features/index.ts",
+    });
+    expect(resolver.resolve(from, "@acme/features/bookings/RegularBookingService")).toEqual({
+      kind: "file",
+      path: "packages/features/bookings/RegularBookingService.ts",
+    });
+    expect(resolver.resolve(from, "@acme/libraries/bookings")).toEqual({
+      kind: "file",
+      path: "packages/libraries/bookings.ts",
+    });
+    // Built entries in `exports` map back to src/.
+    expect(resolver.resolve(from, "@acme/libraries")).toEqual({
+      kind: "file",
+      path: "packages/libraries/src/index.ts",
+    });
+    expect(resolver.resolve(from, "@acme/libraries/utils/dates")).toEqual({
+      kind: "file",
+      path: "packages/libraries/src/utils/dates.ts",
+    });
+    expect(resolver.resolve(from, "@acme/unknown")).toEqual({
+      kind: "package",
+      name: "@acme/unknown",
+      subpath: "",
+    });
+  });
+
+  it("links a method inherited from a base class in another workspace package", () => {
+    const workspace = new Workspace(
+      [
+        facts(
+          `
+          export class RegularBookingService {
+            async createBooking(input) { return input; }
+          }
+        `,
+          "packages/features/bookings/RegularBookingService.ts",
+        ),
+        facts(
+          `export { RegularBookingService } from "@acme/features/bookings/RegularBookingService";`,
+          "packages/libraries/bookings.ts",
+        ),
+        facts(
+          `
+          import { RegularBookingService as BaseRegularBookingService } from "@acme/libraries/bookings";
+          export class RegularBookingService extends BaseRegularBookingService {}
+          export class BookingsService {
+            constructor(private readonly regularBookingService: RegularBookingService) {}
+            async create(body) { return this.regularBookingService.createBooking(body); }
+          }
+        `,
+          "apps/api/src/booking.service.ts",
+        ),
+      ],
+      root,
+    );
+    const graph = buildCodeGraph(workspace);
+    expect(edgeLabels(graph, "BookingsService.create()")).toEqual([
+      "calls:RegularBookingService.createBooking()",
+    ]);
+  });
+});
+
+describe("member calls on repository classes", () => {
+  const workspace = new Workspace(
+    [
+      facts(
+        `
+        import { Mixin } from "./missing";
+        class BaseRepository {
+          save(entity) { return entity; }
+        }
+        class UserRepository extends BaseRepository {}
+        class AuditedRepository extends Mixin {}
+        export class UserService {
+          private notify = withReporting(() => {});
+          constructor(private users: UserRepository, private audit: AuditedRepository) {}
+          register(user) {
+            this.users.save(user);
+            this.audit.record(user);
+            this.users.missing(user);
+            this.notify(user);
+            const local = new UserRepository().findMany();
+            local.map(String);
+          }
+        }
+      `,
+        "src/users.ts",
+      ),
+    ],
+    "/repo",
+  );
+  const graph = buildCodeGraph(workspace);
+
+  it("walks the extends chain and keeps unresolvable methods as unresolved steps", () => {
+    expect(edgeLabels(graph, "UserService.register()")).toEqual([
+      "calls:BaseRepository.save()",
+      "calls:AuditedRepository.record()",
+      "calls:UserRepository.missing()",
+      "calls:UserService.notify()",
+    ]);
+    expect(graph.nodes.get(nodeByLabel(graph, "UserService.notify()"))?.metadata).toMatchObject({
+      property: true,
+    });
+    const unresolved = graph.nodes.get(nodeByLabel(graph, "AuditedRepository.record()"));
+    expect(unresolved).toMatchObject({
+      kind: "unresolved",
+      file: "src/users.ts",
+      metadata: { unresolved: true, owner: "AuditedRepository", extends: "Mixin" },
+    });
+    const edge = graph.out(nodeByLabel(graph, "UserService.register()"))[1];
+    expect(edge?.confidence).toBe(0.5);
   });
 });
 

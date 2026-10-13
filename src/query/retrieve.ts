@@ -163,6 +163,9 @@ export class RetrievalIndex {
       case "navigation":
         add(node.name, 1.5);
         break;
+      case "unresolved":
+        add(node.name, 1);
+        break;
     }
     return weights;
   }
