@@ -96,18 +96,25 @@ plugin and its marketplace with `claude plugin validate --strict`, and runs
 
 ## Releasing
 
-The npm package and the Claude plugin share one version number.
+The npm package and the Claude plugin share one version number, and the git tag sets it: there is
+no version to bump by hand.
 
 1. In `CHANGELOG.md`, move the notes under `[Unreleased]` to a new `## [x.y.z] - YYYY-MM-DD`
-   section and add its compare link at the bottom.
-2. Set `x.y.z` in `package.json` (`npm version x.y.z --no-git-tag-version`) and in
-   `claude-plugin/.claude-plugin/plugin.json`, then run `node scripts/release.mjs`.
-3. Commit and push a tag: `git tag vx.y.z && git push origin main vx.y.z`.
+   section and add its compare link at the bottom. Commit it.
+2. Push a tag: `git tag vx.y.z && git push origin main vx.y.z`.
 
-The [release workflow](.github/workflows/release.yml) then publishes `logictrail` to npm with
+The [release workflow](.github/workflows/release.yml) then writes `x.y.z` into `package.json`,
+`package-lock.json` and `claude-plugin/.claude-plugin/plugin.json` (`node scripts/set-version.mjs`),
+checks it against the changelog (`node scripts/release.mjs`), publishes `logictrail` to npm with
 provenance, creates the GitHub Release from the changelog entry and tags the plugin release
 (`logictrail--vx.y.z`, with `claude plugin tag`). A prerelease tag such as `v1.0.0-beta.1` goes to
-npm's `next` dist-tag and becomes a GitHub prerelease. If a step fails, fix the cause and re-run
+npm's `next` dist-tag and becomes a GitHub prerelease. For a stable release newer than `main`'s
+version, the workflow also pushes a "Set the version to x.y.z" commit to `main`, because Claude
+Code only offers plugin users an update when the plugin's version changes there. The workflow
+pushes as the LogicTrail Release GitHub App, which the `main` ruleset lets bypass its rules; it
+needs Contents read and write, an installation on this repository, its Client ID in the
+`RELEASE_APP_ID` Actions variable and its private key in the `RELEASE_APP_PRIVATE_KEY` secret. If
+a step fails, fix the cause and re-run
 the workflow: steps that already succeeded are skipped.
 
 npm trusts the workflow by its file name (trusted publishing), so no npm token is stored. If you
