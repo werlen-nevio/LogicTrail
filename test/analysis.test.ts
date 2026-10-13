@@ -88,6 +88,11 @@ describe("monorepo workspace packages", () => {
   write("package.json", { name: "root", private: true, workspaces: ["apps/*", "packages/*"] });
   write("apps/api/package.json", { name: "@acme/api" });
   write("packages/features/package.json", { name: "@acme/features", main: "index.ts" });
+  write("packages/enums/package.json", { name: "@acme/enums", main: "./dist/index.js" });
+  write("packages/atoms/package.json", {
+    name: "@acme/atoms",
+    exports: { ".": { import: "./dist/atoms.js" }, "./button": "./button.tsx" },
+  });
   write("packages/libraries/package.json", {
     name: "@acme/libraries",
     exports: {
@@ -105,6 +110,9 @@ describe("monorepo workspace packages", () => {
     "packages/libraries/bookings.ts",
     "packages/libraries/src/index.ts",
     "packages/libraries/src/utils/dates.ts",
+    "packages/enums/index.ts",
+    "packages/atoms/index.ts",
+    "packages/atoms/button.tsx",
   ];
 
   it("resolves workspace packages to their sources", () => {
@@ -130,6 +138,19 @@ describe("monorepo workspace packages", () => {
     expect(resolver.resolve(from, "@acme/libraries/utils/dates")).toEqual({
       kind: "file",
       path: "packages/libraries/src/utils/dates.ts",
+    });
+    // Built entries whose sources sit at the package root, or only in its index.
+    expect(resolver.resolve(from, "@acme/enums")).toEqual({
+      kind: "file",
+      path: "packages/enums/index.ts",
+    });
+    expect(resolver.resolve(from, "@acme/atoms")).toEqual({
+      kind: "file",
+      path: "packages/atoms/index.ts",
+    });
+    expect(resolver.resolve(from, "@acme/atoms/button")).toEqual({
+      kind: "file",
+      path: "packages/atoms/button.tsx",
     });
     expect(resolver.resolve(from, "@acme/unknown")).toEqual({
       kind: "package",

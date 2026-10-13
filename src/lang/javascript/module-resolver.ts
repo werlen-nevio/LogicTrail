@@ -143,12 +143,16 @@ export class JavaScriptModuleResolver implements ModuleResolver {
         if (file) return file;
       }
     }
-    // An `exports` map that lists only some subpaths still lets sources sit at the path itself.
-    if (subpath && manifest.exports !== undefined) {
-      for (const candidate of sourceCandidates(subpath)) {
-        const file = this.probe(path.posix.normalize(path.posix.join(pkg.dir, candidate)));
-        if (file) return file;
-      }
+    // Entries that only name build output (`./dist/cal-atoms.js`) still have sources: at the
+    // subpath itself, or the package's index.
+    const fallbacks = subpath
+      ? manifest.exports !== undefined
+        ? sourceCandidates(subpath)
+        : []
+      : ["index", "src/index"];
+    for (const candidate of fallbacks) {
+      const file = this.probe(path.posix.normalize(path.posix.join(pkg.dir, candidate)));
+      if (file) return file;
     }
     return undefined;
   }
@@ -293,7 +297,8 @@ function conditionTargets(value: unknown): string[] {
 
 /**
  * Where the source for a package entry may live: the entry itself, with a
- * declaration suffix dropped, and with a build directory swapped for `src/`.
+ * declaration suffix dropped, and with a build directory swapped for `src/` or
+ * dropped (`dist/index.js` from `src/index.ts` or from `index.ts`).
  */
 function sourceCandidates(target: string): string[] {
   const entry = target.replace(/^\.\//, "").replace(/\.d\.([cm]?ts)$/, ".$1");
@@ -301,7 +306,7 @@ function sourceCandidates(target: string): string[] {
   const built = /^(dist|build|lib|out)\/(.*)$/.exec(entry);
   if (built?.[2]) {
     const rest = built[2].replace(/\.([cm]?)js$/, "");
-    candidates.push(`src/${rest}`);
+    candidates.push(`src/${rest}`, rest);
   }
   return candidates;
 }

@@ -50,6 +50,11 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- Workspace packages whose entry points name only build output resolve to their sources at the
+  package root as well as under `src/` (`"main": "./dist/index.js"` with `index.ts` beside
+  `package.json`), and a package import falls back to its `index`. In cal.com,
+  `@calcom/platform-libraries`, `@calcom/platform-enums` and `@calcom/atoms` now resolve, and the
+  README no longer lists monorepo workspace packages as a limitation.
 - Tests, mocks and fixtures stay out of a flow unless the question is about them ("how is signup
   tested?") or the `--file`, `--function` or `--route` target is test code. They are no longer
   followed as callers or callees, and they are starting points only when nothing else matches. In

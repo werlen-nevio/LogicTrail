@@ -426,6 +426,7 @@ await writeOutputs(graph, { outDir: "docs/flows", name: "checkout", formats: ["m
 | Area            | Recognized                                                                                                                                                                                                                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Languages       | TypeScript, JavaScript (ESM and CommonJS), JSX/TSX                                                                                                                                                                                                                                                              |
+| Monorepos       | Workspace packages (npm, yarn, pnpm, Turborepo) resolved to their sources through `exports`, `main` or `types`, and tsconfig `paths`                                                                                                                                                                            |
 | Servers         | Express (routers, mount prefixes, middleware chains), Fastify (route options, `register` prefixes), Hono (`route`, `basePath`), Koa (`@koa/router` prefixes and nesting), NestJS controllers (global prefix, `RouterModule`, versions, guards, interceptors and pipes), Next.js App Router and Pages API routes |
 | UI              | React components, hooks, JSX event handlers, React Router pages, Next.js pages, server actions                                                                                                                                                                                                                  |
 | Navigation      | React Router `useNavigate`/`redirect`, Next.js `useRouter`, `redirect`, `notFound`                                                                                                                                                                                                                              |
@@ -443,7 +444,8 @@ leaves the call out rather than guessing.
 - Calls through values whose origin cannot be followed statically (dynamic dispatch, DI
   containers configured at runtime, functions stored in maps) are not linked. Claude may propose
   them as inferred edges.
-- Monorepo workspace packages are treated like external packages.
+- A workspace package whose code is generated (for example a Prisma client) or ships only
+  declaration files (`.d.ts`) is treated like an external package.
 - NestJS guards, interceptors and pipes registered globally (`app.useGlobalGuards`, `APP_GUARD`)
   are not steps, and a guard whose `canActivate` comes from a package (such as Passport's
   `AuthGuard`) has no step. A global prefix or version that isn't a literal (for example read from
@@ -474,7 +476,6 @@ The cache lives in `.logictrail/cache` (about 32 MB for cal.com) and is reused a
 - PNG export
 - More languages through adapters: Python, Go, Java, C#, PHP
 - More providers: OpenAI, Gemini, local models
-- Workspace-aware resolution for monorepos
 - Editor integrations (open the flow for the symbol under the cursor)
 - Diff mode: how a flow changed between two commits
 
