@@ -10,7 +10,7 @@
  * stale caches are discarded.
  */
 
-export const FACTS_VERSION = 5;
+export const FACTS_VERSION = 6;
 
 export interface FileFacts {
   /** Repository-relative path with forward slashes. */
@@ -78,6 +78,11 @@ export interface SymbolFact {
   literals: string[];
   /** Function-local bindings whose initializer matters for resolution. */
   locals: Record<string, InitSummary>;
+  /**
+   * Members of the object literal the function returns (directly or from `useMemo`), so
+   * `const { addItem } = useCart()` resolves `addItem`. Paths resolve in the function's scope.
+   */
+  returns?: Record<string, MemberRef>;
   /** For classes. */
   classInfo?: ClassInfo;
 }
@@ -113,6 +118,8 @@ export type InitSummary =
   | { kind: "call"; callee: string[]; args: ArgFact[]; chain?: ChainSegment[] }
   | { kind: "object" }
   | { kind: "alias"; path: string[] }
+  /** A destructured member: `const { name } = <of>`. */
+  | { kind: "member"; of: InitSummary; name: string }
   | { kind: "string"; value: string }
   | { kind: "function"; symbol: string }
   | { kind: "other" };

@@ -599,6 +599,8 @@ class FileExtractor {
       if (parameter.initializer) this.walk(parameter.initializer, symbol);
     }
     if (fn.body) this.walk(fn.body, symbol);
+    const returns = fn.body ? returnedMembers(fn.body) : undefined;
+    if (returns) symbol.returns = returns;
   }
 
   private createClass(node: ts.ClassLikeDeclaration, name: string): void {
@@ -759,6 +761,12 @@ class FileExtractor {
     statement?: ts.VariableStatement,
   ): void {
     if (!ts.isIdentifier(declaration.name)) {
+      if (scope && declaration.initializer && ts.isObjectBindingPattern(declaration.name)) {
+        this.destructuredLocals(declaration.name, declaration.initializer, scope);
+      }
+      if (scope && declaration.initializer && ts.isArrayBindingPattern(declaration.name)) {
+        this.reducerDispatch(declaration.name, declaration.initializer, scope);
+      }
       if (declaration.initializer) this.walk(declaration.initializer, scope);
       return;
     }
@@ -795,6 +803,52 @@ class FileExtractor {
       scope.locals[name] = init;
     }
     if (initializer) this.walk(initializer, scope);
+  }
+
+  /** `const { addItem, cart: current } = useCart()` -> locals that read members of the call. */
+  private destructuredLocals(
+    pattern: ts.ObjectBindingPattern,
+    initializer: ts.Expression,
+    scope: SymbolFact,
+  ): void {
+    const of = summarizeInit(this.sf, unwrapExpression(initializer));
+    if (of.kind !== "new" && of.kind !== "call" && of.kind !== "alias") return;
+    for (const element of pattern.elements) {
+      if (element.dotDotDotToken || !ts.isIdentifier(element.name)) continue;
+      const name = element.propertyName
+        ? propertyNameText(element.propertyName)
+        : element.name.text;
+      if (name) scope.locals[element.name.text] = { kind: "member", of, name };
+    }
+  }
+
+  /**
+   * `const [state, dispatch] = useReducer(reducer, …)` and
+   * `const [optimistic, update] = useOptimistic(state, reducer)`: calling the dispatcher runs the
+   * reducer, so the dispatcher becomes an alias of it.
+   */
+  private reducerDispatch(
+    pattern: ts.ArrayBindingPattern,
+    initializer: ts.Expression,
+    scope: SymbolFact,
+  ): void {
+    const dispatch = pattern.elements[1];
+    if (!dispatch || ts.isOmittedExpression(dispatch) || !ts.isIdentifier(dispatch.name)) return;
+    const call = unwrapExpression(initializer);
+    if (!ts.isCallExpression(call)) return;
+    const callee = getPath(call.expression);
+    const hook = callee?.[callee.length - 1];
+    const fromReact =
+      callee?.length === 2 ? callee[0] === "React" : this.importSource(hook ?? "") === "react";
+    if (!fromReact) return;
+    const reducerArg =
+      hook === "useReducer"
+        ? call.arguments[0]
+        : hook === "useOptimistic"
+          ? call.arguments[1]
+          : undefined;
+    const reducer = reducerArg && getPath(unwrapExpression(reducerArg));
+    if (reducer) scope.locals[dispatch.name.text] = { kind: "alias", path: reducer };
   }
 
   /** Returns the function a variable holds, unwrapping `useCallback(fn)`, `memo(fn)`, etc. */
@@ -1601,4 +1655,52 @@ function koaRoutes(arg: ts.Expression): string[] | undefined {
   if (!ts.isPropertyAccessExpression(callee)) return undefined;
   if (callee.name.text !== "routes" && callee.name.text !== "middleware") return undefined;
   return getPath(callee.expression);
+}
+
+/** Hooks whose callback's return value is what the call returns. */
+const MEMO_CALLEES = new Set(["useMemo", "computed", "useComputed"]);
+
+/**
+ * Members of the object literals a function body returns, e.g. `return { cart, addItem }` or
+ * `return useMemo(() => ({ cart, addItem }), [cart])`. Only members that name something
+ * (`addItem`, `addItem: add`, `api: client.api`) are kept.
+ */
+function returnedMembers(body: ts.ConciseBody): Record<string, MemberRef> | undefined {
+  const members: Record<string, MemberRef> = {};
+  let found = false;
+  const visitValue = (raw: ts.Expression): void => {
+    const value = unwrapExpression(raw);
+    if (ts.isObjectLiteralExpression(value)) {
+      found = true;
+      for (const property of value.properties) {
+        const name = property.name ? propertyNameText(property.name) : undefined;
+        if (!name || name in members) continue;
+        if (ts.isShorthandPropertyAssignment(property)) {
+          members[name] = { kind: "path", path: [name] };
+        } else if (ts.isPropertyAssignment(property)) {
+          const path = getPath(unwrapExpression(property.initializer));
+          if (path) members[name] = { kind: "path", path };
+        }
+      }
+      return;
+    }
+    if (ts.isCallExpression(value)) {
+      const callee = getPath(value.expression);
+      const callback = value.arguments[0] && unwrapExpression(value.arguments[0]);
+      if (callee && MEMO_CALLEES.has(callee[callee.length - 1] ?? "") && callback) {
+        if (isInlineFunction(callback)) visitBody(callback.body);
+      }
+    }
+  };
+  const visitBody = (node: ts.ConciseBody): void => {
+    if (!ts.isBlock(node)) return visitValue(node);
+    const visit = (child: ts.Node): void => {
+      if (ts.isFunctionLike(child) || ts.isClassLike(child)) return;
+      if (ts.isReturnStatement(child) && child.expression) visitValue(child.expression);
+      else ts.forEachChild(child, visit);
+    };
+    ts.forEachChild(node, visit);
+  };
+  visitBody(body);
+  return found && Object.keys(members).length > 0 ? members : undefined;
 }

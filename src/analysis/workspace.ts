@@ -35,6 +35,8 @@ export interface PackageValue {
 export type Value =
   | { kind: "symbol"; file: string; symbol: SymbolFact }
   | { kind: "object"; file: string; binding: BindingFact }
+  /** The object a call to `symbol` returns; members come from {@link SymbolFact.returns}. */
+  | { kind: "returned"; file: string; symbol: SymbolFact }
   | { kind: "instance"; file: string; cls: SymbolFact }
   | { kind: "namespace"; file: string }
   | { kind: "package"; value: PackageValue }
@@ -208,6 +210,9 @@ export class Workspace {
         }
         case "call": {
           const callee = this.resolvePath(file, scope, init.callee);
+          if (callee.kind === "symbol" && callee.symbol.returns && !init.chain?.length) {
+            return { kind: "returned", file: callee.file, symbol: callee.symbol };
+          }
           if (callee.kind !== "package") return UNKNOWN;
           let value = applyOp(callee.value, "call", init.args);
           for (const segment of init.chain ?? []) {
@@ -217,6 +222,8 @@ export class Workspace {
         }
         case "alias":
           return this.resolvePath(file, scope, init.path);
+        case "member":
+          return this.member(this.evalInit(file, scope, init.of), init.name);
         case "string":
           return { kind: "string", value: init.value };
         case "function": {
@@ -248,6 +255,12 @@ export class Workspace {
       case "object": {
         const ref = value.binding.members?.[name];
         return ref ? this.memberRefValue(value.file, ref) : UNKNOWN;
+      }
+      case "returned": {
+        const ref = value.symbol.returns?.[name];
+        if (!ref) return UNKNOWN;
+        if (ref.kind === "path") return this.resolvePath(value.file, value.symbol, ref.path);
+        return this.memberRefValue(value.file, ref);
       }
       case "instance": {
         const method = this.memberSymbols.get(

@@ -35,6 +35,11 @@ Claude Code plugin share one version number.
 - When `--route` matches nothing, the routes it suggests are the closest ones instead of the first
   eight found: routes with the same method first, then those sharing the most path segments, then
   the smallest edit distance. `GET /users/:id` suggests `GET /api/users/:id` first.
+- Calls to members destructured from a function's return value are followed:
+  `const { addCartItem } = useCart(); addCartItem()` now links to `addCartItem` when `useCart`
+  returns an object literal, directly or from `useMemo(() => ({ … }))`. `const cart = useCart();
+cart.addCartItem()` works the same way. Calling the dispatcher from React's `useReducer` or
+  `useOptimistic` now links to the reducer.
 
 ## [0.2.0] - 2026-10-05
 

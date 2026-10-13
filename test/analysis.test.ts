@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeUrl } from "../src/analysis/adapters/http.js";
 import { parseSql } from "../src/analysis/adapters/data.js";
 import { joinPaths, RouteMatcher, type RouteDefinition } from "../src/analysis/routes.js";
+import { buildCodeGraph } from "../src/analysis/code-graph.js";
 import { Workspace } from "../src/analysis/workspace.js";
 import { JavaScriptModuleResolver } from "../src/lang/javascript/module-resolver.js";
 import {
@@ -143,6 +144,53 @@ describe("workspace resolution", () => {
         member: ["order", "create"],
       },
     });
+  });
+});
+
+describe("destructured hook results", () => {
+  const workspace = new Workspace(
+    [
+      facts(
+        `
+        import { useMemo, useOptimistic } from "react";
+        function cartReducer(state, action) { return state; }
+        export function useCart() {
+          const [cart, updateCart] = useOptimistic([], cartReducer);
+          const addCartItem = (item) => { updateCart({ type: "ADD_ITEM", item }); };
+          function clear() {}
+          return useMemo(() => ({ cart, addCartItem, reset: clear }), [cart]);
+        }
+        export function useSession() {
+          const signOut = () => {};
+          return { signOut };
+        }
+      `,
+        "src/cart.tsx",
+      ),
+      facts(
+        `
+        import { useCart, useSession } from "./cart";
+        export function AddToCart() {
+          const { addCartItem, reset: emptyCart } = useCart();
+          const session = useSession();
+          return <form action={() => { addCartItem({}); emptyCart(); session.signOut(); }} />;
+        }
+      `,
+        "src/add-to-cart.tsx",
+      ),
+    ],
+    "/repo",
+  );
+  const graph = buildCodeGraph(workspace);
+
+  it("resolves members of the object a hook returns", () => {
+    expect(edgeLabels(graph, "AddToCart")).toEqual(
+      expect.arrayContaining(["calls:addCartItem()", "calls:clear()", "calls:signOut()"]),
+    );
+  });
+
+  it("follows a useOptimistic or useReducer dispatcher to its reducer", () => {
+    expect(edgeLabels(graph, "addCartItem()")).toEqual(["calls:cartReducer()"]);
   });
 });
 
