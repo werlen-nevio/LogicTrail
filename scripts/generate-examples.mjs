@@ -21,8 +21,6 @@ for (const flow of flows) {
     config: resolveConfig({ cache: false }),
     provider: new StaticProvider(),
   });
-  // Committed examples must not contain the absolute path of the machine that generated them.
-  delete graph.analysis.rootPath;
   graph.analysis.generatedAt = "2026-10-05T00:00:00.000Z";
   const written = await writeOutputs(graph, {
     outDir,

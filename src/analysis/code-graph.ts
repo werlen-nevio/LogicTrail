@@ -7,12 +7,20 @@ import {
   type Classification,
   type FrameworkAdapter,
 } from "./adapters/index.js";
-import { composeRoutes, RouteMatcher, type RouteDefinition } from "./routes.js";
+import { composeRoutes, routeLabel, RouteMatcher, type RouteDefinition } from "./routes.js";
 import type { Value, Workspace } from "./workspace.js";
 import { asText } from "../util/text.js";
 
 export type CodeNodeKind =
-  "symbol" | "route" | "database" | "external" | "library" | "event" | "navigation";
+  | "symbol"
+  | "route"
+  | "database"
+  | "external"
+  | "library"
+  | "event"
+  | "navigation"
+  /** A call into the repository's own class whose target could not be found. */
+  | "unresolved";
 
 export interface CodeNode {
   id: string;
@@ -83,6 +91,20 @@ export class CodeGraph {
   }
 }
 
+const CONVENTION_FILE_NAMES = new Set([
+  "page",
+  "layout",
+  "route",
+  "template",
+  "loading",
+  "error",
+  "default",
+  "middleware",
+  "handler",
+  "main",
+  "app",
+]);
+
 export function symbolNodeId(file: string, symbolId: string): string {
   return `${file}#${symbolId}`;
 }
@@ -117,6 +139,7 @@ class CodeGraphBuilder {
     this.addRoutes();
     this.addListeners(files);
     this.addPages(files);
+    this.addDefaultExportAliases(files);
     for (const file of files) {
       for (const symbol of file.symbols) {
         if (symbol.kind === "class") continue;
@@ -234,15 +257,23 @@ class CodeGraphBuilder {
         id: route.id,
         kind: "route",
         type: "route",
-        label: `${route.method} ${route.path}`,
+        label: routeLabel(route),
         name: route.path,
         file: route.file,
         line: route.line,
-        metadata: { method: route.method, path: route.path, framework: route.framework },
+        metadata: {
+          method: route.method,
+          path: route.path,
+          framework: route.framework,
+          ...(route.versions ? { versions: route.versions } : {}),
+          ...(route.servesDefault === false ? { servesDefault: false } : {}),
+        },
       });
       const steps: ResolvedStep[] = [];
       for (const handler of route.handlers) {
-        const target = this.resolveHandler(handler.file, handler.ref);
+        const target =
+          this.resolveHandler(handler.file, handler.ref) ??
+          (handler.middleware ? this.packageMiddleware(handler.file, handler.ref) : undefined);
         if (!target) continue;
         const targetNode = this.graph.nodes.get(target);
         if (targetNode?.symbol?.kind === "handler" && !handler.middleware) {
@@ -254,7 +285,7 @@ class CodeGraphBuilder {
             from: route.id,
             to: target,
             kind: "calls",
-            ...(handler.middleware ? { label: "middleware" } : {}),
+            ...(handler.middleware ? { label: handler.ref.role ?? "middleware" } : {}),
             file: handler.file,
             line:
               route.file === handler.file
@@ -308,6 +339,42 @@ class CodeGraphBuilder {
     }
   }
 
+  /**
+   * A default export is known by other names than its own: its file name and the names it is
+   * imported or re-exported under (`async function handler` in handleCancelBooking.ts, imported
+   * as `handleCancelBooking`). They are kept in `metadata.aliases`.
+   */
+  private addDefaultExportAliases(files: readonly FileFacts[]): void {
+    const defaultTarget = (file: string): CodeNode | undefined => {
+      const id = this.symbolTarget(this.workspace.resolveExport(file, "default"));
+      return id ? this.graph.nodes.get(id) : undefined;
+    };
+    const imported = (from: string, source: string): CodeNode | undefined => {
+      const resolution = this.workspace.resolveModule(from, source);
+      return resolution.kind === "file" ? defaultTarget(resolution.path) : undefined;
+    };
+    const addAlias = (node: CodeNode | undefined, alias: string): void => {
+      if (!node || alias === node.name || alias === "default" || !/^[\w$]+$/.test(alias)) return;
+      const aliases = (node.metadata.aliases as string[] | undefined) ?? [];
+      if (!aliases.includes(alias)) aliases.push(alias);
+      node.metadata.aliases = aliases;
+    };
+    for (const file of files) {
+      const stem = path.posix.basename(file.path).replace(/\.[^.]+$/, "");
+      const fileName = stem === "index" ? path.posix.basename(path.posix.dirname(file.path)) : stem;
+      // Framework file names (`page.tsx`, `route.ts`) say nothing about the function.
+      if (!CONVENTION_FILE_NAMES.has(fileName)) addAlias(defaultTarget(file.path), fileName);
+      for (const fact of file.imports) {
+        if (fact.imported === "default" && !fact.typeOnly)
+          addAlias(imported(file.path, fact.source), fact.local);
+      }
+      for (const fact of file.exports) {
+        if (fact.kind === "reexport" && fact.imported === "default")
+          addAlias(imported(file.path, fact.source), fact.exported);
+      }
+    }
+  }
+
   private eventNode(channel: "event" | "queue", event: string): string {
     return this.ensureNode({
       id: `event:${channel}:${event}`,
@@ -326,6 +393,27 @@ class CodeGraphBuilder {
     }
     const value = this.workspace.resolvePath(file, undefined, ref.path);
     return this.symbolTarget(value);
+  }
+
+  /**
+   * Middleware a package creates, named in the repository: `auth.required` where
+   * `auth = { required: expressjwt({ ... }) }`. It has no source here, so it becomes a library step.
+   */
+  private packageMiddleware(file: string, ref: HandlerRef): string | undefined {
+    if (ref.kind !== "path") return undefined;
+    const value = this.workspace.resolvePath(file, undefined, ref.path);
+    if (value.kind !== "package" || !value.value.ops.some((op) => op.op !== "type"))
+      return undefined;
+    const { pkg, imported } = value.value;
+    const label = ref.path.join(".");
+    return this.ensureNode({
+      id: `lib:${pkg}:${label}`,
+      kind: "library",
+      type: "library",
+      label,
+      name: label,
+      metadata: { package: pkg, operation: imported, category: "middleware" },
+    });
   }
 
   private symbolTarget(value: Value): string | undefined {
@@ -416,7 +504,13 @@ class CodeGraphBuilder {
       file,
       line: call.line,
       text: call.text,
-      ...(call.via ? { label: call.via } : call.inLoop ? { label: "for each" } : {}),
+      ...(call.via
+        ? { label: call.via }
+        : call.inLoop
+          ? { label: "for each" }
+          : value.kind === "symbol" && value.wrapper
+            ? { label: `via ${value.wrapper}` }
+            : {}),
     };
     const target = this.symbolTarget(value);
     if (target) {
@@ -427,9 +521,53 @@ class CodeGraphBuilder {
       { file, symbol, call, value, workspace: this.workspace },
       this.adapters,
     );
-    if (!classified) return undefined;
+    if (!classified) {
+      return value.kind === "unknown"
+        ? this.unresolvedMemberEdge(file, symbol, call, base)
+        : undefined;
+    }
     this.graph.frameworks.add(classified.adapter);
     return this.classificationEdge(classified.classification, base);
+  }
+
+  /**
+   * A method called through `this` on a class in the repository that is defined neither on the
+   * class nor along its `extends` chain (e.g. the base comes from a mixin or an unindexed file),
+   * or is a property whose value cannot be followed. The call is real, so it stays in the flow as
+   * an unresolved step instead of being dropped. Receivers held in locals are left out: their
+   * class is only approximated (`new Repo(db).find()` is summarized as a `Repo`).
+   */
+  private unresolvedMemberEdge(
+    file: string,
+    symbol: SymbolFact,
+    call: Extract<Step, { kind: "call" }>["call"],
+    base: { from: string; file: string; line: number; text: string; label?: string },
+  ): CodeEdge | undefined {
+    const member = call.path.at(-1);
+    if (call.path[0] !== "this" || call.path.length < 2 || !member) return undefined;
+    const receiver = this.workspace.resolvePath(file, symbol, call.path.slice(0, -1));
+    let cls: SymbolFact;
+    if (receiver.kind === "instance") cls = receiver.cls;
+    else if (receiver.kind === "symbol" && receiver.symbol.kind === "class") cls = receiver.symbol;
+    else return undefined;
+    const qualified = `${cls.qualifiedName}.${member}`;
+    const id = this.ensureNode({
+      id: `unresolved:${receiver.file}#${qualified}`,
+      kind: "unresolved",
+      type: "function",
+      label: `${qualified}()`,
+      name: member,
+      file: receiver.file,
+      line: cls.line,
+      metadata: {
+        unresolved: true,
+        owner: cls.name,
+        member,
+        ...(cls.classInfo?.properties[member] ? { property: true } : {}),
+        ...(cls.classInfo?.extends ? { extends: cls.classInfo.extends.join(".") } : {}),
+      },
+    });
+    return { ...base, to: id, kind: "calls", confidence: 0.5 };
   }
 
   private classificationEdge(

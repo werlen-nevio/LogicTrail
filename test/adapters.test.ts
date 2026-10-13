@@ -140,6 +140,19 @@ describe("http, event and service adapters", () => {
     ]);
   });
 
+  it("labels unresolved fetch URLs with their expression", () => {
+    expect(
+      classify(`
+        const domain = process.env.SHOP_DOMAIN;
+        const endpoint = domain ? \`\${domain}/api/graphql.json\` : "";
+        export async function run(config: { url: string }) {
+          await fetch(endpoint, { method: "POST" });
+          await fetch(config.url);
+        }
+      `),
+    ).toEqual(["requests:POST endpoint", "requests:GET config.url"]);
+  });
+
   it("mitt, socket.io and generic emitters", () => {
     expect(
       classify(`
@@ -192,5 +205,31 @@ describe("http, event and service adapters", () => {
         "src/run.tsx",
       ),
     ).toEqual(["navigates:navigate /welcome"]);
+  });
+
+  it("Next.js cache, cookies and headers", () => {
+    expect(
+      classify(`
+        import { revalidatePath, revalidateTag, updateTag } from "next/cache";
+        import { cookies, headers } from "next/headers";
+        const TAGS = { cart: "cart" };
+        export async function run() {
+          const cartId = (await cookies()).get("cartId")?.value;
+          const store = await cookies();
+          store.delete("cartId");
+          const topic = (await headers()).get("x-topic");
+          updateTag(TAGS.cart);
+          revalidateTag("products", "seconds");
+          revalidatePath("/cart");
+        }
+      `),
+    ).toEqual([
+      'calls:cookies().get("cartId")',
+      'calls:cookies().delete("cartId")',
+      'calls:headers().get("x-topic")',
+      'calls:updateTag("cart")',
+      'calls:revalidateTag("products")',
+      'calls:revalidatePath("/cart")',
+    ]);
   });
 });

@@ -52,7 +52,8 @@ export function exitLabel(exit: ExitFact): string {
     case "redirect":
       return exit.target ? `redirect ${exit.target}` : (status ?? "redirect");
     case "response":
-      return status ?? "200 OK";
+      if (status) return status;
+      return exit.statusExpression ? `Response (status: ${exit.statusExpression})` : "200 OK";
   }
 }
 
@@ -65,7 +66,10 @@ export function exitDescription(exit: ExitFact, owner: string): string {
   }
   if (exit.kind === "redirect")
     return `${owner} redirects${exit.target ? ` to ${exit.target}` : ""}.`;
-  return `${owner} responds${exit.status ? ` with HTTP ${exit.status}` : ""}.`;
+  if (exit.status) return `${owner} responds with HTTP ${exit.status}.`;
+  if (exit.statusExpression)
+    return `${owner} responds with the HTTP status in \`${exit.statusExpression}\`.`;
+  return `${owner} responds.`;
 }
 
 /** Description of a code node derived from doc comments and code facts (no LLM). */
@@ -134,6 +138,13 @@ export function staticDescription(
       return metadata.channel === "queue"
         ? { text: `Background job queue "${asText(metadata.event)}".`, source: "static" }
         : { text: `Event "${asText(metadata.event)}".`, source: "static" };
+    case "unresolved":
+      return {
+        text: metadata.property
+          ? `Property of ${asText(metadata.owner)} whose value static analysis cannot follow.`
+          : `Called on ${asText(metadata.owner)}, but not found on it${metadata.extends ? ` or its base ${asText(metadata.extends)}` : ""} by static analysis.`,
+        source: "static",
+      };
   }
 }
 

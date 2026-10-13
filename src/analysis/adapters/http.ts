@@ -26,9 +26,42 @@ export function urlFromArg(
     const value = workspace.resolvePath(file, scope, arg.path);
     if (value.kind === "string") raw = value.value;
   }
-  if (raw === undefined) return undefined;
+  if (raw === undefined || raw.trim() === "") return undefined;
   if (arg.kind === "template") raw = substituteConstants(raw, workspace, file, scope);
   return normalizeUrl(raw, baseUrl);
+}
+
+/**
+ * Like {@link urlFromArg}, but a URL that can't be resolved to a string keeps the expression it
+ * was written as, so `fetch(endpoint, …)` is labelled `POST endpoint`.
+ */
+function urlOrExpression(
+  arg: ArgFact | undefined,
+  callText: string,
+  workspace: Workspace,
+  file: string,
+  scope: SymbolFact | undefined,
+  baseUrl?: string,
+): UrlSpec {
+  return (
+    urlFromArg(arg, workspace, file, scope, baseUrl) ?? {
+      raw: expressionText(arg) ?? callText,
+      unknownPrefix: true,
+    }
+  );
+}
+
+function expressionText(arg: ArgFact | undefined): string | undefined {
+  switch (arg?.kind) {
+    case "path":
+      return arg.path.join(".");
+    case "call":
+      return `${arg.path.join(".")}(…)`;
+    case "other":
+      return arg.text;
+    default:
+      return undefined;
+  }
 }
 
 /** Replaces `${CONSTANT}` with known string constants. */
@@ -123,10 +156,7 @@ export const fetchAdapter: FrameworkAdapter = {
       pkg.member.length === 0 &&
       (pkg.imported === "default" || pkg.imported === "fetch" || pkg.imported === "ofetch");
     if (!isFetch && !isPackagedFetch) return undefined;
-    const url = urlFromArg(call.args[0], workspace, file, symbol) ?? {
-      raw: call.text,
-      unknownPrefix: true,
-    };
+    const url = urlOrExpression(call.args[0], call.text, workspace, file, symbol);
     return {
       kind: "request",
       method: methodFromOptions(call.args[1], "GET"),
@@ -158,10 +188,7 @@ export const axiosAdapter: FrameworkAdapter = {
       return { kind: "request", method: methodFromOptions(config, "GET"), url, client: "axios" };
     }
     if (pkg.member.length !== 1 || !method || !ALL_METHODS.has(method)) return undefined;
-    const url = urlFromArg(call.args[0], workspace, file, symbol, baseUrl) ?? {
-      raw: call.text,
-      unknownPrefix: true,
-    };
+    const url = urlOrExpression(call.args[0], call.text, workspace, file, symbol, baseUrl);
     return { kind: "request", method: method.toUpperCase(), url, client: "axios" };
   },
 };
@@ -176,10 +203,7 @@ export const kyAdapter: FrameworkAdapter = {
     const prefix = pkg.ops
       .map((op) => stringArg(objectProp(op.args[0], "prefixUrl")))
       .find(Boolean);
-    const url = urlFromArg(call.args[0], workspace, file, symbol, prefix) ?? {
-      raw: call.text,
-      unknownPrefix: true,
-    };
+    const url = urlOrExpression(call.args[0], call.text, workspace, file, symbol, prefix);
     return { kind: "request", method: method.toUpperCase(), url, client: pkg.pkg };
   },
 };

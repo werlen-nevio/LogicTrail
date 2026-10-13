@@ -102,4 +102,17 @@ export default config;
     await expect(loadConfig(root)).rejects.toBeInstanceOf(ConfigError);
     await expect(loadConfig(root)).rejects.toThrow(/maxDepth[\s\S]*Unrecognized key/);
   });
+
+  it("reads the editor for Open in editor links", async () => {
+    expect((await loadConfig(root)).editor).toBe("vscode");
+    await write("logictrail.config.json", JSON.stringify({ editor: "cursor" }));
+    expect((await loadConfig(root)).editor).toBe("cursor");
+    await write(
+      "logictrail.config.json",
+      JSON.stringify({ editor: "myeditor://open?file={file}&line={line}" }),
+    );
+    expect((await loadConfig(root)).editor).toBe("myeditor://open?file={file}&line={line}");
+    await write("logictrail.config.json", JSON.stringify({ editor: "nano" }));
+    await expect(loadConfig(root)).rejects.toThrow(/editor[\s\S]*Unknown editor "nano"/);
+  });
 });

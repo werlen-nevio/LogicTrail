@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { exitLabel } from "../src/flow/describe.js";
 import type { Step } from "../src/indexer/facts.js";
 import { classifyFileRoute } from "../src/lang/javascript/file-routes.js";
 import { callPaths, facts, symbol } from "./helpers.js";
@@ -218,6 +219,34 @@ describe("steps", () => {
     };
     collect(validate.steps);
     expect(exits).toEqual(["response:422", "throw:next(error)"]);
+  });
+
+  it("keeps a status that isn't a literal as its expression", () => {
+    const result = facts(`
+      import { NextResponse } from "next/server";
+      export async function POST(req, res) {
+        try {
+          return NextResponse.json({ ok: true }, { status: 201 });
+        } catch (e) {
+          if (e.retry) return res.status(e.code).json({});
+          return NextResponse.json({ message: e.message }, { status: e.statusCode });
+        }
+      }
+    `);
+    const labels: string[] = [];
+    const collect = (steps: readonly Step[]): void => {
+      for (const step of steps) {
+        if (step.kind === "exit") labels.push(exitLabel(step.exit));
+        if (step.kind === "branch") for (const arm of step.arms) collect(arm.steps);
+        if (step.kind === "catch") collect(step.steps);
+      }
+    };
+    collect(symbol(result, "POST").steps);
+    expect(labels).toEqual([
+      "201 Created",
+      "Response (status: e.code)",
+      "Response (status: e.statusCode)",
+    ]);
   });
 });
 

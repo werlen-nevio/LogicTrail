@@ -122,8 +122,17 @@ export interface LogicTrailGraph {
     model?: string;
     generatedAt: string;
     repository: string;
-    /** Absolute path of the analyzed root, used for "open in editor" links. */
+    /**
+     * Where the analyzed root is relative to the folder the file was written to, e.g. "..", used
+     * for "Open in editor" links. Never an absolute path (files from 0.2.0 and earlier may have
+     * one).
+     */
     rootPath?: string;
+    /**
+     * Where "Open in editor" links go: a built-in editor ("vscode", "cursor", "idea", …), "none",
+     * or a URL template with {file}/{path} and {line}. Absent means VS Code.
+     */
+    editor?: string;
     stats: {
       files: number;
       symbols: number;

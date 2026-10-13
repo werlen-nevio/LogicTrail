@@ -109,6 +109,8 @@ export interface UpdateFlowOptions {
   maxNodes?: number;
   /** Override the SVG theme the flow was written with. */
   theme?: Theme;
+  /** Override the editor the flow's "Open in editor" links go to. */
+  editor?: string;
 }
 
 export interface UpdatedFlow {
@@ -132,6 +134,7 @@ export async function updateFlow(
     ...options.config,
     maxDepth: options.maxDepth ?? flow.graph.request?.maxDepth ?? options.config.maxDepth,
     maxNodes: options.maxNodes ?? flow.graph.request?.maxNodes ?? options.config.maxNodes,
+    editor: options.editor ?? flow.graph.analysis.editor ?? options.config.editor,
   };
   const { graph } = await analyze({
     root: options.root,
@@ -148,6 +151,7 @@ export async function updateFlow(
   });
   const written = await writeOutputs(graph, {
     outDir: flow.dir,
+    root: options.root,
     name: flow.name,
     formats: flow.formats,
     theme: options.theme ?? flow.theme,

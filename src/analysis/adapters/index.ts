@@ -2,6 +2,7 @@ import { dataAdapters } from "./data.js";
 import { eventAdapters } from "./events.js";
 import { httpAdapters } from "./http.js";
 import { navigationAdapter } from "./navigation.js";
+import { nextAdapter } from "./next.js";
 import { serviceAdapters } from "./services.js";
 import type { CallSiteContext, Classification, FrameworkAdapter } from "./types.js";
 
@@ -15,6 +16,7 @@ export const frameworkAdapters: readonly FrameworkAdapter[] = [
   ...httpAdapters,
   ...eventAdapters,
   navigationAdapter,
+  nextAdapter,
   ...serviceAdapters,
 ];
 

@@ -173,7 +173,9 @@ flowchart LR
    requests are matched to server routes.
 3. **Retrieve.** Your question becomes search terms ("logs in" → `login`, plus synonyms), and the
    best-matching symbols seed a bounded sub-graph: callers up to an entry point, callees down to
-   the side effects.
+   the side effects. Matches that cover more of the question win, near-identical versioned code
+   counts once, and tests rank last. The sub-graph grows best first, so when the budget runs out
+   the path through the matching code is kept and distant leaves are not.
 4. **Select.** Claude receives only that sub-graph with excerpts of the most relevant code, never
    the whole repository. It chooses the nodes that answer the question, describes them, writes
    the explanation and may propose relationships static analysis missed. Without an API key, a
@@ -230,6 +232,15 @@ would be sent without sending it (no API key needed):
 npx logictrail "how does checkout work?" --show-prompt > prompt.md
 ```
 
+### What the output files contain
+
+The HTML and JSON files contain the source excerpts, file paths relative to the repository root,
+the repository's folder name and the question. They don't contain absolute paths, so sharing a
+flow doesn't share your user name or folder layout. For "Open in editor", a file written inside
+the repository (the default `.logictrail/`) records where the root is relative to itself, such as
+`..`; a file written outside the repository records nothing, and its viewer has no "Open in
+editor" links.
+
 ## Output formats
 
 | Format  | Flag               | What you get                                                                                                 |
@@ -255,7 +266,23 @@ npx logictrail "how does checkout work?" --output mermaid --stdout >> docs/check
 - `/` searches, `F` fits the graph to the screen, `+`/`-` zoom, `↑`/`↓` step through the flow,
   `T` switches the theme and `Esc` clears the selection.
 - Links like `flow.html#node=<id>` open with a node selected. "Open in editor" jumps to the line
-  in VS Code.
+  in your editor when the file is opened from disk inside the repository (see
+  [What the output files contain](#what-the-output-files-contain)). It opens VS Code unless you
+  choose another editor with `--editor`, `LOGICTRAIL_EDITOR` or `editor` in the config:
+
+  | Editor                          | Link                                           |
+  | ------------------------------- | ---------------------------------------------- |
+  | `vscode` (default)              | `vscode://file/{path}:{line}`                  |
+  | `vscode-insiders`               | `vscode-insiders://file/{path}:{line}`         |
+  | `vscodium`                      | `vscodium://file/{path}:{line}`                |
+  | `cursor`                        | `cursor://file/{path}:{line}`                  |
+  | `idea` (IntelliJ IDEA/WebStorm) | `idea://open?file={file}&line={line}`          |
+  | `none`                          | No link; "Copy" still copies `file:line`       |
+  | A URL template                  | e.g. `myeditor://open?file={file}&line={line}` |
+
+  In a template, `{file}` is the absolute path, `{path}` the same without a leading slash, and
+  `{line}` the line. The link's tooltip names the editor ("Open in Cursor"). The choice is saved in
+  the flow, so `logictrail update` keeps it.
 
 ## Examples
 
@@ -266,7 +293,9 @@ logictrail "what happens when a payment fails?"
 logictrail "create customer flow"
 
 logictrail --function createSession            # start at a function, method or component
+logictrail --function src/auth.ts#login        # when the name is defined in several files
 logictrail --route "POST /api/orders"          # start at an HTTP route, including its callers
+logictrail --route "GET /product/:handle"      # or at the page component that serves a path
 logictrail --file src/auth/login.ts            # start at the entry points of a file
 
 logictrail "how does checkout work?" --output html --open
@@ -282,11 +311,12 @@ Try them on the bundled sample: `npx logictrail "how does checkout work?" --root
 | `-o, --output <list>` | `html`, `svg`, `mermaid`, `json` or `all` (default: `html`)                   |
 | `--open`              | Open the result in your browser                                               |
 | `-m, --model <model>` | `claude`, a Claude model id such as `claude-opus-5-5`, or `static` for no LLM |
+| `--editor <editor>`   | Where "Open in editor" links go: `vscode` (default), `cursor`, `none`…        |
 | `--max-depth <n>`     | Hops to follow from the relevant code (default: 12)                           |
 | `--max-nodes <n>`     | Upper bound on nodes in the flow (default: 60)                                |
 | `--file <path>`       | Explain the flow starting in a file                                           |
-| `--function <name>`   | Explain the flow starting at a function, method or component                  |
-| `--route <route>`     | Explain the flow behind a route, e.g. `"POST /api/orders"`                    |
+| `--function <name>`   | Explain the flow starting at a function, method or component (`file#name`)    |
+| `--route <route>`     | Explain the flow behind a route or page, e.g. `"POST /api/orders"`            |
 | `--root <dir>`        | Repository root (default: current directory)                                  |
 | `--out-dir <dir>`     | Output directory (default: `.logictrail`)                                     |
 | `--name <name>`       | Output file name                                                              |
@@ -321,8 +351,8 @@ what changed:
 between steps that are in both versions.
 
 `update` reads a flow's `.json` file, or its `.html` viewer when there is no JSON, and takes
-`--root`, `--out-dir`, `--model`, `--max-depth`, `--max-nodes`, `--theme`, `--open`, `--no-cache`
-and `--config`. To ask a question that starts with the word "update", put it in quotes.
+`--root`, `--out-dir`, `--model`, `--editor`, `--max-depth`, `--max-nodes`, `--theme`, `--open`,
+`--no-cache` and `--config`. A flow keeps the editor it was made with unless `--editor` is given. To ask a question that starts with the word "update", put it in quotes.
 
 ## Configuration
 
@@ -337,6 +367,7 @@ export default {
   maxNodes: 60,
   outputDir: ".logictrail",
   output: ["html", "mermaid"],
+  editor: "cursor", // "Open in editor" links; see The HTML viewer
   llm: {
     model: "claude-opus-5-5", // or "claude", "static", "auto" (default)
     effort: "medium",
@@ -350,6 +381,7 @@ export default {
 | -------------------- | ------------------------------------------------------------ |
 | `ANTHROPIC_API_KEY`  | Enables Claude. Without it, LogicTrail uses static analysis. |
 | `LOGICTRAIL_MODEL`   | Default for `--model`.                                       |
+| `LOGICTRAIL_EDITOR`  | Default for `--editor`.                                      |
 
 Claude requests use structured outputs, adaptive thinking and server-side refusal fallbacks. If
 Claude is unavailable, LogicTrail falls back to static analysis and records a warning in the
@@ -409,17 +441,18 @@ await writeOutputs(graph, { outDir: "docs/flows", name: "checkout", formats: ["m
 
 ## Supported frameworks
 
-| Area            | Recognized                                                                                                                                                                                                                                            |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Languages       | TypeScript, JavaScript (ESM and CommonJS), JSX/TSX                                                                                                                                                                                                    |
-| Servers         | Express (routers, mount prefixes, middleware chains), Fastify (route options, `register` prefixes), Hono (`route`, `basePath`), Koa (`@koa/router` prefixes and nesting), NestJS controllers (global prefix), Next.js App Router and Pages API routes |
-| UI              | React components, hooks, JSX event handlers, React Router pages, Next.js pages, server actions                                                                                                                                                        |
-| Navigation      | React Router `useNavigate`/`redirect`, Next.js `useRouter`, `redirect`, `notFound`                                                                                                                                                                    |
-| HTTP clients    | `fetch`, axios (including `axios.create` base URLs), ky, got, SWR, matched to your own routes                                                                                                                                                         |
-| Databases       | Prisma, Drizzle, Mongoose, Sequelize, TypeORM, Knex, pg/mysql/SQLite drivers, Redis, Supabase, Firestore                                                                                                                                              |
-| Events & queues | Node `EventEmitter`, mitt, socket.io, BullMQ, Bull                                                                                                                                                                                                    |
-| External APIs   | Stripe, Resend, SendGrid, Postmark, Twilio, OpenAI, Anthropic, Slack, GitHub, AWS SDK v3, Firebase, Clerk and more                                                                                                                                    |
-| Libraries       | bcrypt/argon2, jsonwebtoken/jose, zod/yup/joi validation, Node crypto, Passport, NextAuth, sessions                                                                                                                                                   |
+| Area            | Recognized                                                                                                                                                                                                                                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Languages       | TypeScript, JavaScript (ESM and CommonJS), JSX/TSX                                                                                                                                                                                                                                                              |
+| Monorepos       | Workspace packages (npm, yarn, pnpm, Turborepo) resolved to their sources through `exports`, `main` or `types`, and tsconfig `paths`                                                                                                                                                                            |
+| Servers         | Express (routers, mount prefixes, middleware chains), Fastify (route options, `register` prefixes), Hono (`route`, `basePath`), Koa (`@koa/router` prefixes and nesting), NestJS controllers (global prefix, `RouterModule`, versions, guards, interceptors and pipes), Next.js App Router and Pages API routes |
+| UI              | React components, hooks, JSX event handlers, React Router pages, Next.js pages, server actions                                                                                                                                                                                                                  |
+| Navigation      | React Router `useNavigate`/`redirect`, Next.js `useRouter`, `redirect`, `notFound`                                                                                                                                                                                                                              |
+| HTTP clients    | `fetch`, axios (including `axios.create` base URLs), ky, got, SWR, matched to your own routes                                                                                                                                                                                                                   |
+| Databases       | Prisma, Drizzle, Mongoose, Sequelize, TypeORM, Knex, pg/mysql/SQLite drivers, Redis, Supabase, Firestore                                                                                                                                                                                                        |
+| Events & queues | Node `EventEmitter`, mitt, socket.io, BullMQ, Bull                                                                                                                                                                                                                                                              |
+| External APIs   | Stripe, Resend, SendGrid, Postmark, Twilio, OpenAI, Anthropic, Slack, GitHub, AWS SDK v3, Firebase, Clerk and more                                                                                                                                                                                              |
+| Libraries       | bcrypt/argon2, jsonwebtoken/jose, zod/yup/joi validation, Node crypto, Passport, NextAuth, sessions, Next.js `revalidateTag`/`revalidatePath`/`updateTag` and `cookies()`/`headers()`, Express middleware created by a package (`expressjwt({ … })`)                                                            |
 
 Recognition is adapter-based and conservative. When LogicTrail cannot prove where a call goes, it
 leaves the call out rather than guessing.
@@ -429,7 +462,12 @@ leaves the call out rather than guessing.
 - Calls through values whose origin cannot be followed statically (dynamic dispatch, DI
   containers configured at runtime, functions stored in maps) are not linked. Claude may propose
   them as inferred edges.
-- Monorepo workspace packages are treated like external packages.
+- A workspace package whose code is generated (for example a Prisma client) or ships only
+  declaration files (`.d.ts`) is treated like an external package.
+- NestJS guards, interceptors and pipes registered globally (`app.useGlobalGuards`, `APP_GUARD`)
+  are not steps, and a guard whose `canActivate` comes from a package (such as Passport's
+  `AuthGuard`) has no step. A global prefix or version that isn't a literal (for example read from
+  an environment variable) is left out.
 - Only `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs` and `.cjs` files are read. Code in
   `.vue`, `.svelte` or `.astro` files is not part of any flow.
 - Files larger than 1 MB, usually generated or bundled code, are skipped.
@@ -456,7 +494,6 @@ The cache lives in `.logictrail/cache` (about 32 MB for cal.com) and is reused a
 - PNG export
 - More languages through adapters: Python, Go, Java, C#, PHP
 - More providers: OpenAI, Gemini, local models
-- Workspace-aware resolution for monorepos
 - Editor integrations (open the flow for the symbol under the cursor)
 - Diff mode: how a flow changed between two commits
 

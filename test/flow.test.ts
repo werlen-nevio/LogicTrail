@@ -128,6 +128,32 @@ describe('vertical slice: "how does login work?"', () => {
     );
   });
 
+  it("keeps the whole graph within --max-nodes, trimming the furthest steps first", async () => {
+    const result = await analyze({
+      root: ACME_SHOP,
+      question: "how does login work?",
+      config: resolveConfig({ cache: false, maxNodes: 12 }),
+      provider: new StaticProvider(),
+    });
+    const graph = result.graph;
+    expect(graph.nodes).toHaveLength(12);
+    expect(labels(graph)).toEqual(
+      expect.arrayContaining(["LoginPage", "POST /api/auth/login", "authController.login()"]),
+    );
+    const ids = new Set(graph.nodes.map((node) => node.id));
+    for (const candidate of graph.edges) {
+      expect(ids.has(candidate.from) && ids.has(candidate.to)).toBe(true);
+    }
+    const collapsed = graph.nodes.find((node) => node.label === "authController.login()");
+    expect(collapsed?.metadata?.hiddenBranchNodes).toBeGreaterThan(0);
+    expect(collapsed?.description).toContain("hidden to stay within --max-nodes");
+    // Calls made inside the collapsed branches start at the function itself.
+    expect(edge(graph, "authController.login()", "createSession()")).toBeDefined();
+    const warning = graph.analysis.warnings.find((text) => text.includes("--max-nodes 12"));
+    expect(warning).toMatch(/^The flow had \d+ nodes, more than --max-nodes 12, so LogicTrail /);
+    expect(warning).toContain("authController.login()");
+  });
+
   it("is deterministic", async () => {
     const strip = (graph: LogicTrailGraph) => ({
       ...graph,
@@ -230,6 +256,27 @@ describe("targets", () => {
         "fetchAccount()",
       ]),
     );
+  });
+
+  it("suggests the closest routes when --route matches nothing", async () => {
+    const suggestions = async (route: string) => {
+      const error = await analyze({
+        root: SERVER_FRAMEWORKS,
+        target: { route },
+        config,
+        provider: new StaticProvider(),
+      }).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(NoFlowFoundError);
+      return (error as NoFlowFoundError).suggestions.slice(0, 2);
+    };
+    expect(await suggestions("GET /users/:id")).toEqual([
+      "Available: GET /api/users/:id",
+      "Available: GET /shop/orders/:id",
+    ]);
+    expect(await suggestions("POST /api/acounts")).toEqual([
+      "Available: POST /api/accounts",
+      "Available: POST /api/auth/login",
+    ]);
   });
 
   it("starts from a file", async () => {

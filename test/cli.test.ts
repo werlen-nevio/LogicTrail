@@ -4,12 +4,15 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { slugify } from "../src/output.js";
+import { safeFileName, slugify } from "../src/output.js";
 import { ACME_SHOP } from "./helpers.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function cli(args: string[]): { status: number | null; stdout: string; stderr: string } {
+function cli(
+  args: string[],
+  env: Record<string, string> = {},
+): { status: number | null; stdout: string; stderr: string } {
   const result = spawnSync(
     process.execPath,
     ["--import", "tsx", path.join(projectRoot, "src/cli/main.ts"), ...args],
@@ -21,7 +24,9 @@ function cli(args: string[]): { status: number | null; stdout: string; stderr: s
         ANTHROPIC_API_KEY: "",
         ANTHROPIC_AUTH_TOKEN: "",
         LOGICTRAIL_MODEL: "",
+        LOGICTRAIL_EDITOR: "",
         NO_COLOR: "1",
+        ...env,
       },
     },
   );
@@ -136,9 +141,92 @@ describe("cli", () => {
     }
   });
 
+  it("takes the editor from --editor, then LOGICTRAIL_EDITOR, and keeps it on update", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-editor-"));
+    const editorOf = async (name: string): Promise<string | undefined> =>
+      (
+        JSON.parse(await fs.readFile(path.join(outDir, `${name}.json`), "utf8")) as {
+          analysis: { editor?: string };
+        }
+      ).analysis.editor;
+    try {
+      const common = ["--root", ACME_SHOP, "--out-dir", outDir, "--model", "static", "--no-cache"];
+      const flow = ["--route", "POST /api/orders", "--output", "json", ...common];
+      expect(cli([...flow, "--name", "default"]).status).toBe(0);
+      expect(await editorOf("default")).toBe("vscode");
+      expect(cli([...flow, "--name", "env"], { LOGICTRAIL_EDITOR: "idea" }).status).toBe(0);
+      expect(await editorOf("env")).toBe("idea");
+      expect(
+        cli([...flow, "--name", "flag", "--editor", "cursor"], { LOGICTRAIL_EDITOR: "idea" })
+          .status,
+      ).toBe(0);
+      expect(await editorOf("flag")).toBe("cursor");
+
+      // update keeps each flow's editor unless --editor is given.
+      expect(cli(["update", "flag", ...common], { LOGICTRAIL_EDITOR: "idea" }).status).toBe(0);
+      expect(await editorOf("flag")).toBe("cursor");
+      expect(cli(["update", "flag", "--editor", "none", ...common]).status).toBe(0);
+      expect(await editorOf("flag")).toBe("none");
+
+      const unknown = cli([...flow, "--editor", "nano"]);
+      expect(unknown.status).not.toBe(0);
+      expect(unknown.stderr).toContain('Unknown editor "nano"');
+      const badEnv = cli([...flow, "--name", "bad"], { LOGICTRAIL_EDITOR: "nano" });
+      expect(badEnv.status).toBe(2);
+      expect(badEnv.stderr).toContain('LOGICTRAIL_EDITOR: Unknown editor "nano"');
+    } finally {
+      await fs.rm(outDir, { recursive: true, force: true });
+    }
+  });
+
+  it("writes no absolute paths, only where the root is relative to the files", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-root-"));
+    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-out-"));
+    try {
+      await fs.cp(ACME_SHOP, root, { recursive: true });
+      const common = [
+        "how does login work?",
+        "--root",
+        root,
+        "--output",
+        "html,json",
+        "--no-cache",
+      ];
+      expect(cli([...common, "--name", "inside"]).status).toBe(0);
+      expect(cli([...common, "--name", "outside", "--out-dir", outside]).status).toBe(0);
+
+      const inside = path.join(root, ".logictrail", "inside");
+      const json = JSON.parse(await fs.readFile(`${inside}.json`, "utf8")) as {
+        analysis: { rootPath?: string };
+      };
+      expect(json.analysis.rootPath).toBe("..");
+      const outsideJson = JSON.parse(
+        await fs.readFile(path.join(outside, "outside.json"), "utf8"),
+      ) as { analysis: { rootPath?: string } };
+      expect(outsideJson.analysis.rootPath).toBeUndefined();
+
+      const escaped = JSON.stringify(root).slice(1, -1);
+      for (const file of [`${inside}.json`, `${inside}.html`, path.join(outside, "outside.html")]) {
+        const content = await fs.readFile(file, "utf8");
+        expect(content).not.toContain(root);
+        expect(content).not.toContain(escaped);
+      }
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+      await fs.rm(outside, { recursive: true, force: true });
+    }
+  });
+
   it("slugifies output names", () => {
     expect(slugify("How does checkout work?")).toBe("how-does-checkout-work");
     expect(slugify("Ünïcödé — flows!")).toBe("unicode-flows");
     expect(slugify("???")).toBe("flow");
+  });
+
+  it("keeps the case of an explicit --name", () => {
+    expect(safeFileName("fn-addItem")).toBe("fn-addItem");
+    expect(safeFileName("api/v1: Cart?")).toBe("api-v1-Cart");
+    expect(safeFileName("..\\.hidden")).toBe("hidden");
+    expect(safeFileName("???")).toBe("flow");
   });
 });

@@ -3,6 +3,7 @@ import path from "node:path";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { beforeAll, describe, expect, it } from "vitest";
 import { resolveConfig } from "../src/config/config.js";
+import { editorLink, editorProblem } from "../src/graph/editor.js";
 import { GRAPH_SCHEMA_URL, type LogicTrailGraph } from "../src/graph/model.js";
 import { StaticProvider } from "../src/llm/static.js";
 import { analyze } from "../src/pipeline.js";
@@ -133,6 +134,69 @@ describe("html", () => {
     expect(html).not.toContain("<img src=x");
     expect(html.match(/<\/script>/g)).toHaveLength(2);
     expect(safeJson({ text: "</script>\u2028" })).toBe('{"text":"\\u003c/script>\\u2028"}');
+  });
+});
+
+describe("Open in editor links", () => {
+  const file = "/home/me/my app/src/auth.ts";
+
+  it("open VS Code by default", () => {
+    const expected = {
+      href: "vscode://file/home/me/my%20app/src/auth.ts:12",
+      title: "Open in VS Code",
+    };
+    expect(editorLink(undefined, file, 12)).toEqual(expected);
+    expect(editorLink("vscode", file, 12)).toEqual(expected);
+    expect(editorLink(undefined, "C:\\work\\app\\auth.ts", 3)?.href).toBe(
+      "vscode://file/C:/work/app/auth.ts:3",
+    );
+    expect(editorLink(undefined, file)?.href).toBe("vscode://file/home/me/my%20app/src/auth.ts:1");
+  });
+
+  it("open a named editor", () => {
+    expect(editorLink("cursor", file, 12)).toEqual({
+      href: "cursor://file/home/me/my%20app/src/auth.ts:12",
+      title: "Open in Cursor",
+    });
+    expect(editorLink("vscode-insiders", file, 12)?.title).toBe("Open in VS Code Insiders");
+    expect(editorLink("vscodium", file, 12)?.href).toBe(
+      "vscodium://file/home/me/my%20app/src/auth.ts:12",
+    );
+    expect(editorLink("idea", file, 12)).toEqual({
+      href: "idea://open?file=%2Fhome%2Fme%2Fmy%20app%2Fsrc%2Fauth.ts&line=12",
+      title: "Open in IntelliJ IDEA",
+    });
+  });
+
+  it("follow a custom template", () => {
+    expect(editorLink("myeditor://open?file={file}&line={line}", file, 7)).toEqual({
+      href: "myeditor://open?file=%2Fhome%2Fme%2Fmy%20app%2Fsrc%2Fauth.ts&line=7",
+      title: "Open in editor",
+    });
+    expect(editorLink("subl://open/{path}:{line}", file, 7)?.href).toBe(
+      "subl://open/home/me/my%20app/src/auth.ts:7",
+    );
+  });
+
+  it("are left out for none and for settings that aren't editors", () => {
+    expect(editorLink("none", file, 12)).toBeUndefined();
+    expect(editorLink("javascript:alert({file})", file, 12)).toBeUndefined();
+    expect(editorProblem("nano")).toMatch(/^Unknown editor "nano"\. Use vscode, /);
+    expect(editorProblem("myeditor://open?line={line}")).toMatch(/Unknown editor/);
+    expect(editorProblem("cursor")).toBeUndefined();
+  });
+
+  it("are configured through the graph the viewer reads", async () => {
+    const html = await renderHtml(
+      { ...graph, analysis: { ...graph.analysis, editor: "cursor" } },
+      { version: "test" },
+    );
+    const data = /<script id="logictrail-data" type="application\/json">(.*?)<\/script>/s.exec(
+      html,
+    )?.[1];
+    const parsed = JSON.parse(data ?? "{}") as { graph: LogicTrailGraph };
+    expect(parsed.graph.analysis.editor).toBe("cursor");
+    expect(graph.analysis.editor).toBe("vscode");
   });
 });
 

@@ -5,7 +5,7 @@ import { OUTPUT_FORMATS, type OutputFormat, type ResolvedConfig } from "../confi
 import { ConfigError, loadConfig } from "../config/load.js";
 import { selectProvider } from "../llm/index.js";
 import { ProviderError } from "../llm/types.js";
-import { renderFormat, slugify, writeOutputs } from "../output.js";
+import { renderFormat, safeFileName, slugify, writeOutputs } from "../output.js";
 import {
   analyze,
   buildFlowPrompt,
@@ -17,13 +17,14 @@ import type { Theme } from "../render/svg.js";
 import { VERSION } from "../version.js";
 import { openFile } from "./open.js";
 import { TerminalReporter } from "./reporter.js";
-import { displayPath, parsePositiveInt } from "./shared.js";
+import { displayPath, editorFromEnv, parseEditor, parsePositiveInt } from "./shared.js";
 import { updateCommand } from "./update.js";
 
 interface CliOptions {
   output?: OutputFormat[];
   open?: boolean;
   model?: string;
+  editor?: string;
   maxDepth?: number;
   maxNodes?: number;
   file?: string;
@@ -78,10 +79,18 @@ export function createProgram(): Command {
       "-m, --model <model>",
       'LLM to use: "claude", a Claude model id (e.g. claude-opus-5-5), or "static" for no LLM',
     )
+    .option(
+      "--editor <editor>",
+      'Where "Open in editor" links go: vscode, vscode-insiders, vscodium, cursor, idea, none, or a URL template with {file} and {line}',
+      parseEditor,
+    )
     .option("--max-depth <n>", "How many hops to follow from the relevant code", parsePositiveInt)
     .option("--max-nodes <n>", "Maximum number of nodes in the flow", parsePositiveInt)
     .option("--file <path>", "Explain the flow starting in a file")
-    .option("--function <name>", "Explain the flow starting at a function, method or component")
+    .option(
+      "--function <name>",
+      "Explain the flow starting at a function, method or component (file.ts#name picks one file)",
+    )
     .option("--route <route>", 'Explain the flow behind an HTTP route, e.g. "POST /api/orders"')
     .option("--root <dir>", "Repository root", ".")
     .option("--out-dir <dir>", "Where to write results (default: .logictrail)")
@@ -115,6 +124,7 @@ Examples:
 Environment:
   ANTHROPIC_API_KEY   Enables Claude for selection and explanations (static analysis otherwise)
   LOGICTRAIL_MODEL    Default for --model
+  LOGICTRAIL_EDITOR   Default for --editor
 `,
     )
     .action(async (words: string[], options: CliOptions) => {
@@ -153,8 +163,14 @@ async function runCli(question: string, options: CliOptions): Promise<number> {
     throw error;
   }
   if (config.configFile) reporter.debug(`Config: ${path.relative(root, config.configFile)}`);
+  const env = editorFromEnv();
+  if (env.problem && !options.editor) {
+    reporter.error(env.problem);
+    return 2;
+  }
   const effective: ResolvedConfig = {
     ...config,
+    editor: options.editor ?? env.editor ?? config.editor,
     maxDepth: options.maxDepth ?? config.maxDepth,
     maxNodes: options.maxNodes ?? config.maxNodes,
     cache: options.cache && config.cache,
@@ -215,9 +231,10 @@ ${prompt.user}
     }
 
     const outDir = path.resolve(root, options.outDir ?? effective.outputDir);
-    const name = options.name ? slugify(options.name) : slugify(result.graph.query);
+    const name = options.name ? safeFileName(options.name) : slugify(result.graph.query);
     const written = await writeOutputs(result.graph, {
       outDir,
+      root,
       name,
       formats,
       theme: options.theme,

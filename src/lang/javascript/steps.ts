@@ -245,8 +245,7 @@ export class StepExtractor {
       if (name) exit.errorName = name.join(".");
       const first = thrown.arguments?.[0];
       if (first && ts.isStringLiteralLike(first)) exit.message = first.text;
-      const status = findStatus(thrown.arguments ?? []);
-      if (status !== undefined) exit.status = status;
+      Object.assign(exit, findStatus(this.sf, thrown.arguments ?? []));
     } else {
       this.expression(thrown, out, ctx);
     }
@@ -490,14 +489,12 @@ export class StepExtractor {
     if (path.length === 2 && RESPONSE_OBJECTS.has(head) && this.paramNames.has(head)) {
       const method = path[1];
       if (method === "status" || method === "sendStatus" || method === "code") {
-        const first = baseArgs[0];
-        const status = first && ts.isNumericLiteral(first) ? Number(first.text) : undefined;
         const redirect = names.includes("redirect");
         return {
           kind: redirect ? "redirect" : "response",
           line,
           text,
-          ...(status !== undefined ? { status } : {}),
+          ...statusValue(this.sf, baseArgs[0]),
         };
       }
       if (method === "redirect") {
@@ -514,14 +511,12 @@ export class StepExtractor {
       }
     }
     if (path.length === 2 && head === "ctx" && path[1] === "throw") {
-      const status = findStatus(baseArgs);
-      return { kind: "throw", line, text, ...(status !== undefined ? { status } : {}) };
+      return { kind: "throw", line, text, ...findStatus(this.sf, baseArgs) };
     }
     if (path.length === 2 && /Response$/.test(head)) {
       const method = path[1];
       if (method === "json") {
-        const status = findStatus(baseArgs.slice(1));
-        return { kind: "response", line, text, ...(status !== undefined ? { status } : {}) };
+        return { kind: "response", line, text, ...findStatus(this.sf, baseArgs.slice(1)) };
       }
       if (method === "redirect") {
         const target = baseArgs[0];
@@ -557,12 +552,11 @@ export class StepExtractor {
   private responseConstructor(node: ts.NewExpression): ExitFact | undefined {
     const path = getPath(node.expression);
     if (!path || path.length !== 1 || !/^(Next)?Response$/.test(path[0] ?? "")) return undefined;
-    const status = findStatus((node.arguments ?? []).slice(1));
     return {
       kind: "response",
       line: lineOf(this.sf, node),
       text: textOf(this.sf, node, 100),
-      ...(status !== undefined ? { status } : {}),
+      ...findStatus(this.sf, (node.arguments ?? []).slice(1)),
     };
   }
 
@@ -597,25 +591,35 @@ function terminates(statement: ts.Statement): boolean {
   return false;
 }
 
-/** Finds `{ status: 401 }` in argument lists, or a leading numeric status. */
-function findStatus(args: readonly ts.Expression[]): number | undefined {
+type StatusFields = Pick<ExitFact, "status" | "statusExpression">;
+
+/**
+ * Finds `{ status: 401 }` in argument lists, or a leading numeric status. A status that isn't a
+ * literal, like `{ status: e.statusCode }`, is kept as its source text.
+ */
+function findStatus(sf: ts.SourceFile, args: readonly ts.Expression[]): StatusFields {
   for (const raw of args) {
     const arg = unwrapExpression(raw);
     if (ts.isNumericLiteral(arg)) {
       const value = Number(arg.text);
-      if (value >= 100 && value < 600) return value;
+      if (value >= 100 && value < 600) return { status: value };
     }
     if (ts.isObjectLiteralExpression(arg)) {
       for (const property of arg.properties) {
-        if (
-          ts.isPropertyAssignment(property) &&
-          propertyNameText(property.name) === "status" &&
-          ts.isNumericLiteral(property.initializer)
-        ) {
-          return Number(property.initializer.text);
-        }
+        if (ts.isPropertyAssignment(property) && propertyNameText(property.name) === "status")
+          return statusValue(sf, property.initializer);
+        if (ts.isShorthandPropertyAssignment(property) && property.name.text === "status")
+          return statusValue(sf, property.name);
       }
     }
   }
-  return undefined;
+  return {};
+}
+
+/** `401` -> { status: 401 }; `e.statusCode` -> { statusExpression: "e.statusCode" }. */
+function statusValue(sf: ts.SourceFile, raw: ts.Expression | undefined): StatusFields {
+  if (!raw) return {};
+  const expression = unwrapExpression(raw);
+  if (ts.isNumericLiteral(expression)) return { status: Number(expression.text) };
+  return { statusExpression: textOf(sf, expression, 40) };
 }
