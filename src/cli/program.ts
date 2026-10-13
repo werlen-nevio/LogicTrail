@@ -218,6 +218,7 @@ ${prompt.user}
     const name = options.name ? safeFileName(options.name) : slugify(result.graph.query);
     const written = await writeOutputs(result.graph, {
       outDir,
+      root,
       name,
       formats,
       theme: options.theme,

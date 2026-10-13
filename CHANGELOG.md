@@ -21,6 +21,15 @@ Claude Code plugin share one version number.
   plus `app.setGlobalPrefix`). Each route records its framework and is matched by `--route` and by
   client requests like an Express route.
 
+### Changed
+
+- The HTML and JSON files no longer contain the absolute path of the analyzed root, which named
+  the local user and folder layout. `analysis.rootPath` now says where the root is relative to the
+  file (`..` for the default `.logictrail/`), and is left out when the file is written outside the
+  repository. `analyze()` no longer sets it; `writeOutputs` does when given `root`. "Open in
+  editor" works as before for files opened from disk inside the repository. The README describes
+  what the output files contain.
+
 ### Fixed
 
 - `--name` keeps the case of the name it's given (`--name fn-addItem` writes `fn-addItem.*`, not

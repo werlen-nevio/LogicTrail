@@ -38,7 +38,7 @@
         "generatedAt": { "type": "string", "format": "date-time" },
         "repository": { "type": "string" },
         "rootPath": {
-          "description": "Absolute path of the analyzed root, used for \"open in editor\" links.",
+          "description": "Where the analyzed root is relative to the folder the file was written to, e.g. \"..\", used for \"Open in editor\" links. Files from LogicTrail 0.2.0 and earlier may hold an absolute path.",
           "type": "string"
         },
         "stats": {

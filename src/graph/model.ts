@@ -122,7 +122,11 @@ export interface LogicTrailGraph {
     model?: string;
     generatedAt: string;
     repository: string;
-    /** Absolute path of the analyzed root, used for "open in editor" links. */
+    /**
+     * Where the analyzed root is relative to the folder the file was written to, e.g. "..", used
+     * for "Open in editor" links. Never an absolute path (files from 0.2.0 and earlier may have
+     * one).
+     */
     rootPath?: string;
     stats: {
       files: number;

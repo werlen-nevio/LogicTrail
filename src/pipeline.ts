@@ -184,7 +184,6 @@ export async function analyze(options: AnalyzeOptions): Promise<AnalysisResult> 
       ...(activeProvider.model ? { model: activeProvider.model } : {}),
       generatedAt: new Date().toISOString(),
       repository: path.basename(root),
-      rootPath: root,
       stats: {
         files: index.stats.files,
         symbols: index.stats.symbols,

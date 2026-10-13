@@ -136,6 +136,44 @@ describe("cli", () => {
     }
   });
 
+  it("writes no absolute paths, only where the root is relative to the files", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-root-"));
+    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-out-"));
+    try {
+      await fs.cp(ACME_SHOP, root, { recursive: true });
+      const common = [
+        "how does login work?",
+        "--root",
+        root,
+        "--output",
+        "html,json",
+        "--no-cache",
+      ];
+      expect(cli([...common, "--name", "inside"]).status).toBe(0);
+      expect(cli([...common, "--name", "outside", "--out-dir", outside]).status).toBe(0);
+
+      const inside = path.join(root, ".logictrail", "inside");
+      const json = JSON.parse(await fs.readFile(`${inside}.json`, "utf8")) as {
+        analysis: { rootPath?: string };
+      };
+      expect(json.analysis.rootPath).toBe("..");
+      const outsideJson = JSON.parse(
+        await fs.readFile(path.join(outside, "outside.json"), "utf8"),
+      ) as { analysis: { rootPath?: string } };
+      expect(outsideJson.analysis.rootPath).toBeUndefined();
+
+      const escaped = JSON.stringify(root).slice(1, -1);
+      for (const file of [`${inside}.json`, `${inside}.html`, path.join(outside, "outside.html")]) {
+        const content = await fs.readFile(file, "utf8");
+        expect(content).not.toContain(root);
+        expect(content).not.toContain(escaped);
+      }
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+      await fs.rm(outside, { recursive: true, force: true });
+    }
+  });
+
   it("slugifies output names", () => {
     expect(slugify("How does checkout work?")).toBe("how-does-checkout-work");
     expect(slugify("Ünïcödé — flows!")).toBe("unicode-flows");

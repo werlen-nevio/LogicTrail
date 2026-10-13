@@ -148,6 +148,7 @@ export async function updateFlow(
   });
   const written = await writeOutputs(graph, {
     outDir: flow.dir,
+    root: options.root,
     name: flow.name,
     formats: flow.formats,
     theme: options.theme ?? flow.theme,

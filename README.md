@@ -230,6 +230,15 @@ would be sent without sending it (no API key needed):
 npx logictrail "how does checkout work?" --show-prompt > prompt.md
 ```
 
+### What the output files contain
+
+The HTML and JSON files contain the source excerpts, file paths relative to the repository root,
+the repository's folder name and the question. They don't contain absolute paths, so sharing a
+flow doesn't share your user name or folder layout. For "Open in editor", a file written inside
+the repository (the default `.logictrail/`) records where the root is relative to itself, such as
+`..`; a file written outside the repository records nothing, and its viewer has no "Open in
+editor" links.
+
 ## Output formats
 
 | Format  | Flag               | What you get                                                                                                 |
@@ -255,7 +264,8 @@ npx logictrail "how does checkout work?" --output mermaid --stdout >> docs/check
 - `/` searches, `F` fits the graph to the screen, `+`/`-` zoom, `↑`/`↓` step through the flow,
   `T` switches the theme and `Esc` clears the selection.
 - Links like `flow.html#node=<id>` open with a node selected. "Open in editor" jumps to the line
-  in VS Code.
+  in VS Code when the file is opened from disk inside the repository (see
+  [What the output files contain](#what-the-output-files-contain)).
 
 ## Examples
 

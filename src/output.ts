@@ -22,6 +22,11 @@ export interface WriteOutputsOptions {
   name: string;
   formats: readonly OutputFormat[];
   theme?: Theme;
+  /**
+   * The analyzed root. The files record where it is relative to `outDir` (e.g. "..") so the HTML
+   * viewer can link to source files without the files containing an absolute path.
+   */
+  root?: string;
 }
 
 export interface WrittenFile {
@@ -35,6 +40,13 @@ export async function writeOutputs(
   options: WriteOutputsOptions,
 ): Promise<WrittenFile[]> {
   await fs.mkdir(options.outDir, { recursive: true });
+  if (options.root !== undefined) {
+    const rootPath = path.relative(options.outDir, options.root).split(path.sep).join("/") || ".";
+    // Only when the files are inside the root ("..", "../.."): a path that climbs out of an
+    // outside folder and back down would name the folders above the repository.
+    if (/^\.\.?(\/\.\.)*$/.test(rootPath))
+      graph = { ...graph, analysis: { ...graph.analysis, rootPath } };
+  }
   const needsLayout = options.formats.includes("html") || options.formats.includes("svg");
   const layout = needsLayout ? layoutGraph(graph) : undefined;
   const written: WrittenFile[] = [];

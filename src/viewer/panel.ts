@@ -266,9 +266,9 @@ export class Panel {
       });
     });
     wrapper.appendChild(copy);
-    const rootPath = this.context.graph.analysis.rootPath;
-    if (rootPath) {
-      const absolute = `${rootPath.replace(/\\/g, "/").replace(/\/$/, "")}/${file}`;
+    const root = absoluteRoot(this.context.graph.analysis.rootPath);
+    if (root) {
+      const absolute = `${root.replace(/\/$/, "")}/${file}`;
       const href = `vscode://file/${encodeURI(absolute.startsWith("/") ? absolute.slice(1) : absolute)}${line ? `:${line}` : ""}`;
       wrapper.appendChild(h("a", { href, title: "Open in VS Code" }, "Open in editor"));
     }
@@ -415,4 +415,17 @@ export function typeChip(type: LogicNode["type"]): HTMLElement {
   chip.appendChild(icon(NODE_ICONS[type], 13));
   chip.appendChild(document.createTextNode(NODE_TYPE_LABELS[type]));
   return chip;
+}
+
+/**
+ * The analyzed root as an absolute path. `rootPath` is relative to the folder the HTML file is in,
+ * so it only resolves when the viewer is opened from disk. Older files hold an absolute path.
+ */
+function absoluteRoot(rootPath: string | undefined): string | undefined {
+  if (!rootPath) return undefined;
+  const normalized = rootPath.replace(/\\/g, "/");
+  if (normalized.startsWith("/") || /^[A-Za-z]:\//.test(normalized)) return normalized;
+  if (window.location.protocol !== "file:") return undefined;
+  const url = new URL(`${normalized.replace(/\/$/, "")}/`, window.location.href);
+  return decodeURIComponent(url.pathname);
 }
