@@ -25,6 +25,10 @@ Claude Code plugin share one version number.
 
 - `--name` keeps the case of the name it's given (`--name fn-addItem` writes `fn-addItem.*`, not
   `fn-additem.*`) and only replaces characters that aren't safe in file names.
+- An HTTP request whose URL can't be resolved to a string is labelled with the expression it was
+  written as. `fetch(endpoint, { method: "POST" })`, where `endpoint` is a conditional that can be
+  `""`, was labelled `POST ` and is now `POST endpoint`; an unresolved `fetch`, axios, ky or got URL
+  no longer shows the whole call.
 
 ## [0.2.0] - 2026-10-05
 

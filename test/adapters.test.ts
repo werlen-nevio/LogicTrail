@@ -140,6 +140,19 @@ describe("http, event and service adapters", () => {
     ]);
   });
 
+  it("labels unresolved fetch URLs with their expression", () => {
+    expect(
+      classify(`
+        const domain = process.env.SHOP_DOMAIN;
+        const endpoint = domain ? \`\${domain}/api/graphql.json\` : "";
+        export async function run(config: { url: string }) {
+          await fetch(endpoint, { method: "POST" });
+          await fetch(config.url);
+        }
+      `),
+    ).toEqual(["requests:POST endpoint", "requests:GET config.url"]);
+  });
+
   it("mitt, socket.io and generic emitters", () => {
     expect(
       classify(`
