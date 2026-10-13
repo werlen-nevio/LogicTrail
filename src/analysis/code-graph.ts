@@ -7,7 +7,7 @@ import {
   type Classification,
   type FrameworkAdapter,
 } from "./adapters/index.js";
-import { composeRoutes, RouteMatcher, type RouteDefinition } from "./routes.js";
+import { composeRoutes, routeLabel, RouteMatcher, type RouteDefinition } from "./routes.js";
 import type { Value, Workspace } from "./workspace.js";
 import { asText } from "../util/text.js";
 
@@ -234,11 +234,17 @@ class CodeGraphBuilder {
         id: route.id,
         kind: "route",
         type: "route",
-        label: `${route.method} ${route.path}`,
+        label: routeLabel(route),
         name: route.path,
         file: route.file,
         line: route.line,
-        metadata: { method: route.method, path: route.path, framework: route.framework },
+        metadata: {
+          method: route.method,
+          path: route.path,
+          framework: route.framework,
+          ...(route.versions ? { versions: route.versions } : {}),
+          ...(route.servesDefault === false ? { servesDefault: false } : {}),
+        },
       });
       const steps: ResolvedStep[] = [];
       for (const handler of route.handlers) {
@@ -254,7 +260,7 @@ class CodeGraphBuilder {
             from: route.id,
             to: target,
             kind: "calls",
-            ...(handler.middleware ? { label: "middleware" } : {}),
+            ...(handler.middleware ? { label: handler.ref.role ?? "middleware" } : {}),
             file: handler.file,
             line:
               route.file === handler.file

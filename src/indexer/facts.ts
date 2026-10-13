@@ -10,7 +10,7 @@
  * stale caches are discarded.
  */
 
-export const FACTS_VERSION = 6;
+export const FACTS_VERSION = 7;
 
 export interface FileFacts {
   /** Repository-relative path with forward slashes. */
@@ -27,6 +27,8 @@ export interface FileFacts {
   mounts: MountFact[];
   listeners: ListenerFact[];
   pages: PageFact[];
+  /** NestJS modules, apps and RouterModule paths declared in this file. */
+  nest?: NestFacts;
   /** File-level directives such as "use client" / "use server". */
   directives: string[];
   /** Number of syntax errors reported by the parser (facts may be partial). */
@@ -195,10 +197,14 @@ export interface BranchArm {
   terminates: boolean;
 }
 
-export type HandlerRef =
+export type HandlerRef = (
   | { kind: "symbol"; symbol: string }
   | { kind: "path"; path: string[] }
-  | { kind: "call"; path: string[]; text: string };
+  | { kind: "call"; path: string[]; text: string }
+) & {
+  /** What a step before the handler is, when it isn't plain middleware (NestJS enhancers). */
+  role?: "guard" | "interceptor" | "pipe";
+};
 
 export interface RouteFact {
   method: string;
@@ -213,6 +219,42 @@ export interface RouteFact {
   handlers: HandlerRef[];
   line: number;
   text: string;
+  /** NestJS: symbol id of the controller class. */
+  controller?: string;
+  /** NestJS: versions from `@Version` or `@Controller({ version })`. */
+  versions?: VersionRef[];
+}
+
+/** A NestJS version: a literal, a constant to resolve, or `VERSION_NEUTRAL`. */
+export type VersionRef =
+  { kind: "string"; value: string } | { kind: "path"; path: string[] } | { kind: "neutral" };
+
+export interface NestFacts {
+  /** Classes decorated with `@Module({ imports, controllers })`. */
+  modules: NestModuleFact[];
+  /** Apps configured in this file (`setGlobalPrefix`, `enableVersioning`). */
+  apps: NestAppFact[];
+  /** `RouterModule.register([{ path, module, children }])`, flattened to full paths. */
+  routerPaths: { path: string; module: HandlerRef; line: number }[];
+}
+
+export interface NestModuleFact {
+  symbol: string;
+  imports: HandlerRef[];
+  controllers: HandlerRef[];
+}
+
+export interface NestAppFact {
+  line: number;
+  /** The root module from `NestFactory.create(AppModule)`, when it is visible. */
+  module?: HandlerRef;
+  globalPrefix?: { prefix: string; exclude: { path: string; method?: string }[] };
+  versioning?: {
+    type: "uri" | "header" | "media-type" | "custom";
+    /** URI versioning prefix, "v" unless set. */
+    prefix: string;
+    defaultVersions: VersionRef[];
+  };
 }
 
 export interface MountFact {
@@ -224,11 +266,10 @@ export interface MountFact {
   line: number;
   /**
    * How the prefix applies. Omitted for Express-style `use()`, where targets that are not
-   * routers become middleware. "register" (Fastify plugins) only mounts routers, "base-path"
-   * prefixes the router's own routes (Hono `basePath`, Koa `prefix`) and "global-prefix"
-   * prefixes every NestJS route (`app.setGlobalPrefix`).
+   * routers become middleware. "register" (Fastify plugins) only mounts routers and "base-path"
+   * prefixes the router's own routes (Hono `basePath`, Koa `prefix`).
    */
-  kind?: "register" | "base-path" | "global-prefix";
+  kind?: "register" | "base-path";
 }
 
 export interface ListenerFact {

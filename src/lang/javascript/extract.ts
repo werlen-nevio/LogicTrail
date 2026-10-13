@@ -8,10 +8,13 @@ import type {
   ImportFact,
   InitSummary,
   MemberRef,
+  NestAppFact,
+  NestFacts,
   PropertyFact,
   RouteFact,
   SymbolFact,
   SymbolKind,
+  VersionRef,
 } from "../../indexer/facts.js";
 import {
   containsJsx,
@@ -62,6 +65,25 @@ const ROUTER_NAME = /^(app|server|fastify|router|routes|.+Router|.+Routes)$/;
 /** Fastify route options that run before the handler. */
 const ROUTE_HOOKS = new Set(["onRequest", "preParsing", "preValidation", "preHandler"]);
 const NEST_METHODS = new Set(["Get", "Post", "Put", "Patch", "Delete", "All", "Options", "Head"]);
+/** NestJS enhancer decorators, in the order Nest runs them, and the method each one calls. */
+const NEST_ENHANCERS = [
+  { decorator: "UseGuards", role: "guard", method: "canActivate" },
+  { decorator: "UseInterceptors", role: "interceptor", method: "intercept" },
+  { decorator: "UsePipes", role: "pipe", method: "transform" },
+] as const;
+const NEST_VERSIONING_TYPES: Record<string, NonNullable<NestAppFact["versioning"]>["type"]> = {
+  URI: "uri",
+  HEADER: "header",
+  MEDIA_TYPE: "media-type",
+  CUSTOM: "custom",
+};
+
+/** A NestJS controller: its paths, versions and class-level enhancers. */
+interface NestController {
+  paths: string[];
+  versions?: VersionRef[];
+  enhancers: HandlerRef[][];
+}
 const REQUEST_PARAM = /^(req|request|ctx|c|context)$/;
 const LISTENER_METHODS = new Set(["on", "once", "addListener", "subscribe"]);
 const UI_EMITTERS = new Set(["window", "document"]);
@@ -109,6 +131,7 @@ class FileExtractor {
   private readonly symbolNodes = new Map<ts.Node, SymbolFact>();
   private readonly usedIds = new Set<string>();
   private readonly requireDeclarations = new Set<ts.VariableDeclaration>();
+  private readonly nestApps = new Map<string, NestAppFact>();
   private readonly fileStem: string;
   private importedFrameworks: Set<RouteFact["framework"]> | undefined;
 
@@ -152,7 +175,13 @@ class FileExtractor {
     for (const statement of this.sf.statements) this.topLevelStatement(statement);
     this.addFileBasedRoutes();
     this.extractBodies();
+    if (this.nestApps.size > 0) this.nest().apps.push(...this.nestApps.values());
     return this.facts;
+  }
+
+  private nest(): NestFacts {
+    this.facts.nest ??= { modules: [], apps: [], routerPaths: [] };
+    return this.facts.nest;
   }
 
   // ---------------------------------------------------------------------------
@@ -621,7 +650,8 @@ class FileExtractor {
     const basePath = base ? getPath(base.expression) : undefined;
     if (basePath) info.extends = basePath;
     classSymbol.classInfo = info;
-    const controllerPaths = this.nestControllerPaths(node);
+    const controller = this.nestController(node);
+    this.nestModule(node, classSymbol);
 
     for (const member of node.members) {
       const memberName = member.name ? propertyNameText(member.name) : undefined;
@@ -637,7 +667,7 @@ class FileExtractor {
           declarationNode: member,
         });
         this.walkFunction(member, method);
-        if (controllerPaths) this.nestRoutes(member, method, controllerPaths);
+        if (controller) this.nestRoutes(member, method, controller, classSymbol.id);
       } else if (ts.isConstructorDeclaration(member)) {
         for (const parameter of member.parameters) {
           const isProperty =
@@ -709,29 +739,176 @@ class FileExtractor {
     return { typeName, ...(typeArgs && typeArgs.length > 0 ? { typeArgs } : {}) };
   }
 
-  /** `@Controller("users")` prefixes, or undefined when the class is no NestJS controller. */
-  private nestControllerPaths(node: ts.ClassLikeDeclaration): string[] | undefined {
-    const controller = this.nestDecorators(node).find((entry) => entry.name === "Controller");
-    return controller ? nestPaths(controller.call.arguments[0]) : undefined;
+  /** A `@Controller()` class's paths, versions and enhancers; undefined for other classes. */
+  private nestController(node: ts.ClassLikeDeclaration): NestController | undefined {
+    const decorators = this.nestDecorators(node);
+    const controller = decorators.find((entry) => entry.name === "Controller");
+    if (!controller) return undefined;
+    const paths = nestPaths(controller.call.arguments[0]);
+    if (!paths) return undefined;
+    const options = controller.call.arguments[0] && unwrapExpression(controller.call.arguments[0]);
+    const version =
+      options && ts.isObjectLiteralExpression(options)
+        ? objectProperty(options, "version")
+        : undefined;
+    const versions = version ? this.nestVersions(version) : undefined;
+    return {
+      paths,
+      ...(versions ? { versions } : {}),
+      enhancers: this.nestEnhancers(decorators),
+    };
   }
 
   /** NestJS `@Get(":id")`-style routes on a controller method. */
   private nestRoutes(
     member: ts.MethodDeclaration,
     method: SymbolFact,
-    prefixes: readonly string[],
+    controller: NestController,
+    controllerId: string,
   ): void {
-    for (const { name, call, decorator } of this.nestDecorators(member)) {
+    const decorators = this.nestDecorators(member);
+    const own = this.nestEnhancers(decorators);
+    // Guards, then interceptors, then pipes; class-level before method-level within each.
+    const enhancers = NEST_ENHANCERS.flatMap((_, index) => [
+      ...(controller.enhancers[index] ?? []),
+      ...(own[index] ?? []),
+    ]);
+    const versionDecorator = decorators.find((entry) => entry.name === "Version");
+    const versions =
+      (versionDecorator?.call.arguments[0] &&
+        this.nestVersions(versionDecorator.call.arguments[0])) ||
+      controller.versions;
+    for (const { name, call, decorator } of decorators) {
       if (!NEST_METHODS.has(name)) continue;
-      for (const prefix of prefixes) {
+      for (const prefix of controller.paths) {
         for (const routePath of nestPaths(call.arguments[0]) ?? []) {
           this.facts.routes.push({
             method: name.toUpperCase(),
             path: joinUrl(prefix, routePath),
             framework: "nestjs",
-            handlers: [{ kind: "symbol", symbol: method.id }],
+            handlers: [...enhancers, { kind: "symbol", symbol: method.id }],
             line: lineOf(this.sf, decorator),
             text: textOf(this.sf, decorator, 100),
+            controller: controllerId,
+            ...(versions ? { versions } : {}),
+          });
+        }
+      }
+    }
+  }
+
+  /** `@UseGuards(AuthGuard)` and friends, grouped like {@link NEST_ENHANCERS}. */
+  private nestEnhancers(decorators: ReturnType<FileExtractor["nestDecorators"]>): HandlerRef[][] {
+    return NEST_ENHANCERS.map(({ decorator, role, method }) =>
+      decorators
+        .filter((entry) => entry.name === decorator)
+        .flatMap((entry) => entry.call.arguments)
+        .flatMap((raw): HandlerRef[] => {
+          // `AuthGuard` and `new ValidationPipe()` both run the class's method.
+          let value = unwrapExpression(raw);
+          if (ts.isNewExpression(value)) value = unwrapExpression(value.expression);
+          const path = getPath(value);
+          return path ? [{ kind: "path", path: [...path, method], role }] : [];
+        }),
+    );
+  }
+
+  /** `"2"`, `["1", "2"]`, `VERSION_NEUTRAL` or a constant holding a version. */
+  private nestVersions(raw: ts.Expression): VersionRef[] | undefined {
+    const value = unwrapExpression(raw);
+    const elements = ts.isArrayLiteralExpression(value) ? [...value.elements] : [value];
+    const versions: VersionRef[] = [];
+    for (const element of elements) {
+      const item = unwrapExpression(element);
+      if (ts.isStringLiteralLike(item)) {
+        versions.push({ kind: "string", value: item.text });
+        continue;
+      }
+      const path = getPath(item);
+      if (!path) continue;
+      const imported = path.length === 1 ? this.imports.get(path[0] ?? "") : undefined;
+      if (imported?.source === "@nestjs/common" && imported.imported === "VERSION_NEUTRAL") {
+        versions.push({ kind: "neutral" });
+      } else {
+        versions.push({ kind: "path", path });
+      }
+    }
+    return versions.length > 0 ? versions : undefined;
+  }
+
+  /** `@Module({ imports, controllers })`, and the `RouterModule.register()` paths it imports. */
+  private nestModule(node: ts.ClassLikeDeclaration, classSymbol: SymbolFact): void {
+    const decorator = this.nestDecorators(node).find((entry) => entry.name === "Module");
+    const options = decorator?.call.arguments[0] && unwrapExpression(decorator.call.arguments[0]);
+    if (!options || !ts.isObjectLiteralExpression(options)) return;
+    const elements = (name: string): ts.Expression[] => {
+      const value = objectProperty(options, name);
+      return value && ts.isArrayLiteralExpression(value)
+        ? value.elements.map((element) => unwrapExpression(element))
+        : [];
+    };
+    const imports: HandlerRef[] = [];
+    for (const element of elements("imports")) {
+      if (ts.isCallExpression(element)) {
+        const callee = getPath(element.expression);
+        const head = callee?.[0];
+        if (callee?.length === 2 && head && callee[1] === "register" && this.isNestCore(head)) {
+          this.routerModulePaths(element.arguments[0], "");
+        } else if (callee?.length === 1 && head === "forwardRef") {
+          const factory = element.arguments[0] && unwrapExpression(element.arguments[0]);
+          const target =
+            factory && ts.isArrowFunction(factory) && !ts.isBlock(factory.body)
+              ? getPath(unwrapExpression(factory.body))
+              : undefined;
+          if (target) imports.push({ kind: "path", path: target });
+        } else if (callee && callee.length >= 2) {
+          // `ConfigModule.forRoot()`, `TypeOrmModule.forFeature([...])`: the module itself.
+          imports.push({ kind: "path", path: callee.slice(0, -1) });
+        }
+        continue;
+      }
+      const path = getPath(element);
+      if (path) imports.push({ kind: "path", path });
+    }
+    const controllers = elements("controllers").flatMap((element): HandlerRef[] => {
+      const path = getPath(element);
+      return path ? [{ kind: "path", path }] : [];
+    });
+    this.nest().modules.push({ symbol: classSymbol.id, imports, controllers });
+  }
+
+  private isNestCore(local: string): boolean {
+    return this.imports.get(local)?.source === "@nestjs/core";
+  }
+
+  /** Flattens `[{ path: "admin", module: AdminModule, children: [...] }]` into full paths. */
+  private routerModulePaths(raw: ts.Expression | undefined, parent: string): void {
+    const routes = raw && unwrapExpression(raw);
+    if (!routes || !ts.isArrayLiteralExpression(routes)) return;
+    for (const element of routes.elements) {
+      const route = unwrapExpression(element);
+      if (ts.isObjectLiteralExpression(route)) {
+        const pathValue = objectProperty(route, "path");
+        const routePath =
+          pathValue && ts.isStringLiteralLike(pathValue) ? joinUrl(parent, pathValue.text) : parent;
+        const moduleValue = objectProperty(route, "module");
+        const modulePath = moduleValue && getPath(moduleValue);
+        if (modulePath) {
+          this.nest().routerPaths.push({
+            path: routePath,
+            module: { kind: "path", path: modulePath },
+            line: lineOf(this.sf, route),
+          });
+        }
+        this.routerModulePaths(objectProperty(route, "children"), routePath);
+      } else {
+        // `children: [CatsModule]` gives the module the parent's path.
+        const modulePath = getPath(route);
+        if (modulePath && parent) {
+          this.nest().routerPaths.push({
+            path: parent,
+            module: { kind: "path", path: modulePath },
+            line: lineOf(this.sf, route),
           });
         }
       }
@@ -1028,7 +1205,8 @@ class FileExtractor {
       return false;
     }
     if (method === "register") return this.pluginRegistration(call, callee, scope);
-    if (method === "setGlobalPrefix") return this.globalPrefix(call, callee, scope);
+    if (method === "setGlobalPrefix" || method === "enableVersioning")
+      return this.nestAppConfig(call, callee, scope);
     if (LISTENER_METHODS.has(method)) return this.listenerRegistration(call, callee, scope);
     if (method === "process") return this.queueProcessor(call, callee, scope);
     return false;
@@ -1246,25 +1424,58 @@ class FileExtractor {
     return true;
   }
 
-  /** NestJS `app.setGlobalPrefix("api")` on an app created by `NestFactory.create()`. */
-  private globalPrefix(
+  /** NestJS `app.setGlobalPrefix()` and `app.enableVersioning()`. */
+  private nestAppConfig(
     call: ts.CallExpression,
     callee: ts.PropertyAccessExpression,
     scope: SymbolFact | undefined,
   ): boolean {
-    const routerPath = getPath(callee.expression);
-    const prefixArg = call.arguments[0];
-    if (routerPath?.length !== 1 || !prefixArg || !ts.isStringLiteralLike(prefixArg)) return false;
-    const init = this.lookupInit(routerPath[0] ?? "", scope);
-    if (init?.kind !== "call" || this.importSource(init.callee[0] ?? "") !== "@nestjs/core")
-      return false;
-    this.facts.mounts.push({
-      router: routerPath,
-      prefix: prefixArg.text,
-      targets: [],
+    const appPath = getPath(callee.expression);
+    const name = appPath?.length === 1 ? appPath[0] : undefined;
+    if (!name) return false;
+    const init = this.lookupInit(name, scope);
+    const created =
+      init?.kind === "call" && this.isNestCore(init.callee[0] ?? "") ? init : undefined;
+    // An app received as a parameter (`bootstrap(app)`) counts in files that use NestJS.
+    const usesNest = [...this.imports.values()].some((fact) => fact.source.startsWith("@nestjs/"));
+    if (!created && !usesNest) return false;
+    const key = `${scope?.id ?? ""}#${name}`;
+    const moduleArg = created?.args[0];
+    const app: NestAppFact = this.nestApps.get(key) ?? {
       line: lineOf(this.sf, call),
-      kind: "global-prefix",
-    });
+      ...(moduleArg?.kind === "path" ? { module: { kind: "path", path: moduleArg.path } } : {}),
+    };
+    const first = call.arguments[0] && unwrapExpression(call.arguments[0]);
+    if (callee.name.text === "setGlobalPrefix") {
+      if (!first || !ts.isStringLiteralLike(first)) return false;
+      const options = call.arguments[1] && unwrapExpression(call.arguments[1]);
+      const excluded =
+        options && ts.isObjectLiteralExpression(options)
+          ? objectProperty(options, "exclude")
+          : undefined;
+      const exclude =
+        excluded && ts.isArrayLiteralExpression(excluded)
+          ? excluded.elements.flatMap((element) => nestExclude(unwrapExpression(element)))
+          : [];
+      app.globalPrefix = { prefix: first.text, exclude };
+    } else {
+      if (!first || !ts.isObjectLiteralExpression(first)) return false;
+      const type = objectProperty(first, "type");
+      const typeName = type ? getPath(type)?.at(-1) : undefined;
+      const prefix = objectProperty(first, "prefix");
+      const defaultVersion = objectProperty(first, "defaultVersion");
+      app.versioning = {
+        type: NEST_VERSIONING_TYPES[typeName ?? "URI"] ?? "uri",
+        prefix:
+          prefix && ts.isStringLiteralLike(prefix)
+            ? prefix.text
+            : prefix?.kind === ts.SyntaxKind.FalseKeyword
+              ? ""
+              : "v",
+        defaultVersions: (defaultVersion && this.nestVersions(defaultVersion)) ?? [],
+      };
+    }
+    this.nestApps.set(key, app);
     return true;
   }
 
@@ -1703,4 +1914,34 @@ function returnedMembers(body: ts.ConciseBody): Record<string, MemberRef> | unde
   };
   visitBody(body);
   return found && Object.keys(members).length > 0 ? members : undefined;
+}
+
+/** The value of `name: value` in an object literal. */
+function objectProperty(
+  object: ts.ObjectLiteralExpression,
+  name: string,
+): ts.Expression | undefined {
+  for (const property of object.properties) {
+    if (ts.isPropertyAssignment(property) && propertyNameText(property.name) === name)
+      return unwrapExpression(property.initializer);
+    if (ts.isShorthandPropertyAssignment(property) && property.name.text === name)
+      return property.name;
+  }
+  return undefined;
+}
+
+/** An entry of `setGlobalPrefix(prefix, { exclude })`: "health" or `{ path, method }`. */
+function nestExclude(entry: ts.Expression): { path: string; method?: string }[] {
+  if (ts.isStringLiteralLike(entry)) return [{ path: entry.text }];
+  if (!ts.isObjectLiteralExpression(entry)) return [];
+  const pathValue = objectProperty(entry, "path");
+  if (!pathValue || !ts.isStringLiteralLike(pathValue)) return [];
+  const method = objectProperty(entry, "method");
+  const methodName = method ? getPath(method)?.at(-1) : undefined;
+  return [
+    {
+      path: pathValue.text,
+      ...(methodName && methodName !== "ALL" ? { method: methodName.toUpperCase() } : {}),
+    },
+  ];
 }

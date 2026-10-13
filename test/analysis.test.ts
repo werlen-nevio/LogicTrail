@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { normalizeUrl } from "../src/analysis/adapters/http.js";
 import { parseSql } from "../src/analysis/adapters/data.js";
-import { joinPaths, RouteMatcher, type RouteDefinition } from "../src/analysis/routes.js";
+import {
+  composeRoutes,
+  joinPaths,
+  routeLabel,
+  RouteMatcher,
+  type RouteDefinition,
+} from "../src/analysis/routes.js";
 import { buildCodeGraph } from "../src/analysis/code-graph.js";
 import { Workspace } from "../src/analysis/workspace.js";
+import { NoFlowFoundError, seedsForTarget } from "../src/pipeline.js";
 import { JavaScriptModuleResolver } from "../src/lang/javascript/module-resolver.js";
 import {
   ACME_SHOP,
@@ -191,6 +198,160 @@ describe("destructured hook results", () => {
 
   it("follows a useOptimistic or useReducer dispatcher to its reducer", () => {
     expect(edgeLabels(graph, "addCartItem()")).toEqual(["calls:cartReducer()"]);
+  });
+});
+
+describe("NestJS modules, versions and enhancers", () => {
+  const nestFiles = (main: string) => [
+    facts(
+      `
+      import { Controller, Get, Post, UseGuards, UseInterceptors, UsePipes, Version, ValidationPipe } from "@nestjs/common";
+      import { AuthGuard } from "./auth.guard";
+      import { RolesGuard, LoggingInterceptor } from "./enhancers";
+      @Controller({ path: "cats", version: ["1", "2"] })
+      @UseGuards(AuthGuard)
+      @UseInterceptors(LoggingInterceptor)
+      export class CatsController {
+        @Get() findAll() {}
+        @Post() @UseGuards(RolesGuard) @UsePipes(new ValidationPipe()) create() {}
+        @Get("health") @Version("3") health() {}
+      }
+    `,
+      "src/cats/cats.controller.ts",
+    ),
+    facts(`export class AuthGuard { canActivate() { return true; } }`, "src/cats/auth.guard.ts"),
+    facts(
+      `
+      export class RolesGuard { canActivate() { return true; } }
+      export class LoggingInterceptor { intercept() {} }
+    `,
+      "src/cats/enhancers.ts",
+    ),
+    facts(
+      `
+      import { Module } from "@nestjs/common";
+      import { CatsController } from "./cats.controller";
+      @Module({ controllers: [CatsController] })
+      export class CatsModule {}
+    `,
+      "src/cats/cats.module.ts",
+    ),
+    facts(
+      `
+      import { Controller, Get } from "@nestjs/common";
+      @Controller("status")
+      export class StatusController { @Get() status() {} }
+    `,
+      "src/status.controller.ts",
+    ),
+    facts(
+      `
+      import { Module } from "@nestjs/common";
+      import { RouterModule } from "@nestjs/core";
+      import { CatsModule } from "./cats/cats.module";
+      @Module({ imports: [CatsModule, RouterModule.register([{ path: "pets", module: CatsModule }])] })
+      export class AppModule {}
+    `,
+      "src/app.module.ts",
+    ),
+    facts(
+      `
+      import { Module } from "@nestjs/common";
+      import { StatusController } from "./status.controller";
+      @Module({ controllers: [StatusController] })
+      export class AdminModule {}
+    `,
+      "src/admin.module.ts",
+    ),
+    facts(main, "src/main.ts"),
+  ];
+  const labels = (main: string) =>
+    composeRoutes(new Workspace(nestFiles(main), "/repo"))
+      .map(routeLabel)
+      .sort();
+
+  it("puts URI versions after the global prefix and RouterModule paths before the controller", () => {
+    expect(
+      labels(`
+        import { NestFactory } from "@nestjs/core";
+        import { VersioningType, RequestMethod } from "@nestjs/common";
+        import { AppModule } from "./app.module";
+        async function bootstrap() {
+          const app = await NestFactory.create(AppModule);
+          app.setGlobalPrefix("api", { exclude: [{ path: "pets/cats/health", method: RequestMethod.GET }] });
+          app.enableVersioning({ type: VersioningType.URI });
+        }
+      `),
+    ).toEqual([
+      "GET /api/v1/pets/cats",
+      "GET /api/v2/pets/cats",
+      "GET /status",
+      "GET /v3/pets/cats/health",
+      "POST /api/v1/pets/cats",
+      "POST /api/v2/pets/cats",
+    ]);
+  });
+
+  it("labels header versions and knows which routes serve the default version", () => {
+    const routes = composeRoutes(
+      new Workspace(
+        nestFiles(`
+          import { NestFactory } from "@nestjs/core";
+          import { VersioningType } from "@nestjs/common";
+          import { AppModule } from "./app.module";
+          export async function bootstrap() {
+            const app = await NestFactory.create(AppModule);
+            app.enableVersioning({ type: VersioningType.HEADER, header: "x-version", defaultVersion: "3" });
+          }
+        `),
+        "/repo",
+      ),
+    );
+    expect(routes.map(routeLabel).sort()).toEqual([
+      "GET /pets/cats (versions 1, 2)",
+      "GET /pets/cats/health (version 3)",
+      "GET /status",
+      "POST /pets/cats (versions 1, 2)",
+    ]);
+    expect(
+      routes.filter((route) => route.servesDefault !== false).map((route) => route.path),
+    ).toEqual(expect.arrayContaining(["/pets/cats/health", "/status"]));
+    expect(routes.find((route) => route.path === "/pets/cats")?.servesDefault).toBe(false);
+  });
+
+  it("picks a --route by version, or the default version without one", () => {
+    const graph = buildCodeGraph(
+      new Workspace(
+        nestFiles(`
+          import { NestFactory } from "@nestjs/core";
+          import { VersioningType } from "@nestjs/common";
+          import { AppModule } from "./app.module";
+          export async function bootstrap() {
+            const app = await NestFactory.create(AppModule);
+            app.enableVersioning({ type: VersioningType.CUSTOM, extractor: () => "1", defaultVersion: "2" });
+          }
+        `),
+        "/repo",
+      ),
+    );
+    const seeds = (route: string) => seedsForTarget(graph, { route }, "/repo");
+    expect(seeds("GET /pets/cats")).toEqual(["route:GET /pets/cats (versions 1, 2)"]);
+    expect(seeds("GET /pets/cats (version 1)")).toEqual(["route:GET /pets/cats (versions 1, 2)"]);
+    expect(() => seeds("GET /pets/cats (version 4)")).toThrow(NoFlowFoundError);
+  });
+
+  it("runs guards, then interceptors, then pipes before the handler", () => {
+    const graph = buildCodeGraph(new Workspace(nestFiles(""), "/repo"));
+    expect(
+      graph
+        .out("route:POST /pets/cats")
+        .map((edge) => [edge.label, graph.nodes.get(edge.to)?.label]),
+    ).toEqual([
+      ["guard", "AuthGuard.canActivate()"],
+      ["guard", "RolesGuard.canActivate()"],
+      ["interceptor", "LoggingInterceptor.intercept()"],
+      [undefined, "CatsController.create()"],
+    ]);
   });
 });
 

@@ -419,17 +419,17 @@ await writeOutputs(graph, { outDir: "docs/flows", name: "checkout", formats: ["m
 
 ## Supported frameworks
 
-| Area            | Recognized                                                                                                                                                                                                                                            |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Languages       | TypeScript, JavaScript (ESM and CommonJS), JSX/TSX                                                                                                                                                                                                    |
-| Servers         | Express (routers, mount prefixes, middleware chains), Fastify (route options, `register` prefixes), Hono (`route`, `basePath`), Koa (`@koa/router` prefixes and nesting), NestJS controllers (global prefix), Next.js App Router and Pages API routes |
-| UI              | React components, hooks, JSX event handlers, React Router pages, Next.js pages, server actions                                                                                                                                                        |
-| Navigation      | React Router `useNavigate`/`redirect`, Next.js `useRouter`, `redirect`, `notFound`                                                                                                                                                                    |
-| HTTP clients    | `fetch`, axios (including `axios.create` base URLs), ky, got, SWR, matched to your own routes                                                                                                                                                         |
-| Databases       | Prisma, Drizzle, Mongoose, Sequelize, TypeORM, Knex, pg/mysql/SQLite drivers, Redis, Supabase, Firestore                                                                                                                                              |
-| Events & queues | Node `EventEmitter`, mitt, socket.io, BullMQ, Bull                                                                                                                                                                                                    |
-| External APIs   | Stripe, Resend, SendGrid, Postmark, Twilio, OpenAI, Anthropic, Slack, GitHub, AWS SDK v3, Firebase, Clerk and more                                                                                                                                    |
-| Libraries       | bcrypt/argon2, jsonwebtoken/jose, zod/yup/joi validation, Node crypto, Passport, NextAuth, sessions                                                                                                                                                   |
+| Area            | Recognized                                                                                                                                                                                                                                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Languages       | TypeScript, JavaScript (ESM and CommonJS), JSX/TSX                                                                                                                                                                                                                                                              |
+| Servers         | Express (routers, mount prefixes, middleware chains), Fastify (route options, `register` prefixes), Hono (`route`, `basePath`), Koa (`@koa/router` prefixes and nesting), NestJS controllers (global prefix, `RouterModule`, versions, guards, interceptors and pipes), Next.js App Router and Pages API routes |
+| UI              | React components, hooks, JSX event handlers, React Router pages, Next.js pages, server actions                                                                                                                                                                                                                  |
+| Navigation      | React Router `useNavigate`/`redirect`, Next.js `useRouter`, `redirect`, `notFound`                                                                                                                                                                                                                              |
+| HTTP clients    | `fetch`, axios (including `axios.create` base URLs), ky, got, SWR, matched to your own routes                                                                                                                                                                                                                   |
+| Databases       | Prisma, Drizzle, Mongoose, Sequelize, TypeORM, Knex, pg/mysql/SQLite drivers, Redis, Supabase, Firestore                                                                                                                                                                                                        |
+| Events & queues | Node `EventEmitter`, mitt, socket.io, BullMQ, Bull                                                                                                                                                                                                                                                              |
+| External APIs   | Stripe, Resend, SendGrid, Postmark, Twilio, OpenAI, Anthropic, Slack, GitHub, AWS SDK v3, Firebase, Clerk and more                                                                                                                                                                                              |
+| Libraries       | bcrypt/argon2, jsonwebtoken/jose, zod/yup/joi validation, Node crypto, Passport, NextAuth, sessions                                                                                                                                                                                                             |
 
 Recognition is adapter-based and conservative. When LogicTrail cannot prove where a call goes, it
 leaves the call out rather than guessing.
@@ -440,6 +440,10 @@ leaves the call out rather than guessing.
   containers configured at runtime, functions stored in maps) are not linked. Claude may propose
   them as inferred edges.
 - Monorepo workspace packages are treated like external packages.
+- NestJS guards, interceptors and pipes registered globally (`app.useGlobalGuards`, `APP_GUARD`)
+  are not steps, and a guard whose `canActivate` comes from a package (such as Passport's
+  `AuthGuard`) has no step. A global prefix or version that isn't a literal (for example read from
+  an environment variable) is left out.
 - Only `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs` and `.cjs` files are read. Code in
   `.vue`, `.svelte` or `.astro` files is not part of any flow.
 - Files larger than 1 MB, usually generated or bundled code, are skipped.

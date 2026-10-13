@@ -360,16 +360,27 @@ export function seedsForTarget(graph: CodeGraph, target: FlowTarget, root: strin
   }
 
   if (target.route) {
-    const match = /^\s*([A-Za-z]+)\s+(\S+)\s*$/.exec(target.route);
+    // "POST /v2/bookings (version 2024-08-13)", as NestJS routes are labelled.
+    const versioned = /^(.*?)\s*\(versions?\s+([^)]*)\)\s*$/.exec(target.route);
+    const requested = versioned?.[2]?.split(",").map((version) => version.trim());
+    const match = /^\s*([A-Za-z]+)\s+(\S+)\s*$/.exec(versioned?.[1] ?? target.route);
     const method = match?.[1]?.toUpperCase();
-    const routePath = normalizeRoute(match?.[2] ?? target.route.trim());
-    const routes = nodes.filter(
+    const routePath = normalizeRoute(match?.[2] ?? (versioned?.[1] ?? target.route).trim());
+    const matching = nodes.filter(
       (node) =>
         node.kind === "route" &&
         !node.metadata.navigation &&
         normalizeRoute(String(node.metadata.path)) === routePath &&
         (!method || node.metadata.method === method || node.metadata.method === "ANY"),
     );
+    const versionsOf = (node: CodeNode): string[] | undefined =>
+      Array.isArray(node.metadata.versions) ? node.metadata.versions.map(String) : undefined;
+    // Without a version, NestJS serves the routes for the default version.
+    const routes = requested
+      ? matching.filter((node) => versionsOf(node)?.some((v) => requested.includes(v)) ?? true)
+      : matching.some((node) => node.metadata.servesDefault !== false)
+        ? matching.filter((node) => node.metadata.servesDefault !== false)
+        : matching;
     if (routes.length === 0) {
       const available = closestRoutes(
         nodes.filter((node) => node.kind === "route" && !node.metadata.navigation),

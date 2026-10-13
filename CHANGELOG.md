@@ -17,9 +17,19 @@ Claude Code plugin share one version number.
   `$schema`, and the package exports it as `logictrail/graph.schema.json`.
 - Routes for Fastify (`fastify.get`, `fastify.route`, route hooks and `register` prefixes), Hono
   (`app.route` sub-apps and `basePath`), Koa (`@koa/router` and `koa-router` prefixes and nested
-  `router.routes()`) and NestJS (`@Controller` methods decorated with `@Get`, `@Post` and so on,
-  plus `app.setGlobalPrefix`). Each route records its framework and is matched by `--route` and by
-  client requests like an Express route.
+  `router.routes()`) and NestJS (`@Controller` methods decorated with `@Get`, `@Post` and so on).
+  Each route records its framework and is matched by `--route` and by client requests like an
+  Express route.
+- For NestJS:
+  - `@UseGuards`, `@UseInterceptors` and `@UsePipes` on a controller or method are steps before the
+    handler, in the order Nest runs them, linked to `canActivate`, `intercept` and `transform`.
+  - `app.setGlobalPrefix` applies to the controllers in that app's module tree
+    (`NestFactory.create(AppModule)`) and honors `exclude`.
+  - `RouterModule.register` paths prefix the controllers of their module.
+  - `@Version` and `@Controller({ version })` follow `app.enableVersioning`. URI versions are part of
+    the path (`/v1/cats`); header, media type and custom versions are in the route's label, as in
+    `POST /v2/bookings (version 2024-08-13)`. `--route` takes the same suffix to pick a version,
+    and without one picks the routes that serve the default version.
 
 ### Changed
 
