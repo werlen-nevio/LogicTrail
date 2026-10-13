@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_EDITOR, editorProblem } from "../graph/editor.js";
 
 export const OUTPUT_FORMATS = ["html", "svg", "mermaid", "json"] as const;
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
@@ -20,6 +21,18 @@ export const ConfigSchema = z
     /** Cache per-file analysis between runs. */
     cache: z.boolean().optional(),
     cacheDir: z.string().min(1).optional(),
+    /**
+     * Where "Open in editor" links in the HTML viewer go: "vscode" (default), "vscode-insiders",
+     * "vscodium", "cursor", "idea", "none", or a URL template with {file} or {path} and {line}.
+     */
+    editor: z
+      .string()
+      .min(1)
+      .superRefine((value, context) => {
+        const problem = editorProblem(value);
+        if (problem) context.addIssue({ code: "custom", message: problem });
+      })
+      .optional(),
     llm: z
       .object({
         /** "auto", "claude", a Claude model id, or "static". */
@@ -43,6 +56,7 @@ export interface ResolvedConfig {
   output: OutputFormat[];
   cache: boolean;
   cacheDir: string;
+  editor: string;
   llm: { model: string; effort?: z.infer<typeof EffortSchema>; fallbacks?: boolean };
   /** The config file that was loaded, if any. */
   configFile?: string;
@@ -56,6 +70,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   output: ["html"],
   cache: true,
   cacheDir: ".logictrail/cache",
+  editor: DEFAULT_EDITOR,
   llm: { model: "auto" },
 };
 
@@ -73,6 +88,7 @@ export function resolveConfig(config: LogicTrailConfig, configFile?: string): Re
     output: config.output ?? DEFAULT_CONFIG.output,
     cache: config.cache ?? DEFAULT_CONFIG.cache,
     cacheDir: config.cacheDir ?? DEFAULT_CONFIG.cacheDir,
+    editor: config.editor ?? DEFAULT_CONFIG.editor,
     llm: {
       model: config.llm?.model ?? DEFAULT_CONFIG.llm.model,
       ...(config.llm?.effort ? { effort: config.llm.effort } : {}),

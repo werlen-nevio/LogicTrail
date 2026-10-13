@@ -9,7 +9,10 @@ import { ACME_SHOP } from "./helpers.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function cli(args: string[]): { status: number | null; stdout: string; stderr: string } {
+function cli(
+  args: string[],
+  env: Record<string, string> = {},
+): { status: number | null; stdout: string; stderr: string } {
   const result = spawnSync(
     process.execPath,
     ["--import", "tsx", path.join(projectRoot, "src/cli/main.ts"), ...args],
@@ -21,7 +24,9 @@ function cli(args: string[]): { status: number | null; stdout: string; stderr: s
         ANTHROPIC_API_KEY: "",
         ANTHROPIC_AUTH_TOKEN: "",
         LOGICTRAIL_MODEL: "",
+        LOGICTRAIL_EDITOR: "",
         NO_COLOR: "1",
+        ...env,
       },
     },
   );
@@ -131,6 +136,44 @@ describe("cli", () => {
       expect(missing.status).toBe(1);
       expect(missing.stderr).toContain('No saved flow named "the"');
       expect(missing.stderr).toContain('quote it: logictrail "update …"');
+    } finally {
+      await fs.rm(outDir, { recursive: true, force: true });
+    }
+  });
+
+  it("takes the editor from --editor, then LOGICTRAIL_EDITOR, and keeps it on update", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "logictrail-editor-"));
+    const editorOf = async (name: string): Promise<string | undefined> =>
+      (
+        JSON.parse(await fs.readFile(path.join(outDir, `${name}.json`), "utf8")) as {
+          analysis: { editor?: string };
+        }
+      ).analysis.editor;
+    try {
+      const common = ["--root", ACME_SHOP, "--out-dir", outDir, "--model", "static", "--no-cache"];
+      const flow = ["--route", "POST /api/orders", "--output", "json", ...common];
+      expect(cli([...flow, "--name", "default"]).status).toBe(0);
+      expect(await editorOf("default")).toBe("vscode");
+      expect(cli([...flow, "--name", "env"], { LOGICTRAIL_EDITOR: "idea" }).status).toBe(0);
+      expect(await editorOf("env")).toBe("idea");
+      expect(
+        cli([...flow, "--name", "flag", "--editor", "cursor"], { LOGICTRAIL_EDITOR: "idea" })
+          .status,
+      ).toBe(0);
+      expect(await editorOf("flag")).toBe("cursor");
+
+      // update keeps each flow's editor unless --editor is given.
+      expect(cli(["update", "flag", ...common], { LOGICTRAIL_EDITOR: "idea" }).status).toBe(0);
+      expect(await editorOf("flag")).toBe("cursor");
+      expect(cli(["update", "flag", "--editor", "none", ...common]).status).toBe(0);
+      expect(await editorOf("flag")).toBe("none");
+
+      const unknown = cli([...flow, "--editor", "nano"]);
+      expect(unknown.status).not.toBe(0);
+      expect(unknown.stderr).toContain('Unknown editor "nano"');
+      const badEnv = cli([...flow, "--name", "bad"], { LOGICTRAIL_EDITOR: "nano" });
+      expect(badEnv.status).toBe(2);
+      expect(badEnv.stderr).toContain('LOGICTRAIL_EDITOR: Unknown editor "nano"');
     } finally {
       await fs.rm(outDir, { recursive: true, force: true });
     }

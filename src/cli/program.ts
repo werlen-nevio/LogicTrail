@@ -17,13 +17,14 @@ import type { Theme } from "../render/svg.js";
 import { VERSION } from "../version.js";
 import { openFile } from "./open.js";
 import { TerminalReporter } from "./reporter.js";
-import { displayPath, parsePositiveInt } from "./shared.js";
+import { displayPath, editorFromEnv, parseEditor, parsePositiveInt } from "./shared.js";
 import { updateCommand } from "./update.js";
 
 interface CliOptions {
   output?: OutputFormat[];
   open?: boolean;
   model?: string;
+  editor?: string;
   maxDepth?: number;
   maxNodes?: number;
   file?: string;
@@ -78,6 +79,11 @@ export function createProgram(): Command {
       "-m, --model <model>",
       'LLM to use: "claude", a Claude model id (e.g. claude-opus-5-5), or "static" for no LLM',
     )
+    .option(
+      "--editor <editor>",
+      'Where "Open in editor" links go: vscode, vscode-insiders, vscodium, cursor, idea, none, or a URL template with {file} and {line}',
+      parseEditor,
+    )
     .option("--max-depth <n>", "How many hops to follow from the relevant code", parsePositiveInt)
     .option("--max-nodes <n>", "Maximum number of nodes in the flow", parsePositiveInt)
     .option("--file <path>", "Explain the flow starting in a file")
@@ -118,6 +124,7 @@ Examples:
 Environment:
   ANTHROPIC_API_KEY   Enables Claude for selection and explanations (static analysis otherwise)
   LOGICTRAIL_MODEL    Default for --model
+  LOGICTRAIL_EDITOR   Default for --editor
 `,
     )
     .action(async (words: string[], options: CliOptions) => {
@@ -156,8 +163,14 @@ async function runCli(question: string, options: CliOptions): Promise<number> {
     throw error;
   }
   if (config.configFile) reporter.debug(`Config: ${path.relative(root, config.configFile)}`);
+  const env = editorFromEnv();
+  if (env.problem && !options.editor) {
+    reporter.error(env.problem);
+    return 2;
+  }
   const effective: ResolvedConfig = {
     ...config,
+    editor: options.editor ?? env.editor ?? config.editor,
     maxDepth: options.maxDepth ?? config.maxDepth,
     maxNodes: options.maxNodes ?? config.maxNodes,
     cache: options.cache && config.cache,

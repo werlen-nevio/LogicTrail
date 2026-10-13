@@ -128,6 +128,11 @@ export interface LogicTrailGraph {
      * one).
      */
     rootPath?: string;
+    /**
+     * Where "Open in editor" links go: a built-in editor ("vscode", "cursor", "idea", …), "none",
+     * or a URL template with {file}/{path} and {line}. Absent means VS Code.
+     */
+    editor?: string;
     stats: {
       files: number;
       symbols: number;

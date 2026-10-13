@@ -13,13 +13,14 @@ import { findSavedFlows, updateFlow, type UpdatedFlow } from "../update.js";
 import { VERSION } from "../version.js";
 import { openFile } from "./open.js";
 import { TerminalReporter } from "./reporter.js";
-import { displayPath, parsePositiveInt } from "./shared.js";
+import { displayPath, editorFromEnv, parseEditor, parsePositiveInt } from "./shared.js";
 
 /** Changed steps listed per kind before the rest is summarized. */
 const MAX_LISTED = 12;
 
 interface UpdateOptions {
   model?: string;
+  editor?: string;
   maxDepth?: number;
   maxNodes?: number;
   root: string;
@@ -43,6 +44,11 @@ export function updateCommand(): Command {
     .option(
       "-m, --model <model>",
       'LLM to use: "claude", a Claude model id (e.g. claude-opus-5-5), or "static" for no LLM',
+    )
+    .option(
+      "--editor <editor>",
+      'Override where "Open in editor" links go (default: keep each flow\'s)',
+      parseEditor,
     )
     .option("--max-depth <n>", "Override the depth the flow was made with", parsePositiveInt)
     .option("--max-nodes <n>", "Override the node limit the flow was made with", parsePositiveInt)
@@ -88,8 +94,15 @@ async function runUpdate(names: string[], options: UpdateOptions): Promise<numbe
     }
     throw error;
   }
+  const env = editorFromEnv();
+  if (env.problem && !options.editor) {
+    reporter.error(env.problem);
+    return 2;
+  }
   const effective: ResolvedConfig = {
     ...config,
+    // For flows saved without an editor; a saved one is kept unless --editor overrides it.
+    editor: env.editor ?? config.editor,
     cache: options.cache && config.cache,
     llm: {
       ...config.llm,
@@ -134,6 +147,7 @@ async function runUpdate(names: string[], options: UpdateOptions): Promise<numbe
           ...(options.maxDepth ? { maxDepth: options.maxDepth } : {}),
           ...(options.maxNodes ? { maxNodes: options.maxNodes } : {}),
           ...(options.theme ? { theme: options.theme } : {}),
+          ...(options.editor ? { editor: options.editor } : {}),
         });
         reportChanges(reporter, result);
         updated.push(result);

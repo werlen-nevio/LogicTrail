@@ -41,6 +41,10 @@
           "description": "Where the analyzed root is relative to the folder the file was written to, e.g. \"..\", used for \"Open in editor\" links. Files from LogicTrail 0.2.0 and earlier may hold an absolute path.",
           "type": "string"
         },
+        "editor": {
+          "description": "Where \"Open in editor\" links go: \"vscode\", \"vscode-insiders\", \"vscodium\", \"cursor\", \"idea\", \"none\", or a URL template with {file} or {path} and {line}. Absent means VS Code.",
+          "type": "string"
+        },
         "stats": {
           "type": "object",
           "required": ["files", "symbols", "relationships", "candidates"],

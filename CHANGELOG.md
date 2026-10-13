@@ -10,6 +10,12 @@ Claude Code plugin share one version number.
 
 ### Added
 
+- "Open in editor" in the HTML viewer can open Cursor, VS Code Insiders, VSCodium or IntelliJ
+  IDEA/WebStorm instead of VS Code, or any editor through a URL template such as
+  `myeditor://open?file={file}&line={line}`. Choose it with `--editor`, `LOGICTRAIL_EDITOR` or
+  `editor` in the config (in that order of precedence). `none` hides the link and keeps "Copy".
+  The link's tooltip names the editor, and the choice is saved in the flow
+  (`analysis.editor`), so `logictrail update` keeps it unless `--editor` overrides it.
 - `--show-prompt` prints the prompt LogicTrail would send to Claude (the system prompt, the
   candidate steps, the edges and the source excerpts) without sending it or writing any files. It
   needs no API key. `buildFlowPrompt` does the same in the library API.

@@ -1,3 +1,4 @@
+import { editorLink } from "../graph/editor.js";
 import type { LogicEdge, LogicNode, LogicTrailGraph, SourceEvidence } from "../graph/model.js";
 import { NODE_ICONS, NODE_TYPE_LABELS } from "../render/theme.js";
 import { clear, copyText, h, icon } from "./dom.js";
@@ -267,11 +268,10 @@ export class Panel {
     });
     wrapper.appendChild(copy);
     const root = absoluteRoot(this.context.graph.analysis.rootPath);
-    if (root) {
-      const absolute = `${root.replace(/\/$/, "")}/${file}`;
-      const href = `vscode://file/${encodeURI(absolute.startsWith("/") ? absolute.slice(1) : absolute)}${line ? `:${line}` : ""}`;
-      wrapper.appendChild(h("a", { href, title: "Open in VS Code" }, "Open in editor"));
-    }
+    const link = root
+      ? editorLink(this.context.graph.analysis.editor, `${root.replace(/\/$/, "")}/${file}`, line)
+      : undefined;
+    if (link) wrapper.appendChild(h("a", { href: link.href, title: link.title }, "Open in editor"));
     return wrapper;
   }
 

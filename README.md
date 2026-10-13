@@ -266,8 +266,23 @@ npx logictrail "how does checkout work?" --output mermaid --stdout >> docs/check
 - `/` searches, `F` fits the graph to the screen, `+`/`-` zoom, `↑`/`↓` step through the flow,
   `T` switches the theme and `Esc` clears the selection.
 - Links like `flow.html#node=<id>` open with a node selected. "Open in editor" jumps to the line
-  in VS Code when the file is opened from disk inside the repository (see
-  [What the output files contain](#what-the-output-files-contain)).
+  in your editor when the file is opened from disk inside the repository (see
+  [What the output files contain](#what-the-output-files-contain)). It opens VS Code unless you
+  choose another editor with `--editor`, `LOGICTRAIL_EDITOR` or `editor` in the config:
+
+  | Editor                          | Link                                           |
+  | ------------------------------- | ---------------------------------------------- |
+  | `vscode` (default)              | `vscode://file/{path}:{line}`                  |
+  | `vscode-insiders`               | `vscode-insiders://file/{path}:{line}`         |
+  | `vscodium`                      | `vscodium://file/{path}:{line}`                |
+  | `cursor`                        | `cursor://file/{path}:{line}`                  |
+  | `idea` (IntelliJ IDEA/WebStorm) | `idea://open?file={file}&line={line}`          |
+  | `none`                          | No link; "Copy" still copies `file:line`       |
+  | A URL template                  | e.g. `myeditor://open?file={file}&line={line}` |
+
+  In a template, `{file}` is the absolute path, `{path}` the same without a leading slash, and
+  `{line}` the line. The link's tooltip names the editor ("Open in Cursor"). The choice is saved in
+  the flow, so `logictrail update` keeps it.
 
 ## Examples
 
@@ -296,6 +311,7 @@ Try them on the bundled sample: `npx logictrail "how does checkout work?" --root
 | `-o, --output <list>` | `html`, `svg`, `mermaid`, `json` or `all` (default: `html`)                   |
 | `--open`              | Open the result in your browser                                               |
 | `-m, --model <model>` | `claude`, a Claude model id such as `claude-opus-5-5`, or `static` for no LLM |
+| `--editor <editor>`   | Where "Open in editor" links go: `vscode` (default), `cursor`, `none`…        |
 | `--max-depth <n>`     | Hops to follow from the relevant code (default: 12)                           |
 | `--max-nodes <n>`     | Upper bound on nodes in the flow (default: 60)                                |
 | `--file <path>`       | Explain the flow starting in a file                                           |
@@ -335,8 +351,8 @@ what changed:
 between steps that are in both versions.
 
 `update` reads a flow's `.json` file, or its `.html` viewer when there is no JSON, and takes
-`--root`, `--out-dir`, `--model`, `--max-depth`, `--max-nodes`, `--theme`, `--open`, `--no-cache`
-and `--config`. To ask a question that starts with the word "update", put it in quotes.
+`--root`, `--out-dir`, `--model`, `--editor`, `--max-depth`, `--max-nodes`, `--theme`, `--open`,
+`--no-cache` and `--config`. A flow keeps the editor it was made with unless `--editor` is given. To ask a question that starts with the word "update", put it in quotes.
 
 ## Configuration
 
@@ -351,6 +367,7 @@ export default {
   maxNodes: 60,
   outputDir: ".logictrail",
   output: ["html", "mermaid"],
+  editor: "cursor", // "Open in editor" links; see The HTML viewer
   llm: {
     model: "claude-opus-5-5", // or "claude", "static", "auto" (default)
     effort: "medium",
@@ -364,6 +381,7 @@ export default {
 | -------------------- | ------------------------------------------------------------ |
 | `ANTHROPIC_API_KEY`  | Enables Claude. Without it, LogicTrail uses static analysis. |
 | `LOGICTRAIL_MODEL`   | Default for `--model`.                                       |
+| `LOGICTRAIL_EDITOR`  | Default for `--editor`.                                      |
 
 Claude requests use structured outputs, adaptive thinking and server-side refusal fallbacks. If
 Claude is unavailable, LogicTrail falls back to static analysis and records a warning in the
