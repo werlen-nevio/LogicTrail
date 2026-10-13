@@ -29,6 +29,9 @@ Claude Code plugin share one version number.
   written as. `fetch(endpoint, { method: "POST" })`, where `endpoint` is a conditional that can be
   `""`, was labelled `POST ` and is now `POST endpoint`; an unresolved `fetch`, axios, ky or got URL
   no longer shows the whole call.
+- A response whose status isn't a number literal, like
+  `NextResponse.json({ message }, { status: e.statusCode })` or `res.status(code).json()`, is
+  labelled `Response (status: e.statusCode)` instead of `200 OK`.
 
 ## [0.2.0] - 2026-10-05
 

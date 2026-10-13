@@ -10,7 +10,7 @@
  * stale caches are discarded.
  */
 
-export const FACTS_VERSION = 4;
+export const FACTS_VERSION = 5;
 
 export interface FileFacts {
   /** Repository-relative path with forward slashes. */
@@ -165,6 +165,8 @@ export interface ExitFact {
   kind: "throw" | "response" | "redirect";
   line: number;
   status?: number;
+  /** Source text of a status that isn't a literal, e.g. "e.statusCode". */
+  statusExpression?: string;
   text: string;
   errorName?: string;
   message?: string;

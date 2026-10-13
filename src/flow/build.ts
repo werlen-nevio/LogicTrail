@@ -283,6 +283,7 @@ class FlowBuilder {
         kind: exit.kind,
         owner: ownerId,
         ...(exit.status !== undefined ? { status: exit.status } : {}),
+        ...(exit.statusExpression ? { statusExpression: exit.statusExpression } : {}),
         ...(exit.errorName ? { errorName: exit.errorName } : {}),
         ...(exit.message ? { message: exit.message } : {}),
       },
