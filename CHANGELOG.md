@@ -50,6 +50,16 @@ Claude Code plugin share one version number.
 
 ### Fixed
 
+- Functions exported or stored through a wrapper are followed into the function they wrap:
+  `export default defaultResponder(handler, "/api/book/event")`,
+  `export const POST = defaultResponderForAppDir(handler)`,
+  `export const ensureAvailableUsers = withReporting(_ensureAvailableUsers, "…")` and class
+  properties like `getEventType = withReporting(this._getEventType.bind(this), "…")`. Calls through
+  them are labelled `via withReporting`, and route handlers exported this way are linked. This
+  applies to module-level bindings and class properties, where a wrapper is the usual reason for
+  such a call. In cal.com, `--route "POST /api/book/event"` now runs into `handler()` instead of
+  ending at the route, and `RegularBookingService.createBooking` reaches `_ensureAvailableUsers`,
+  `loadAndValidateUsers` and `_getEventType`.
 - Workspace packages whose entry points name only build output resolve to their sources at the
   package root as well as under `src/` (`"main": "./dist/index.js"` with `index.ts` beside
   `package.json`), and a package import falls back to its `index`. In cal.com,

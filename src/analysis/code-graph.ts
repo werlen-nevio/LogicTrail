@@ -504,7 +504,13 @@ class CodeGraphBuilder {
       file,
       line: call.line,
       text: call.text,
-      ...(call.via ? { label: call.via } : call.inLoop ? { label: "for each" } : {}),
+      ...(call.via
+        ? { label: call.via }
+        : call.inLoop
+          ? { label: "for each" }
+          : value.kind === "symbol" && value.wrapper
+            ? { label: `via ${value.wrapper}` }
+            : {}),
     };
     const target = this.symbolTarget(value);
     if (target) {

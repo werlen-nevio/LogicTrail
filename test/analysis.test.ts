@@ -572,6 +572,96 @@ describe("--route on pages", () => {
   });
 });
 
+describe("functions exported through a wrapper", () => {
+  const graph = buildCodeGraph(
+    new Workspace(
+      [
+        facts(
+          `
+          export function withReporting(fn, name) { return (...args) => fn(...args); }
+          export function defaultResponder(fn, path) { return async (req, res) => fn(req, res); }
+        `,
+          "lib/wrappers.ts",
+        ),
+        facts(
+          `
+          import { withReporting } from "../lib/wrappers";
+          const _ensureAvailableUsers = async (users) => users;
+          export const ensureAvailableUsers = withReporting(_ensureAvailableUsers, "ensureAvailableUsers");
+          export class BookingService {
+            private getEventType = withReporting(this._getEventType.bind(this), "getEventType");
+            private async _getEventType(id) { return id; }
+            async createBooking(input) {
+              await this.getEventType(input.id);
+              return ensureAvailableUsers(input.users);
+            }
+          }
+        `,
+          "lib/booking.ts",
+        ),
+        facts(
+          `
+          import { defaultResponder } from "../../../lib/wrappers";
+          import { BookingService } from "../../../lib/booking";
+          async function handler(req) { return new BookingService().createBooking(req.body); }
+          export default defaultResponder(handler, "/api/book/event");
+        `,
+          "pages/api/book/event.ts",
+        ),
+        facts(
+          `
+          import { defaultResponder } from "../../../lib/wrappers";
+          async function handler(req) { return req; }
+          export const POST = defaultResponder(handler);
+        `,
+          "app/api/cancel/route.ts",
+        ),
+        facts(
+          `
+          function keyOf(item) { return item.id; }
+          function sortBy(list, key) { return list; }
+          function render(rows) {}
+          export function table(list) {
+            const sorted = sortBy(list, keyOf);
+            render(sorted);
+          }
+        `,
+          "lib/table.ts",
+        ),
+      ],
+      "/repo",
+    ),
+  );
+
+  it("calls through a wrapper reach the wrapped function", () => {
+    expect(
+      graph
+        .out(nodeByLabel(graph, "BookingService.createBooking()"))
+        .map((edge) => `${graph.nodes.get(edge.to)?.label} ${edge.label ?? ""}`.trim()),
+    ).toEqual([
+      "BookingService._getEventType() via withReporting",
+      "_ensureAvailableUsers() via withReporting",
+    ]);
+  });
+
+  it("route handlers exported through a wrapper are linked", () => {
+    expect(edgeLabels(graph, "ANY /api/book/event")).toEqual(["calls:handler()"]);
+    expect(edgeLabels(graph, "POST /api/cancel")).toEqual(["calls:handler()"]);
+  });
+
+  it("does not unwrap calls inside functions", () => {
+    // `keyOf` is passed to sortBy as a callback; `sorted` is sortBy's result, not keyOf.
+    const steps = graph.steps.get(nodeByLabel(graph, "table()")) ?? [];
+    expect(
+      steps.map((step) =>
+        step.kind === "edge"
+          ? `${graph.nodes.get(step.edge.to)?.label} ${step.edge.label ?? ""}`.trim()
+          : step.kind,
+      ),
+    ).toEqual(["sortBy()", "keyOf() via sortBy", "render()"]);
+  });
+});
+
 describe("--function", () => {
   const graph = buildCodeGraph(
     new Workspace(
