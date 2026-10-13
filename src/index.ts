@@ -23,7 +23,7 @@ export type {
   FlowTarget,
   IndexedRepository,
 } from "./pipeline.js";
-export { writeOutputs, renderFormat, slugify } from "./output.js";
+export { writeOutputs, renderFormat, safeFileName, slugify } from "./output.js";
 export type { WriteOutputsOptions, WrittenFile } from "./output.js";
 export { findSavedFlows, loadSavedFlow, SavedFlowError, updateFlow } from "./update.js";
 export type { SavedFlow, UpdatedFlow, UpdateFlowOptions } from "./update.js";

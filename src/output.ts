@@ -76,3 +76,16 @@ export function slugify(text: string, max = 60): string {
   const trimmed = slug.length > max ? slug.slice(0, max).replace(/-[^-]*$/, "") : slug;
   return trimmed || "flow";
 }
+
+/**
+ * Makes an explicit --name safe as a file name without changing its case: "fn-addItem" stays
+ * "fn-addItem", "api/v1: cart" -> "api-v1-cart".
+ */
+export function safeFileName(name: string): string {
+  const safe = name
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1f\x7f/\\:*?"<>|\s]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "");
+  return safe || "flow";
+}

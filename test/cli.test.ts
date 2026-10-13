@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { slugify } from "../src/output.js";
+import { safeFileName, slugify } from "../src/output.js";
 import { ACME_SHOP } from "./helpers.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -140,5 +140,12 @@ describe("cli", () => {
     expect(slugify("How does checkout work?")).toBe("how-does-checkout-work");
     expect(slugify("Ünïcödé — flows!")).toBe("unicode-flows");
     expect(slugify("???")).toBe("flow");
+  });
+
+  it("keeps the case of an explicit --name", () => {
+    expect(safeFileName("fn-addItem")).toBe("fn-addItem");
+    expect(safeFileName("api/v1: Cart?")).toBe("api-v1-Cart");
+    expect(safeFileName("..\\.hidden")).toBe("hidden");
+    expect(safeFileName("???")).toBe("flow");
   });
 });

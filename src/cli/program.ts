@@ -5,7 +5,7 @@ import { OUTPUT_FORMATS, type OutputFormat, type ResolvedConfig } from "../confi
 import { ConfigError, loadConfig } from "../config/load.js";
 import { selectProvider } from "../llm/index.js";
 import { ProviderError } from "../llm/types.js";
-import { renderFormat, slugify, writeOutputs } from "../output.js";
+import { renderFormat, safeFileName, slugify, writeOutputs } from "../output.js";
 import {
   analyze,
   buildFlowPrompt,
@@ -215,7 +215,7 @@ ${prompt.user}
     }
 
     const outDir = path.resolve(root, options.outDir ?? effective.outputDir);
-    const name = options.name ? slugify(options.name) : slugify(result.graph.query);
+    const name = options.name ? safeFileName(options.name) : slugify(result.graph.query);
     const written = await writeOutputs(result.graph, {
       outDir,
       name,

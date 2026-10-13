@@ -21,6 +21,11 @@ Claude Code plugin share one version number.
   plus `app.setGlobalPrefix`). Each route records its framework and is matched by `--route` and by
   client requests like an Express route.
 
+### Fixed
+
+- `--name` keeps the case of the name it's given (`--name fn-addItem` writes `fn-addItem.*`, not
+  `fn-additem.*`) and only replaces characters that aren't safe in file names.
+
 ## [0.2.0] - 2026-10-05
 
 ### Added
