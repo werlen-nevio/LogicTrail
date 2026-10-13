@@ -248,7 +248,9 @@ class CodeGraphBuilder {
       });
       const steps: ResolvedStep[] = [];
       for (const handler of route.handlers) {
-        const target = this.resolveHandler(handler.file, handler.ref);
+        const target =
+          this.resolveHandler(handler.file, handler.ref) ??
+          (handler.middleware ? this.packageMiddleware(handler.file, handler.ref) : undefined);
         if (!target) continue;
         const targetNode = this.graph.nodes.get(target);
         if (targetNode?.symbol?.kind === "handler" && !handler.middleware) {
@@ -332,6 +334,27 @@ class CodeGraphBuilder {
     }
     const value = this.workspace.resolvePath(file, undefined, ref.path);
     return this.symbolTarget(value);
+  }
+
+  /**
+   * Middleware a package creates, named in the repository: `auth.required` where
+   * `auth = { required: expressjwt({ ... }) }`. It has no source here, so it becomes a library step.
+   */
+  private packageMiddleware(file: string, ref: HandlerRef): string | undefined {
+    if (ref.kind !== "path") return undefined;
+    const value = this.workspace.resolvePath(file, undefined, ref.path);
+    if (value.kind !== "package" || !value.value.ops.some((op) => op.op !== "type"))
+      return undefined;
+    const { pkg, imported } = value.value;
+    const label = ref.path.join(".");
+    return this.ensureNode({
+      id: `lib:${pkg}:${label}`,
+      kind: "library",
+      type: "library",
+      label,
+      name: label,
+      metadata: { package: pkg, operation: imported, category: "middleware" },
+    });
   }
 
   private symbolTarget(value: Value): string | undefined {

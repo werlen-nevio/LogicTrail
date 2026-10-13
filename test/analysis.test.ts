@@ -355,6 +355,49 @@ describe("NestJS modules, versions and enhancers", () => {
   });
 });
 
+describe("Express middleware created by a package", () => {
+  it("is a step before the handler", () => {
+    const graph = buildCodeGraph(
+      new Workspace(
+        [
+          facts(
+            `
+            import { expressjwt as jwt } from "express-jwt";
+            const auth = { required: jwt({ secret: "s", algorithms: ["HS256"] }) };
+            export default auth;
+          `,
+            "src/auth.ts",
+          ),
+          facts(
+            `
+            import { Router } from "express";
+            import auth from "./auth";
+            const router = Router();
+            function feed(req, res) { res.json([]); }
+            router.get("/articles/feed", auth.required, feed);
+            export default router;
+          `,
+            "src/articles.ts",
+          ),
+        ],
+        "/repo",
+      ),
+    );
+    expect(
+      graph
+        .out("route:GET /articles/feed")
+        .map((edge) => [
+          edge.label,
+          graph.nodes.get(edge.to)?.label,
+          graph.nodes.get(edge.to)?.metadata.package,
+        ]),
+    ).toEqual([
+      ["middleware", "auth.required", "express-jwt"],
+      [undefined, "feed()", undefined],
+    ]);
+  });
+});
+
 describe("code graph on the Express + React sample", () => {
   it("composes Express routes across files and inherits mount middleware", async () => {
     const { graph } = await fixtureGraph(ACME_SHOP);

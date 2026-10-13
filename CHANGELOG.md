@@ -31,6 +31,14 @@ Claude Code plugin share one version number.
     `POST /v2/bookings (version 2024-08-13)`. `--route` takes the same suffix to pick a version,
     and without one picks the routes that serve the default version.
 
+- Next.js cache and request APIs are steps: `revalidateTag`, `revalidatePath`, `updateTag` and
+  `refresh` from `next/cache` (labelled with the tag or path, e.g. `updateTag("cart")`), and the
+  `get`, `set`, `has` and `delete` operations on `cookies()` and `headers()` from `next/headers`
+  (e.g. `cookies().get("cartId")`).
+- Express middleware that a package creates and the repository names, such as
+  `auth.required = expressjwt({ … })` used as `router.get("/articles/feed", auth.required, …)`, is
+  a step before the handler.
+
 ### Changed
 
 - The HTML and JSON files no longer contain the absolute path of the analyzed root, which named
